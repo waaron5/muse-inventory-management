@@ -5,10 +5,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: muse
-      POSTGRES_PASSWORD: muse_password
+      POSTGRES_PASSWORD: "8307869"
       POSTGRES_DB: muse_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - muse_pgdata:/var/lib/postgresql/data
 
