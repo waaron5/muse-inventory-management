@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand */
+  --muse-cyan: #00b4d8;
+  --muse-cyan-light: #e0f7fc;
+  --muse-cyan-dark: #0096b7;
+
+  /* Neutrals */
+  --white: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  /* Semantic */
+  --color-bg: var(--white);
+  --color-surface: var(--gray-50);
+  --color-border: var(--gray-200);
+  --color-text: var(--gray-900);
+  --color-text-muted: var(--gray-500);
+  --color-primary: var(--muse-cyan);
+  --color-primary-hover: var(--muse-cyan-dark);
+
+  /* Status colors */
+  --status-active-bg: #dcfce7;
+  --status-active-text: #166534;
+  --status-retired-bg: #f3f4f6;
+  --status-retired-text: #6b7280;
+  --status-pending-bg: #fef9c3;
+  --status-pending-text: #854d0e;
+  --status-approved-bg: #dcfce7;
+  --status-approved-text: #166534;
+  --status-rejected-bg: #fee2e2;
+  --status-rejected-text: #991b1b;
+  --status-canceled-bg: #f3f4f6;
+  --status-canceled-text: #6b7280;
+  --status-completed-bg: #eff6ff;
+  --status-completed-text: #1d4ed8;
+  --status-consumed-bg: #f3f4f6;
+  --status-consumed-text: #6b7280;
+  --status-past-bg: #f3f4f6;
+  --status-past-text: #6b7280;
+  --status-current-bg: #dcfce7;
+  --status-current-text: #166534;
+  --status-future-bg: #eff6ff;
+  --status-future-text: #1d4ed8;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent layout shift from scrollbar */
+html {
+  overflow-y: scroll;
+}
+
+/* Global link reset */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Global button reset */
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Global input/textarea reset */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Utility: visually hidden */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

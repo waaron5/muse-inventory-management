@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: muse_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: muse
+      POSTGRES_PASSWORD: muse_password
+      POSTGRES_DB: muse_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - muse_pgdata:/var/lib/postgresql/data
+
+volumes:
+  muse_pgdata:
