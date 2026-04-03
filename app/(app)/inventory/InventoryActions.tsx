@@ -112,7 +112,6 @@ export function InventoryActions({
           },
         ]}
         title={`Reserve "${item.title}"`}
-        subtitle="Choose an event, adjust quantity, and add more inventory for the same reservation request if needed."
       />
     </>
   );

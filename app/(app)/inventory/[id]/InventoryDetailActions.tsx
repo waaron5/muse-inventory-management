@@ -197,7 +197,6 @@ export function InventoryDetailActions({
           },
         ]}
         title={`Reserve "${itemTitle}"`}
-        subtitle="Pick an event, then reserve this item and add any other inventory needed for the same event."
       />
 
       {/* Return Modal */}

@@ -10,6 +10,10 @@ export default async function DashboardPage() {
   const isAdmin = session?.user.role === "ADMIN";
   const userId = session!.user.id;
   const now = new Date();
+  const firstName =
+    session?.user.name?.trim().split(/\s+/)[0] ??
+    session?.user.email?.split("@")[0] ??
+    "there";
 
   const [
     allEvents,
@@ -93,7 +97,7 @@ export default async function DashboardPage() {
       <div className="dashboard-wrap">
         <h1 className="dash-title">Dashboard</h1>
         <p className="dash-subtitle">
-          Welcome back, {session?.user.name ?? session?.user.email}
+          Welcome back, {firstName}
         </p>
 
         {/* Stat Cards */}

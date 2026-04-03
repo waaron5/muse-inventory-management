@@ -160,10 +160,6 @@ export function ReserveInventoryModal({
     !hasAvailabilityConflict &&
     !submitting;
 
-  const defaultSubtitle = presetEvent
-    ? "Add inventory items for this event, then submit the reservation."
-    : "Choose an event, add inventory items, then submit the reservation.";
-
   useEffect(() => {
     if (!open) return;
 
@@ -440,8 +436,8 @@ export function ReserveInventoryModal({
       titleClassName="reserve-modal-title"
     >
       <form onSubmit={handleSubmit} className="modal-form reserve-modal-form">
-        {!headerEvent && (
-          <p className="reserve-modal-subtitle">{subtitle ?? defaultSubtitle}</p>
+        {!headerEvent && subtitle && (
+          <p className="reserve-modal-subtitle">{subtitle}</p>
         )}
 
         {!presetEvent && (

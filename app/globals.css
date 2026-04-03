@@ -22,6 +22,7 @@
 
   /* Semantic */
   --color-bg: var(--white);
+  --color-page-bg: #f5f8fb;
   --color-surface: var(--gray-50);
   --color-border: var(--gray-200);
   --color-input-border: var(--gray-300);
@@ -74,7 +75,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text);
-  background: var(--color-bg);
+  background: var(--color-page-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -859,7 +860,7 @@ select {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--color-surface);
+  background: var(--color-page-bg);
 }
 .app-main {
   flex: 1;
@@ -968,7 +969,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gray-50);
+  background: var(--color-page-bg);
   padding: 24px;
 }
 .login-card {
@@ -1780,6 +1781,7 @@ select {
    =========================== */
 :root[data-theme="dark"] {
   --color-bg: #1a1a2e;
+  --color-page-bg: #12121f;
   --color-surface: #12121f;
   --color-border: #2d2d44;
   --color-input-border: #4b4b68;
@@ -1859,6 +1861,7 @@ html[data-theme="light"] .form-input:focus {
 @media (prefers-color-scheme: dark) {
   :root {
     --color-bg: #1a1a2e;
+    --color-page-bg: #12121f;
     --color-surface: #12121f;
     --color-border: #2d2d44;
     --color-text: #e4e4e7;
