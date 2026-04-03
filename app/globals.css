@@ -310,7 +310,38 @@ select {
 .event-date-range {
   color: var(--gray-600);
 }
-.inventory-table { min-width: 1180px; }
+.table-meta-inline {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 7px;
+  max-width: 100%;
+}
+
+.table-meta-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--gray-400);
+  margin-top: 2px;
+}
+
+.inventory-table { min-width: 1120px; }
+.inventory-table .table-row td {
+  padding-top: 18px;
+  padding-bottom: 18px;
+  border-bottom-color: var(--gray-200);
+}
+.inventory-table th,
+.inventory-table td {
+  vertical-align: top;
+}
+.inventory-table .col-image { width: 64px; }
+.inventory-table .col-item { min-width: 180px; }
+.inventory-table .col-desc { min-width: 220px; }
+.inventory-table .col-qty { min-width: 110px; }
+.inventory-table .col-location { min-width: 160px; }
+.inventory-table .col-notes { min-width: 180px; }
+.inventory-table .col-updated { min-width: 130px; }
 .data-table thead tr { background: var(--color-bg); border-bottom: 1px solid var(--color-border); }
 .data-table th {
   padding: 12px 16px;
@@ -345,13 +376,144 @@ select {
 .qty-available { font-weight: 500; color: var(--gray-900); }
 .qty-sep { color: var(--gray-300); margin: 0 2px; }
 .qty-total { color: var(--gray-500); }
+.inventory-item-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.inventory-item-link {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.inventory-item-link-retired {
+  color: var(--gray-500);
+  text-decoration: line-through;
+}
+
+.inventory-text-block {
+  display: block;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--gray-500);
+}
+
+.inventory-description-text,
+.inventory-notes-text {
+  max-width: 30ch;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.inventory-location-text {
+  max-width: 18ch;
+}
+
 .notes-indicator { font-size: 13px; color: var(--gray-500); }
+.inventory-updated-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.inventory-updated-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-900);
+  line-height: 1.35;
+}
+
+.inventory-updated-user {
+  font-size: 12px;
+  color: var(--gray-500);
+  line-height: 1.35;
+}
+
 .empty-row { text-align: center; color: var(--gray-400); padding: 48px 16px !important; font-size: 14px; }
 
 .event-actions-header,
 .event-action-cell {
   width: 1%;
   white-space: nowrap;
+}
+
+.inventory-actions-header,
+.inventory-action-cell {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.inventory-action-cell {
+  vertical-align: middle;
+}
+
+.inventory-table .row-retired td {
+  opacity: 1;
+}
+
+.inventory-table .row-retired .item-image {
+  filter: grayscale(1);
+  opacity: 0.72;
+}
+
+.inventory-table .row-retired .inventory-item-link {
+  color: var(--gray-500);
+}
+
+.inventory-table .row-retired .inventory-text-block,
+.inventory-table .row-retired .qty-total,
+.inventory-table .row-retired .qty-sep,
+.inventory-table .row-retired .inventory-updated-user {
+  color: var(--gray-400);
+}
+
+.inventory-table .row-retired .qty-available,
+.inventory-table .row-retired .inventory-updated-date {
+  color: var(--gray-600);
+}
+
+.inventory-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.inventory-reserve-button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inventory-reserve-button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.inventory-reserve-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inventory-reserve-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .event-reservation-list {
@@ -559,6 +721,24 @@ select {
 
 /* Image cells */
 .item-image { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+.inventory-image-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: zoom-in;
+}
+
+.inventory-image-button:hover .item-image,
+.inventory-image-button:focus-visible .item-image {
+  box-shadow: 0 0 0 2px rgba(2, 181, 225, 0.16);
+  border-radius: 8px;
+}
+
+.inventory-image-button:focus-visible {
+  outline: none;
+}
+
 .image-placeholder {
   width: 40px; height: 40px;
   background: var(--gray-100);
@@ -570,6 +750,26 @@ select {
   background: var(--gray-100);
   border: 1px solid var(--color-border);
   border-radius: 8px;
+}
+
+.inventory-image-modal-body {
+  padding-top: 20px;
+}
+
+.inventory-image-preview-frame {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+  max-height: 70vh;
+  height: min(70vh, 560px);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+}
+
+.inventory-image-preview-img {
+  object-fit: contain;
 }
 
 /* --- Detail Pages --- */
@@ -1469,6 +1669,13 @@ select {
   .dash-grid { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
+  .inventory-table {
+    min-width: 1040px;
+  }
+  .inventory-table .table-row td {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
   .data-table th,
   .data-table td {
     padding: 12px 14px;
@@ -1476,6 +1683,9 @@ select {
   .event-row-actions {
     opacity: 1;
     transform: none;
+  }
+  .inventory-row-actions {
+    gap: 6px;
   }
   .event-reservation-cell {
     min-width: 240px;
@@ -1493,6 +1703,9 @@ select {
   .app-main { padding: 16px 12px; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
   .detail-card { flex-direction: column; }
+  .inventory-table {
+    min-width: 960px;
+  }
   .table-toolbar {
     align-items: stretch;
   }
@@ -1512,6 +1725,10 @@ select {
     padding: 10px 12px;
     font-size: 13px;
   }
+  .inventory-table .table-row td {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
   .row-actions {
     gap: 4px;
   }
@@ -1521,6 +1738,21 @@ select {
   }
   .event-reservation-cell {
     min-width: 220px;
+  }
+  .inventory-row-actions {
+    gap: 6px;
+  }
+  .inventory-reserve-button {
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  .inventory-description-text,
+  .inventory-notes-text {
+    max-width: 24ch;
+  }
+  .inventory-image-preview-frame {
+    min-height: 280px;
+    height: min(60vh, 420px);
   }
   .reserve-modal-header {
     padding: 18px 20px 16px;

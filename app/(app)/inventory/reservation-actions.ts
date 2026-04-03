@@ -100,6 +100,7 @@ export async function createInventoryReservationsBatch(formData: {
   }>;
 }) {
   const session = await requireSession();
+  const autoApproved = session.user.role === "ADMIN";
 
   if (formData.items.length === 0) {
     throw new Error("Add at least one inventory item before reserving.");
@@ -165,24 +166,45 @@ export async function createInventoryReservationsBatch(formData: {
     }
   }
 
-  const reservations = await prisma.$transaction(
-    normalizedItems.map((item) =>
-      prisma.inventoryReservation.create({
-        data: {
-          inventoryItemId: item.inventoryItemId,
-          eventId: formData.eventId,
-          quantity: item.quantity,
-          notes: item.notes,
-          requestedById: session.user.id,
-          lastModifiedById: session.user.id,
-        },
-        include: {
-          inventoryItem: { select: { title: true } },
-          event: { select: { eventName: true } },
-        },
-      })
-    )
-  );
+  const reservations = await prisma.$transaction(async (tx) => {
+    const created = await Promise.all(
+      normalizedItems.map((item) =>
+        tx.inventoryReservation.create({
+          data: {
+            inventoryItemId: item.inventoryItemId,
+            eventId: formData.eventId,
+            quantity: item.quantity,
+            notes: item.notes,
+            requestedById: session.user.id,
+            lastModifiedById: session.user.id,
+            ...(autoApproved
+              ? {
+                  status: "APPROVED",
+                  approvedById: session.user.id,
+                }
+              : {}),
+          },
+          include: {
+            inventoryItem: { select: { title: true } },
+            event: { select: { eventName: true } },
+          },
+        })
+      )
+    );
+
+    if (autoApproved) {
+      await Promise.all(
+        [...new Set(itemIds)].map((itemId) =>
+          tx.inventoryItem.update({
+            where: { id: itemId },
+            data: { updatedById: session.user.id },
+          })
+        )
+      );
+    }
+
+    return created;
+  });
 
   await Promise.all(
     reservations.map((reservation) =>
@@ -191,7 +213,7 @@ export async function createInventoryReservationsBatch(formData: {
         entityId: reservation.id,
         actionType: "CREATED",
         performedById: session.user.id,
-        summary: `Reserved ${reservation.quantity}x "${reservation.inventoryItem.title}" for event "${reservation.event.eventName}"`,
+        summary: `Reserved ${reservation.quantity}x "${reservation.inventoryItem.title}" for event "${reservation.event.eventName}"${autoApproved ? " (auto-approved)" : ""}`,
       })
     )
   );
@@ -201,6 +223,7 @@ export async function createInventoryReservationsBatch(formData: {
     success: true,
     count: reservations.length,
     ids: reservations.map((reservation) => reservation.id),
+    autoApproved,
   };
 }
 
@@ -224,6 +247,7 @@ export async function createInventoryReservation(formData: {
   return {
     success: result.success,
     id: result.ids[0],
+    autoApproved: result.autoApproved,
   };
 }
 
@@ -251,15 +275,23 @@ export async function approveInventoryReservation(id: string, notes?: string) {
     );
   }
 
-  await prisma.inventoryReservation.update({
-    where: { id },
-    data: {
-      status: "APPROVED",
-      approvedById: session.user.id,
-      lastModifiedById: session.user.id,
-      notes: notes ?? reservation.notes,
-    },
-  });
+  await prisma.$transaction([
+    prisma.inventoryReservation.update({
+      where: { id },
+      data: {
+        status: "APPROVED",
+        approvedById: session.user.id,
+        lastModifiedById: session.user.id,
+        notes: notes ?? reservation.notes,
+      },
+    }),
+    prisma.inventoryItem.update({
+      where: { id: reservation.inventoryItemId },
+      data: {
+        updatedById: session.user.id,
+      },
+    }),
+  ]);
 
   await logAudit({
     entityType: "INVENTORY_RESERVATION",

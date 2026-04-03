@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/PageHeader";
 import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
+import { CalendarIcon, LocationPinIcon } from "@/components/MetadataIcons";
 import { getEventStatus } from "@/lib/availability";
 import Link from "next/link";
 import { EventRowActions } from "./EventRowActions";
@@ -158,20 +159,26 @@ export default async function EventsPage({
                       </Link>
                     </td>
                     <td>
-                      <span className="event-meta-text">{event.location}</span>
+                      <span className="table-meta-inline">
+                        <LocationPinIcon className="table-meta-icon" />
+                        <span className="event-meta-text">{event.location}</span>
+                      </span>
                     </td>
                     <td>
-                      <span className="event-meta-text event-date-range">
-                        {event.startDate.toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                        {" – "}
-                        {event.endDate.toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                      <span className="table-meta-inline">
+                        <CalendarIcon className="table-meta-icon" />
+                        <span className="event-meta-text event-date-range">
+                          {event.startDate.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                          {" – "}
+                          {event.endDate.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </span>
                       </span>
                     </td>
                     <td>

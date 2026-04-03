@@ -144,6 +144,7 @@ export async function createGiftReservation(formData: {
   notes?: string;
 }) {
   const session = await requireSession();
+  const autoApproved = session.user.role === "ADMIN";
 
   const event = await prisma.event.findUnique({
     where: { id: formData.eventId },
@@ -162,19 +163,36 @@ export async function createGiftReservation(formData: {
     throw new Error(`Only ${available} unit(s) available for that event window.`);
   }
 
-  const reservation = await prisma.giftReservation.create({
-    data: {
-      giftItemId: formData.giftItemId,
-      eventId: formData.eventId,
-      quantity: formData.quantity,
-      notes: formData.notes,
-      requestedById: session.user.id,
-      lastModifiedById: session.user.id,
-    },
-    include: {
-      giftItem: { select: { title: true } },
-      event: { select: { eventName: true } },
-    },
+  const reservation = await prisma.$transaction(async (tx) => {
+    const created = await tx.giftReservation.create({
+      data: {
+        giftItemId: formData.giftItemId,
+        eventId: formData.eventId,
+        quantity: formData.quantity,
+        notes: formData.notes,
+        requestedById: session.user.id,
+        lastModifiedById: session.user.id,
+        ...(autoApproved
+          ? {
+              status: "APPROVED",
+              approvedById: session.user.id,
+            }
+          : {}),
+      },
+      include: {
+        giftItem: { select: { title: true } },
+        event: { select: { eventName: true } },
+      },
+    });
+
+    if (autoApproved) {
+      await tx.giftItem.update({
+        where: { id: formData.giftItemId },
+        data: { updatedById: session.user.id },
+      });
+    }
+
+    return created;
   });
 
   await logAudit({
@@ -182,13 +200,13 @@ export async function createGiftReservation(formData: {
     entityId: reservation.id,
     actionType: "CREATED",
     performedById: session.user.id,
-    summary: `Reserved ${formData.quantity}x "${reservation.giftItem.title}" for event "${reservation.event.eventName}"`,
+    summary: `Reserved ${formData.quantity}x "${reservation.giftItem.title}" for event "${reservation.event.eventName}"${autoApproved ? " (auto-approved)" : ""}`,
   });
 
   revalidatePath("/gifting");
   revalidatePath(`/gifting/${formData.giftItemId}`);
   revalidatePath("/dashboard");
-  return { success: true, id: reservation.id };
+  return { success: true, id: reservation.id, autoApproved };
 }
 
 export async function approveGiftReservation(id: string) {

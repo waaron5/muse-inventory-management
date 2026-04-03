@@ -53,30 +53,47 @@ export function InventoryActions({
 
   return (
     <>
-      <div className="row-actions">
-        <Link href={`/inventory/${item.id}`} className="btn-action">
-          Open
-        </Link>
+      <div className="inventory-row-actions">
         {item.status === "ACTIVE" && (
           <button
             type="button"
-            className="btn-action btn-action-primary"
+            className="inventory-reserve-button"
             onClick={() => setReserveOpen(true)}
+            aria-label={`Reserve ${item.title}`}
           >
+            <ReserveArrowIcon className="inventory-reserve-icon" />
             Reserve
           </button>
         )}
         {isAdmin && (
           <>
-            <Link href={`/inventory/${item.id}/edit`} className="btn-action btn-action-admin">
-              Edit
+            <Link
+              href={`/inventory/${item.id}/edit`}
+              className="event-icon-button"
+              aria-label={`Edit ${item.title}`}
+              title={`Edit ${item.title}`}
+            >
+              <EditIcon />
             </Link>
             <button
-              className="btn-action btn-action-admin"
+              type="button"
+              className={`event-icon-button${
+                item.status === "ACTIVE" ? " event-icon-button-danger" : ""
+              }`}
               onClick={handleRetireToggle}
               disabled={loading}
+              aria-label={
+                item.status === "ACTIVE"
+                  ? `Retire ${item.title}`
+                  : `Activate ${item.title}`
+              }
+              title={
+                item.status === "ACTIVE"
+                  ? `Retire ${item.title}`
+                  : `Activate ${item.title}`
+              }
             >
-              {loading ? "…" : item.status === "ACTIVE" ? "Retire" : "Activate"}
+              {loading ? <span aria-hidden="true">…</span> : <TrashIcon />}
             </button>
           </>
         )}
@@ -98,5 +115,54 @@ export function InventoryActions({
         subtitle="Choose an event, adjust quantity, and add more inventory for the same reservation request if needed."
       />
     </>
+  );
+}
+
+function ReserveArrowIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M189.66,122.34a8,8,0,0,1,0,11.32l-72,72a8,8,0,0,1-11.32-11.32L164.69,136H32a8,8,0,0,1,0-16H164.69L106.34,61.66a8,8,0,0,1,11.32-11.32ZM216,32a8,8,0,0,0-8,8V216a8,8,0,0,0,16,0V40A8,8,0,0,0,216,32Z" />
+    </svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
   );
 }

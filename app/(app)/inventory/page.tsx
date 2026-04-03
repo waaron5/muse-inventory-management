@@ -3,36 +3,28 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/PageHeader";
 import { SearchBar } from "@/components/SearchBar";
-import { FilterDropdown } from "@/components/FilterDropdown";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Pagination } from "@/components/Pagination";
+import { LocationPinIcon } from "@/components/MetadataIcons";
 import { InventoryActions } from "./InventoryActions";
-import Image from "next/image";
+import { InventoryImagePreview } from "./InventoryImagePreview";
 import Link from "next/link";
 
-const FILTER_OPTIONS = [
-  { label: "Active", value: "ACTIVE" },
-  { label: "Retired", value: "RETIRED" },
-];
-
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 8;
 
 export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; filter?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user.role === "ADMIN";
   const params = await searchParams;
   const query = params.q ?? "";
-  const filter = params.filter ?? "";
   const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const today = new Date();
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
   const where = {
-    ...(filter ? { status: filter as "ACTIVE" | "RETIRED" } : {}),
     ...(query
       ? {
           OR: [
@@ -117,11 +109,6 @@ export default async function InventoryPage({
 
       <div className="table-toolbar">
         <SearchBar placeholder="Search items, descriptions, locations..." />
-        <FilterDropdown
-          options={FILTER_OPTIONS}
-          defaultLabel="All Items"
-          paramName="filter"
-        />
         <span className="item-count">{totalCount} items</span>
       </div>
 
@@ -134,16 +121,17 @@ export default async function InventoryPage({
               <th className="col-desc">Description</th>
               <th className="col-qty">Avail / Total</th>
               <th className="col-location">Location</th>
-              <th className="col-status">Status</th>
               <th className="col-notes">Notes</th>
               <th className="col-updated">Last Updated</th>
-              <th className="col-actions">Actions</th>
+              <th className="inventory-actions-header">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {itemsWithAvailability.length === 0 && (
               <tr>
-                <td colSpan={9} className="empty-row">
+                <td colSpan={8} className="empty-row">
                   No inventory items found.
                 </td>
               </tr>
@@ -154,27 +142,24 @@ export default async function InventoryPage({
                 className={`table-row ${item.status === "RETIRED" ? "row-retired" : ""}`}
               >
                 <td className="col-image">
-                  <div className="item-image">
-                    {item.imageUrl ? (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.title}
-                        width={40}
-                        height={40}
-                        style={{ objectFit: "cover", borderRadius: 4 }}
-                      />
-                    ) : (
-                      <div className="image-placeholder" />
-                    )}
-                  </div>
+                  <InventoryImagePreview src={item.imageUrl ?? null} alt={item.title} />
                 </td>
                 <td className="col-item">
-                  <Link href={`/inventory/${item.id}`} className="item-title-link">
-                    {item.title}
-                  </Link>
+                  <div className="inventory-item-cell">
+                    <Link
+                      href={`/inventory/${item.id}`}
+                      className={`item-title-link inventory-item-link${
+                        item.status === "RETIRED" ? " inventory-item-link-retired" : ""
+                      }`}
+                    >
+                      {item.title}
+                    </Link>
+                  </div>
                 </td>
                 <td className="col-desc">
-                  <span className="text-muted">{item.description ?? "—"}</span>
+                  <span className="inventory-text-block inventory-description-text">
+                    {item.description ?? "—"}
+                  </span>
                 </td>
                 <td className="col-qty">
                   <span className="qty-available">{item.availableQty}</span>
@@ -182,34 +167,41 @@ export default async function InventoryPage({
                   <span className="qty-total">{item.quantity}</span>
                 </td>
                 <td className="col-location">
-                  <span className="text-muted">{item.currentLocation ?? "—"}</span>
-                </td>
-                <td className="col-status">
-                  <StatusBadge
-                    variant={item.status === "ACTIVE" ? "active" : "retired"}
-                  />
+                  {item.currentLocation ? (
+                    <span className="table-meta-inline">
+                      <LocationPinIcon className="table-meta-icon" />
+                      <span className="inventory-text-block inventory-location-text">
+                        {item.currentLocation}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="inventory-text-block inventory-location-text">—</span>
+                  )}
                 </td>
                 <td className="col-notes">
                   {item.notes ? (
-                    <span className="notes-indicator" title={item.notes}>
-                      {item.notes.length > 30
-                        ? item.notes.slice(0, 30) + "…"
-                        : item.notes}
+                    <span className="inventory-text-block inventory-notes-text" title={item.notes}>
+                      {item.notes}
                     </span>
                   ) : (
-                    <span className="text-muted">—</span>
+                    <span className="inventory-text-block inventory-notes-text">—</span>
                   )}
                 </td>
                 <td className="col-updated">
-                  <span className="text-muted">
-                    {item.updatedAt.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
+                  <div className="inventory-updated-cell">
+                    <span className="inventory-updated-date">
+                      {item.updatedAt.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <span className="inventory-updated-user">
+                      {item.updatedBy?.name ?? "—"}
+                    </span>
+                  </div>
                 </td>
-                <td className="col-actions">
+                <td className="inventory-action-cell">
                   <InventoryActions
                     item={{
                       id: item.id,

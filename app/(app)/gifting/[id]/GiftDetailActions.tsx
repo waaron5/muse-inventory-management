@@ -98,7 +98,7 @@ export function GiftDetailActions({
     setReserveLoading(true);
     setReserveError("");
     try {
-      await createGiftReservation({
+      const result = await createGiftReservation({
         giftItemId: itemId,
         eventId: reserveEventId,
         quantity: parseInt(reserveQty, 10),
@@ -108,7 +108,7 @@ export function GiftDetailActions({
       setReserveEventId("");
       setReserveQty("1");
       setReserveNotes("");
-      toast("Gift reservation submitted for approval");
+      toast(result.autoApproved ? "Gift reservation approved" : "Gift reservation submitted for approval");
       router.refresh();
     } catch (err: unknown) {
       setReserveError(err instanceof Error ? err.message : "An error occurred.");
