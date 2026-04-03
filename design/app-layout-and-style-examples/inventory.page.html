@@ -1,0 +1,248 @@
+<section class="inventory-page">
+  <header class="page-header">
+    <div>
+      <h2>Inventory</h2>
+      <p>View and update inventory, checkount items for events</p>
+    </div>
+    <button class="add-item-button" type="button" (click)="openAddItemModal()">+ Add Item</button>
+  </header>
+
+  <section class="table-toolbar" aria-label="Inventory filters">
+    <label class="search-field">
+      <span class="search-icon" aria-hidden="true"></span>
+      <input
+        [(ngModel)]="searchTerm"
+        type="search"
+        placeholder="Search items, descriptions, locations..."
+        aria-label="Search inventory items"
+      />
+    </label>
+
+    <label class="status-filter">
+      <span class="sr-only">Status filter</span>
+      <select [(ngModel)]="statusFilter" aria-label="Filter inventory by status">
+        <option *ngFor="let option of statusOptions" [ngValue]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </label>
+
+    <p class="item-count">{{ countLabel }}</p>
+  </section>
+
+  <section class="table-card" aria-label="Inventory table">
+    <table>
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Item</th>
+          <th>Description</th>
+          <th>Quantity</th>
+          <th>Location</th>
+          <th>Status</th>
+          <th>Notes</th>
+          <th class="sortable">
+            Last Updated
+            <span class="sort-icon" aria-hidden="true"></span>
+          </th>
+          <th class="actions-column">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody *ngIf="hasRows; else tableMessage">
+        <tr *ngFor="let row of filteredRows; trackBy: trackById">
+          <td class="image-column">
+            <img
+              *ngIf="row.imageUrl; else imagePlaceholder"
+              [src]="row.imageUrl"
+              [alt]="row.name"
+              loading="lazy"
+              decoding="async"
+            />
+            <ng-template #imagePlaceholder>
+              <span class="image-placeholder" aria-hidden="true"></span>
+            </ng-template>
+          </td>
+          <td>{{ row.name }}</td>
+          <td>{{ row.description || '—' }}</td>
+          <td>{{ row.quantity }}</td>
+          <td>{{ row.location || '—' }}</td>
+          <td>
+            <span class="status-chip" [attr.data-status]="row.status">
+              {{ statusLabel(row.status) }}
+            </span>
+          </td>
+          <td>{{ row.notes || '—' }}</td>
+          <td>{{ row.lastUpdated | date: 'MMM d, y' }}</td>
+          <td class="actions-column">
+            <button type="button" class="row-action">Open</button>
+          </td>
+        </tr>
+      </tbody>
+
+      <ng-template #tableMessage>
+        <tbody>
+          <tr class="empty-row" [class.error-row]="!!loadError">
+            <td colspan="9">{{ tableMessageText }}</td>
+          </tr>
+        </tbody>
+      </ng-template>
+    </table>
+  </section>
+
+  <div
+    class="modal-backdrop"
+    *ngIf="showAddItemModal"
+    (click)="closeAddItemModal()"
+    aria-hidden="true"
+  >
+    <section
+      class="add-item-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-item-modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="modal-header">
+        <h3 id="add-item-modal-title">Add Item</h3>
+        <button type="button" class="modal-close" (click)="closeAddItemModal()" [disabled]="isSaving">
+          ×
+        </button>
+      </header>
+
+      <form class="modal-form" (ngSubmit)="submitAddItem()">
+        <div class="image-upload-field">
+          <label class="image-upload-picker" [class.has-image]="!!addItemImage">
+            <input
+              type="file"
+              name="itemImage"
+              [accept]="imageAccept"
+              (change)="onAddItemImageSelected($event)"
+              [disabled]="isSaving"
+            />
+
+            <ng-container *ngIf="addItemImage; else emptyImageState">
+              <img class="image-upload-preview-image" [src]="addItemImage.previewUrl" alt="Selected item image preview" />
+
+              <div class="image-upload-overlay">
+                <p class="image-upload-picker-title">Click to replace image</p>
+              </div>
+            </ng-container>
+
+            <ng-template #emptyImageState>
+              <div class="image-upload-empty-state">
+                <svg class="image-upload-icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                  <path
+                    d="M24 30V10M24 10L16 18M24 10L32 18M12 28V33C12 35.7614 14.2386 38 17 38H31C33.7614 38 36 35.7614 36 33V28"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3.5"
+                  />
+                </svg>
+
+                <div class="image-upload-copy">
+                  <p class="image-upload-picker-title">Click to upload image</p>
+                  <p class="image-upload-picker-caption">PNG, JPG, WebP up to 10MB</p>
+                </div>
+              </div>
+            </ng-template>
+          </label>
+
+          <div class="image-upload-actions" *ngIf="addItemImage">
+            <div class="image-upload-file-copy">
+              <p class="image-upload-name">{{ selectedImageName }}</p>
+              <p class="image-upload-meta">{{ selectedImageDetails }}</p>
+            </div>
+
+            <button
+              type="button"
+              class="button-secondary image-upload-remove"
+              (click)="removeSelectedImage()"
+              [disabled]="isSaving"
+            >
+              Remove image
+            </button>
+          </div>
+
+          <p class="modal-error" *ngIf="imageError">{{ imageError }}</p>
+        </div>
+
+        <label>
+          <span>Item</span>
+          <input
+            type="text"
+            name="name"
+            [(ngModel)]="addItemForm.name"
+            placeholder="Item title"
+            required
+            [disabled]="isSaving"
+          />
+        </label>
+
+        <label>
+          <span>Description</span>
+          <textarea
+            name="description"
+            [(ngModel)]="addItemForm.description"
+            rows="3"
+            [disabled]="isSaving"
+          ></textarea>
+        </label>
+
+        <div class="modal-row">
+          <label>
+            <span>Quantity</span>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              name="initialQuantity"
+              [(ngModel)]="addItemForm.initialQuantity"
+              [disabled]="isSaving"
+            />
+          </label>
+
+          <label>
+            <span>Status</span>
+            <select name="status" [(ngModel)]="addItemForm.status" [disabled]="isSaving">
+              <option *ngFor="let option of addItemStatusOptions" [ngValue]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          <span>Location</span>
+          <select name="locationId" [(ngModel)]="addItemForm.locationId" [disabled]="isSaving">
+            <option [ngValue]="''">Default location (JP Display)</option>
+            <option
+              *ngFor="let location of locations; trackBy: trackByLocationId"
+              [ngValue]="location.id"
+            >
+              {{ location.name }}
+            </option>
+          </select>
+        </label>
+
+        <label>
+          <span>Notes</span>
+          <textarea name="notes" [(ngModel)]="addItemForm.notes" rows="3" [disabled]="isSaving"></textarea>
+        </label>
+
+        <p class="modal-error" *ngIf="saveError">{{ saveError }}</p>
+
+        <footer class="modal-actions">
+          <button type="button" class="button-secondary" (click)="closeAddItemModal()" [disabled]="isSaving">
+            Cancel
+          </button>
+          <button type="submit" class="button-primary" [disabled]="isSaving">
+            {{ saveButtonLabel }}
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+</section>

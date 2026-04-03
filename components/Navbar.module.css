@@ -1,0 +1,260 @@
+.navbar {
+  height: 56px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.navbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-width: 0;
+}
+
+.navbarLogo {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.navbarNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  color: var(--gray-600, #4b5563);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 120ms ease, color 120ms ease;
+  white-space: nowrap;
+}
+
+.navLink:hover {
+  color: var(--gray-900);
+}
+
+.navLink:focus-visible {
+  outline: 2px solid rgba(17, 17, 17, 0.15);
+  outline-offset: 2px;
+}
+
+.navLinkActive {
+  background: var(--gray-200, #eee);
+  color: var(--gray-900);
+}
+
+.navIcon {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  position: relative;
+  flex-shrink: 0;
+  color: currentColor;
+  box-sizing: border-box;
+}
+
+.navIcon::before,
+.navIcon::after {
+  content: "";
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.eventsIcon {
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  background:
+    linear-gradient(currentColor, currentColor) left 3px top 5px / 8px 1.5px no-repeat,
+    linear-gradient(currentColor, currentColor) left 3px top 8px / 6px 1.5px no-repeat;
+}
+
+.eventsIcon::before,
+.eventsIcon::after {
+  width: 1.5px;
+  height: 3px;
+  top: -1.5px;
+  background: currentColor;
+  border-radius: 999px;
+}
+
+.eventsIcon::before {
+  left: 3px;
+}
+
+.eventsIcon::after {
+  right: 3px;
+}
+
+.inventoryIcon {
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+.giftingIcon {
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+}
+
+.giftingIcon::before {
+  left: 5.5px;
+  top: 0;
+  width: 1.5px;
+  height: 100%;
+  background: currentColor;
+}
+
+.giftingIcon::after {
+  left: 0;
+  top: 5.5px;
+  width: 100%;
+  height: 1.5px;
+  background: currentColor;
+}
+
+.navLinkLabel {
+  line-height: 1;
+}
+
+.navbarRight {
+  position: relative;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.navbarUserName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+  white-space: nowrap;
+}
+
+.accountTrigger {
+  border: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.accountTrigger:focus-visible {
+  outline: 2px solid rgba(17, 17, 17, 0.15);
+  outline-offset: 3px;
+}
+
+.accountAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #f7f7f7 0%, #ececec 100%);
+  border: 1px solid #d4d4d8;
+  color: #111111;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.accountTrigger:hover .accountAvatar,
+.accountTriggerOpen .accountAvatar {
+  background: linear-gradient(180deg, #f0f0f0 0%, #e6e6e6 100%);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.accountTrigger:active .accountAvatar {
+  transform: translateY(1px);
+}
+
+.accountMenu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 208px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+}
+
+.accountMenuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gray-800, #1f2937);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  transition: background 0.14s ease, color 0.14s ease;
+  cursor: pointer;
+}
+
+.accountMenuItem:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.accountMenuItem:focus-visible {
+  outline: 2px solid rgba(17, 17, 17, 0.12);
+  outline-offset: 1px;
+}
+
+.accountMenuIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .navbar {
+    padding: 0 18px;
+  }
+
+  .navbarLeft {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding: 0 14px;
+  }
+
+  .navbarUserName {
+    display: none;
+  }
+}

@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import Link from "next/link";
 import { GiftDetailActions } from "./GiftDetailActions";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export default async function GiftDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -39,12 +40,30 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
   });
 
   const pendingReservations = item.reservations.filter((r) => r.status === "PENDING");
+  const approvedReservations = item.reservations.filter(
+    (r) => r.status === "APPROVED"
+  );
+
+  // Fetch current/future events for reservation dropdown
+  const availableEvents = await prisma.event.findMany({
+    where: { endDate: { gte: new Date() } },
+    orderBy: { startDate: "asc" },
+    select: {
+      id: true,
+      eventName: true,
+      companyName: true,
+      location: true,
+      startDate: true,
+      endDate: true,
+    },
+  });
 
   return (
     <>
-      <div className="back-link-wrap">
-        <Link href="/gifting" className="back-link">← Back to Gifting</Link>
-      </div>
+      <Breadcrumbs items={[
+        { label: "Gifting", href: "/gifting" },
+        { label: item.title },
+      ]} />
 
       <PageHeader
         title={item.title}
@@ -105,12 +124,25 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
               itemId={item.id}
               itemTitle={item.title}
               isAdmin={isAdmin}
-              userId={session!.user.id}
               pendingReservations={pendingReservations.map((r) => ({
                 id: r.id,
                 quantity: r.quantity,
                 requestedByName: r.requestedBy.name,
                 eventName: r.event.eventName,
+              }))}
+              approvedReservations={approvedReservations.map((r) => ({
+                id: r.id,
+                quantity: r.quantity,
+                requestedByName: r.requestedBy.name,
+                eventName: r.event.eventName,
+              }))}
+              availableEvents={availableEvents.map((e) => ({
+                id: e.id,
+                eventName: e.eventName,
+                companyName: e.companyName,
+                location: e.location,
+                startDate: e.startDate.toISOString(),
+                endDate: e.endDate.toISOString(),
               }))}
             />
           )}
@@ -154,69 +186,6 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
           )}
         </div>
       </div>
-
-      <style>{`
-        .back-link-wrap { margin-bottom: 16px; }
-        .back-link { font-size: 14px; color: #6b7280; text-decoration: none; }
-        .back-link:hover { color: #111827; }
-        .detail-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
-        .detail-card {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 24px;
-          margin-bottom: 20px;
-        }
-        .detail-fields { display: flex; flex-direction: column; gap: 12px; }
-        .detail-row { display: flex; align-items: baseline; gap: 8px; font-size: 14px; }
-        .detail-row-block { flex-direction: column; gap: 4px; }
-        .detail-label { font-weight: 500; color: #6b7280; min-width: 130px; flex-shrink: 0; }
-        .detail-notes { margin: 0; color: #374151; font-size: 14px; }
-        .strikethrough { text-decoration: line-through; color: #9ca3af; }
-        .detail-side {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 20px;
-        }
-        .section-title { font-size: 14px; font-weight: 600; color: #111827; margin: 0 0 14px; }
-        .empty-hint { font-size: 13px; color: #9ca3af; margin: 0; }
-        .reservation-list { display: flex; flex-direction: column; gap: 10px; }
-        .reservation-card {
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          padding: 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .res-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-        .res-event { font-size: 13px; font-weight: 500; color: #111827; }
-        .res-meta { font-size: 12px; color: #6b7280; }
-        .audit-list { display: flex; flex-direction: column; gap: 10px; }
-        .audit-row { border-left: 2px solid #e5e7eb; padding-left: 10px; display: flex; flex-direction: column; gap: 2px; }
-        .audit-action { font-size: 11px; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; }
-        .audit-meta { font-size: 11px; color: #9ca3af; }
-        .audit-summary { font-size: 12px; color: #6b7280; margin: 0; }
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          border-radius: 8px;
-          padding: 8px 16px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          text-decoration: none;
-          white-space: nowrap;
-        }
-        .btn-outline {
-          border: 1px solid #d1d5db;
-          background: white;
-          color: #374151;
-          transition: background 0.12s;
-        }
-        .btn-outline:hover { background: #f3f4f6; }
-      `}</style>
     </>
   );
 }

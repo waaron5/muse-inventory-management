@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { useToast } from "@/components/Toast";
 import { createEvent, updateEvent } from "./actions";
 import Link from "next/link";
 
@@ -21,6 +23,7 @@ interface EventFormProps {
 
 export function EventForm({ mode, event }: EventFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -41,9 +44,11 @@ export function EventForm({ mode, event }: EventFormProps) {
 
       if (mode === "create") {
         const res = await createEvent(formData);
+        toast("Event created");
         router.push(`/events/${res.id}`);
       } else {
         await updateEvent(event!.id, formData);
+        toast("Event updated");
         router.push(`/events/${event!.id}`);
       }
     } catch (err: unknown) {
@@ -55,14 +60,11 @@ export function EventForm({ mode, event }: EventFormProps) {
 
   return (
     <>
-      <div className="back-link-wrap">
-        <Link
-          href={mode === "edit" ? `/events/${event?.id}` : "/events"}
-          className="back-link"
-        >
-          ← Back
-        </Link>
-      </div>
+      <Breadcrumbs items={[
+        { label: "Events", href: "/events" },
+        ...(mode === "edit" && event ? [{ label: event.eventName, href: `/events/${event.id}` }] : []),
+        { label: mode === "create" ? "New Event" : "Edit" },
+      ]} />
 
       <PageHeader
         title={mode === "create" ? "Create Event" : `Edit "${event?.eventName}"`}
@@ -84,6 +86,7 @@ export function EventForm({ mode, event }: EventFormProps) {
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 required
+                maxLength={200}
                 placeholder="e.g. Acme Corp"
               />
             </div>
@@ -95,6 +98,7 @@ export function EventForm({ mode, event }: EventFormProps) {
                 value={eventName}
                 onChange={(e) => setEventName(e.target.value)}
                 required
+                maxLength={200}
                 placeholder="e.g. Annual Sales Kickoff"
               />
             </div>
@@ -106,6 +110,7 @@ export function EventForm({ mode, event }: EventFormProps) {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 required
+                maxLength={200}
                 placeholder="e.g. Nashville, TN"
               />
             </div>
@@ -137,6 +142,7 @@ export function EventForm({ mode, event }: EventFormProps) {
                 rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
+                maxLength={2000}
                 placeholder="Any additional notes about this event…"
               />
             </div>
@@ -163,71 +169,6 @@ export function EventForm({ mode, event }: EventFormProps) {
           </div>
         </form>
       </div>
-
-      <style jsx>{`
-        .back-link-wrap { margin-bottom: 16px; }
-        .back-link { font-size: 14px; color: #6b7280; text-decoration: none; }
-        .back-link:hover { color: #111827; }
-        .form-container { max-width: 680px; }
-        .ev-form { display: flex; flex-direction: column; gap: 24px; }
-        .form-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 24px;
-        }
-        .form-field { display: flex; flex-direction: column; gap: 4px; }
-        .form-field-wide { grid-column: 1 / -1; }
-        .form-label { font-size: 13px; font-weight: 500; color: #374151; }
-        .form-input {
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          padding: 8px 12px;
-          font-size: 14px;
-          outline: none;
-          transition: border-color 0.15s;
-          resize: vertical;
-        }
-        .form-input:focus {
-          border-color: #00b4d8;
-          box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1);
-        }
-        .form-error {
-          background: #fee2e2;
-          border: 1px solid #fca5a5;
-          border-radius: 6px;
-          padding: 10px 12px;
-          font-size: 13px;
-          color: #991b1b;
-          margin: 0;
-        }
-        .form-footer { display: flex; justify-content: flex-end; gap: 8px; }
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          border-radius: 8px;
-          padding: 9px 18px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          text-decoration: none;
-          transition: background 0.12s, opacity 0.15s;
-          white-space: nowrap;
-          border: none;
-        }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-dark { background: #111827; color: white; }
-        .btn-dark:hover:not(:disabled) { background: #1f2937; }
-        .btn-outline {
-          border: 1px solid #d1d5db;
-          background: white;
-          color: #374151;
-        }
-        .btn-outline:hover { background: #f3f4f6; }
-      `}</style>
     </>
   );
 }

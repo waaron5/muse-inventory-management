@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getEventStatus } from "@/lib/availability";
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export default async function EventDetailPage({
   params,
@@ -46,11 +47,10 @@ export default async function EventDetailPage({
 
   return (
     <>
-      <div className="back-link-wrap">
-        <Link href="/events" className="back-link">
-          ← Back to Events
-        </Link>
-      </div>
+      <Breadcrumbs items={[
+        { label: "Events", href: "/events" },
+        { label: event.eventName },
+      ]} />
 
       <PageHeader
         title={event.eventName}
@@ -64,7 +64,7 @@ export default async function EventDetailPage({
         }
       />
 
-      <div className="detail-grid">
+      <div className="detail-grid-stacked">
         <div className="detail-card">
           <div className="detail-fields">
             <div className="detail-row">
@@ -186,125 +186,6 @@ export default async function EventDetailPage({
           )}
         </div>
       </div>
-
-      <style>{`
-        .back-link-wrap {
-          margin-bottom: 16px;
-        }
-        .back-link {
-          font-size: 14px;
-          color: #6b7280;
-          text-decoration: none;
-        }
-        .back-link:hover {
-          color: #111827;
-        }
-        .detail-grid {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        .detail-card {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 24px;
-        }
-        .detail-fields {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .detail-row {
-          display: flex;
-          align-items: baseline;
-          gap: 8px;
-          font-size: 14px;
-        }
-        .detail-row-block {
-          flex-direction: column;
-          gap: 4px;
-        }
-        .detail-label {
-          font-weight: 500;
-          color: #6b7280;
-          min-width: 110px;
-          flex-shrink: 0;
-        }
-        .detail-notes {
-          margin: 0;
-          color: #374151;
-          font-size: 14px;
-        }
-        .reservations-section {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 20px;
-        }
-        .section-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #111827;
-          margin: 0 0 14px;
-        }
-        .empty-hint {
-          font-size: 13px;
-          color: #9ca3af;
-          margin: 0;
-        }
-        .res-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        .res-table th {
-          padding: 8px 12px;
-          font-size: 12px;
-          font-weight: 500;
-          color: #6b7280;
-          text-align: left;
-          border-bottom: 1px solid #e5e7eb;
-        }
-        .res-table td {
-          padding: 10px 12px;
-          font-size: 13px;
-          border-bottom: 1px solid #f3f4f6;
-        }
-        .res-table tr:last-child td {
-          border-bottom: none;
-        }
-        .item-link {
-          color: #111827;
-          text-decoration: none;
-          font-weight: 500;
-        }
-        .item-link:hover {
-          color: #00b4d8;
-        }
-        .text-muted {
-          color: #6b7280;
-        }
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          border-radius: 8px;
-          padding: 8px 16px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          text-decoration: none;
-          transition: background 0.12s;
-          white-space: nowrap;
-        }
-        .btn-outline {
-          border: 1px solid #d1d5db;
-          background: white;
-          color: #374151;
-        }
-        .btn-outline:hover {
-          background: #f3f4f6;
-        }
-      `}</style>
     </>
   );
 }

@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
+import { useToast } from "@/components/Toast";
 import {
   approveInventoryReservation,
   rejectInventoryReservation,
   cancelInventoryReservation,
   returnInventoryReservation,
   createInventoryReservation,
+  checkInventoryAvailability,
 } from "../reservation-actions";
-import { StatusBadge } from "@/components/StatusBadge";
 
 interface ActiveReservation {
   id: string;
@@ -23,12 +25,22 @@ interface ActiveReservation {
   notes?: string;
 }
 
+interface AvailableEvent {
+  id: string;
+  eventName: string;
+  companyName: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+}
+
 interface Props {
   itemId: string;
   itemTitle: string;
   isAdmin: boolean;
   userId: string;
   activeReservations: ActiveReservation[];
+  availableEvents: AvailableEvent[];
 }
 
 export function InventoryDetailActions({
@@ -37,7 +49,10 @@ export function InventoryDetailActions({
   isAdmin,
   userId,
   activeReservations,
+  availableEvents,
 }: Props) {
+  const router = useRouter();
+  const { toast } = useToast();
   const [reserveOpen, setReserveOpen] = useState(false);
   const [returnOpen, setReturnOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] =
@@ -50,9 +65,39 @@ export function InventoryDetailActions({
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
 
+  // Availability state
+  const [availableQty, setAvailableQty] = useState<number | null>(null);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+
   // Return form state
   const [returnLocation, setReturnLocation] = useState("");
   const [returnNotes, setReturnNotes] = useState("");
+
+  const selectedEvent = availableEvents.find((e) => e.id === eventId);
+
+  // Fetch availability when event selection changes
+  useEffect(() => {
+    if (!eventId) {
+      setAvailableQty(null);
+      return;
+    }
+    let cancelled = false;
+    setLoadingAvailability(true);
+    checkInventoryAvailability(itemId, eventId)
+      .then((qty) => {
+        if (!cancelled) {
+          setAvailableQty(qty);
+          setLoadingAvailability(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAvailableQty(null);
+          setLoadingAvailability(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [eventId, itemId]);
 
   async function handleReserve(e: React.FormEvent) {
     e.preventDefault();
@@ -64,6 +109,8 @@ export function InventoryDetailActions({
       setEventId("");
       setQuantity(1);
       setNotes("");
+      toast("Reservation submitted for approval");
+      router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to create reservation");
     } finally {
@@ -82,6 +129,8 @@ export function InventoryDetailActions({
       setSelectedReservation(null);
       setReturnLocation("");
       setReturnNotes("");
+      toast("Item returned successfully");
+      router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to return");
     } finally {
@@ -93,19 +142,24 @@ export function InventoryDetailActions({
     setLoading(true);
     try {
       await approveInventoryReservation(id);
+      toast("Reservation approved");
+      router.refresh();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to approve");
+      toast(err instanceof Error ? err.message : "Failed to approve", "error");
     } finally {
       setLoading(false);
     }
   }
 
   async function handleReject(id: string) {
+    if (!confirm("Reject this reservation?")) return;
     setLoading(true);
     try {
       await rejectInventoryReservation(id);
+      toast("Reservation rejected");
+      router.refresh();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to reject");
+      toast(err instanceof Error ? err.message : "Failed to reject", "error");
     } finally {
       setLoading(false);
     }
@@ -116,8 +170,10 @@ export function InventoryDetailActions({
     setLoading(true);
     try {
       await cancelInventoryReservation(id);
+      toast("Reservation canceled");
+      router.refresh();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to cancel");
+      toast(err instanceof Error ? err.message : "Failed to cancel", "error");
     } finally {
       setLoading(false);
     }
@@ -182,32 +238,61 @@ export function InventoryDetailActions({
       {/* Reserve Modal */}
       <Modal
         open={reserveOpen}
-        onClose={() => { setReserveOpen(false); setError(""); }}
+        onClose={() => { setReserveOpen(false); setError(""); setAvailableQty(null); }}
         title={`Reserve "${itemTitle}"`}
       >
         <form onSubmit={handleReserve} className="modal-form">
           <div className="form-field">
-            <label className="form-label">Event ID</label>
-            <input
-              type="text"
+            <label className="form-label">Event *</label>
+            <select
               className="form-input"
-              placeholder="Paste event ID"
               value={eventId}
-              onChange={(e) => setEventId(e.target.value)}
+              onChange={(e) => { setEventId(e.target.value); setQuantity(1); }}
               required
-            />
-            <span className="form-hint">Go to Events page to find event IDs</span>
+            >
+              <option value="">Select an event…</option>
+              {availableEvents.map((ev) => (
+                <option key={ev.id} value={ev.id}>
+                  {ev.eventName} — {ev.companyName}
+                </option>
+              ))}
+            </select>
           </div>
+          {selectedEvent && (
+            <div className="event-info-box">
+              <span className="event-info-detail">
+                📍 {selectedEvent.location}
+              </span>
+              <span className="event-info-detail">
+                📅 {new Date(selectedEvent.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                {" – "}
+                {new Date(selectedEvent.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </span>
+              <span className="event-info-detail">
+                {loadingAvailability
+                  ? "Checking availability…"
+                  : availableQty !== null
+                    ? `${availableQty} unit(s) available for this window`
+                    : ""}
+              </span>
+            </div>
+          )}
           <div className="form-field">
-            <label className="form-label">Quantity</label>
+            <label className="form-label">Quantity *</label>
             <input
               type="number"
               className="form-input"
               min={1}
+              max={availableQty ?? undefined}
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
               required
             />
+            {availableQty !== null && quantity > availableQty && (
+              <span className="form-error-inline">
+                Only {availableQty} available — reduce quantity
+              </span>
+            )}
           </div>
           <div className="form-field">
             <label className="form-label">Notes (optional)</label>
@@ -216,6 +301,7 @@ export function InventoryDetailActions({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              maxLength={1000}
             />
           </div>
           {error && <p className="form-error">{error}</p>}
@@ -223,7 +309,11 @@ export function InventoryDetailActions({
             <button type="button" className="btn btn-outline" onClick={() => setReserveOpen(false)}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-dark" disabled={loading}>
+            <button
+              type="submit"
+              className="btn btn-dark"
+              disabled={loading || loadingAvailability || (availableQty !== null && quantity > availableQty)}
+            >
               {loading ? "Reserving…" : "Submit Reservation"}
             </button>
           </div>
@@ -268,148 +358,6 @@ export function InventoryDetailActions({
           </div>
         </form>
       </Modal>
-
-      <style jsx>{`
-        .action-bar {
-          display: flex;
-          gap: 8px;
-          margin-bottom: 12px;
-        }
-        .pending-section {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 16px;
-        }
-        .pending-title {
-          font-size: 13px;
-          font-weight: 600;
-          color: #374151;
-          margin: 0 0 12px;
-        }
-        .pending-card {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          padding: 10px 0;
-          border-bottom: 1px solid #f3f4f6;
-        }
-        .pending-card:last-child {
-          border-bottom: none;
-        }
-        .pending-info {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-        .pending-event {
-          font-size: 13px;
-          font-weight: 500;
-          color: #111827;
-        }
-        .pending-meta {
-          font-size: 12px;
-          color: #6b7280;
-        }
-        .pending-actions {
-          display: flex;
-          gap: 6px;
-        }
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          border-radius: 8px;
-          padding: 8px 14px;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background 0.12s, opacity 0.15s;
-          white-space: nowrap;
-          border: none;
-        }
-        .btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .btn-dark {
-          background: #111827;
-          color: white;
-        }
-        .btn-dark:hover:not(:disabled) {
-          background: #1f2937;
-        }
-        .btn-outline {
-          border: 1px solid #d1d5db;
-          background: white;
-          color: #374151;
-        }
-        .btn-outline:hover:not(:disabled) {
-          background: #f3f4f6;
-        }
-        .btn-approve {
-          background: #dcfce7;
-          color: #166534;
-        }
-        .btn-approve:hover:not(:disabled) {
-          background: #bbf7d0;
-        }
-        .btn-reject {
-          background: #fee2e2;
-          color: #991b1b;
-        }
-        .btn-reject:hover:not(:disabled) {
-          background: #fecaca;
-        }
-        .modal-form {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .form-field {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .form-label {
-          font-size: 13px;
-          font-weight: 500;
-          color: #374151;
-        }
-        .form-input {
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          padding: 8px 12px;
-          font-size: 14px;
-          outline: none;
-          transition: border-color 0.15s;
-          resize: vertical;
-        }
-        .form-input:focus {
-          border-color: #00b4d8;
-          box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1);
-        }
-        .form-hint {
-          font-size: 11px;
-          color: #9ca3af;
-        }
-        .form-error {
-          background: #fee2e2;
-          border: 1px solid #fca5a5;
-          border-radius: 6px;
-          padding: 8px 12px;
-          font-size: 13px;
-          color: #991b1b;
-          margin: 0;
-        }
-        .form-footer {
-          display: flex;
-          justify-content: flex-end;
-          gap: 8px;
-          padding-top: 4px;
-        }
-      `}</style>
     </>
   );
 }

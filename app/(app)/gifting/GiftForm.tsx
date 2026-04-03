@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { useToast } from "@/components/Toast";
 import { createGiftItem, updateGiftItem } from "./actions";
 import Link from "next/link";
 
@@ -20,6 +22,7 @@ interface GiftFormProps {
 
 export function GiftForm({ mode, item }: GiftFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,9 +48,11 @@ export function GiftForm({ mode, item }: GiftFormProps) {
 
       if (mode === "create") {
         const res = await createGiftItem(formData);
+        toast("Gift item added");
         router.push(`/gifting/${res.id}`);
       } else {
         await updateGiftItem(item!.id, formData);
+        toast("Gift item updated");
         router.push(`/gifting/${item!.id}`);
       }
     } catch (err: unknown) {
@@ -59,11 +64,11 @@ export function GiftForm({ mode, item }: GiftFormProps) {
 
   return (
     <>
-      <div className="back-link-wrap">
-        <Link href={mode === "edit" ? `/gifting/${item?.id}` : "/gifting"} className="back-link">
-          ← Back
-        </Link>
-      </div>
+      <Breadcrumbs items={[
+        { label: "Gifting", href: "/gifting" },
+        ...(mode === "edit" && item ? [{ label: item.title, href: `/gifting/${item.id}` }] : []),
+        { label: mode === "create" ? "New Item" : "Edit" },
+      ]} />
 
       <PageHeader
         title={mode === "create" ? "Add Gift Item" : `Edit "${item?.title}"`}
@@ -85,6 +90,7 @@ export function GiftForm({ mode, item }: GiftFormProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
+                maxLength={200}
                 placeholder="e.g. Crystal Award"
               />
             </div>
@@ -96,6 +102,7 @@ export function GiftForm({ mode, item }: GiftFormProps) {
                 className="form-input"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                maxLength={500}
                 placeholder="Brief description of the item"
               />
             </div>
@@ -119,6 +126,7 @@ export function GiftForm({ mode, item }: GiftFormProps) {
                 className="form-input"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
+                maxLength={2000}
                 placeholder="https://..."
               />
             </div>
@@ -130,6 +138,7 @@ export function GiftForm({ mode, item }: GiftFormProps) {
                 rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
+                maxLength={2000}
                 placeholder="Any special notes about this gift item…"
               />
             </div>
@@ -156,59 +165,6 @@ export function GiftForm({ mode, item }: GiftFormProps) {
           </div>
         </form>
       </div>
-
-      <style jsx>{`
-        .back-link-wrap { margin-bottom: 16px; }
-        .back-link { font-size: 14px; color: #6b7280; text-decoration: none; }
-        .back-link:hover { color: #111827; }
-        .form-container {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 28px;
-          max-width: 680px;
-        }
-        .gift-form { display: flex; flex-direction: column; gap: 20px; }
-        .form-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-        .form-field { display: flex; flex-direction: column; gap: 6px; }
-        .form-field-wide { grid-column: 1 / -1; }
-        .form-label { font-size: 13px; font-weight: 500; color: #374151; }
-        .required { color: #dc2626; }
-        .form-input {
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          padding: 8px 12px;
-          font-size: 14px;
-          outline: none;
-          transition: border-color 0.15s;
-          width: 100%;
-          box-sizing: border-box;
-          font-family: inherit;
-        }
-        .form-input:focus { border-color: #111827; }
-        .form-error { color: #dc2626; font-size: 13px; margin: 0; }
-        .form-footer { display: flex; justify-content: flex-end; gap: 10px; }
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          border-radius: 8px;
-          padding: 9px 18px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          text-decoration: none;
-          transition: background 0.12s;
-        }
-        .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-        .btn-dark { background: #111827; color: white; border: none; }
-        .btn-dark:hover:not(:disabled) { background: #1f2937; }
-        .btn-outline { border: 1px solid #d1d5db; background: white; color: #374151; }
-        .btn-outline:hover { background: #f3f4f6; }
-      `}</style>
     </>
   );
 }

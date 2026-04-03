@@ -13,18 +13,50 @@ interface ModalProps {
 
 export function Modal({ open, onClose, title, children, size = "md" }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
 
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
+
+      if (e.key === "Tab" && panelRef.current) {
+        const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
     }
+
+    // Focus the first focusable element when the modal opens
+    const timer = setTimeout(() => {
+      if (panelRef.current) {
+        const first = panelRef.current.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        first?.focus();
+      }
+    }, 0);
 
     document.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
 
     return () => {
+      clearTimeout(timer);
       document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = "";
     };
@@ -44,6 +76,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
     >
       <div
         className="modal-panel"
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
@@ -71,60 +104,6 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
         </div>
         <div className="modal-body">{children}</div>
       </div>
-
-      <style jsx>{`
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.45);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 200;
-          padding: 24px;
-        }
-        .modal-panel {
-          background: white;
-          border-radius: 12px;
-          width: 100%;
-          max-height: calc(100vh - 48px);
-          overflow-y: auto;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        }
-        .modal-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 20px 24px 0;
-          border-bottom: 1px solid #e5e7eb;
-          padding-bottom: 16px;
-        }
-        .modal-title {
-          font-size: 17px;
-          font-weight: 600;
-          color: #111827;
-          margin: 0;
-        }
-        .modal-close {
-          background: none;
-          border: none;
-          border-radius: 6px;
-          padding: 4px;
-          color: #6b7280;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.12s, color 0.12s;
-        }
-        .modal-close:hover {
-          background: #f3f4f6;
-          color: #111827;
-        }
-        .modal-body {
-          padding: 24px;
-        }
-      `}</style>
     </div>,
     document.body
   );

@@ -8,6 +8,22 @@ import { revalidatePath } from "next/cache";
 import { GiftStatus } from "@prisma/client";
 import { getGiftAvailableQty } from "@/lib/availability";
 
+export async function checkGiftAvailability(
+  giftItemId: string,
+  eventId: string
+) {
+  const session = await getServerSession(authOptions);
+  if (!session) throw new Error("Unauthorized");
+
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { startDate: true, endDate: true },
+  });
+  if (!event) throw new Error("Event not found");
+
+  return getGiftAvailableQty(giftItemId, event.startDate, event.endDate);
+}
+
 async function requireSession() {
   const session = await getServerSession(authOptions);
   if (!session) throw new Error("Unauthorized");
@@ -170,6 +186,7 @@ export async function createGiftReservation(formData: {
   });
 
   revalidatePath("/gifting");
+  revalidatePath(`/gifting/${formData.giftItemId}`);
   revalidatePath("/dashboard");
   return { success: true, id: reservation.id };
 }
@@ -214,6 +231,7 @@ export async function approveGiftReservation(id: string) {
   });
 
   revalidatePath("/gifting");
+  revalidatePath(`/gifting/${reservation.giftItemId}`);
   revalidatePath("/dashboard");
   return { success: true };
 }
@@ -246,6 +264,7 @@ export async function rejectGiftReservation(id: string) {
   });
 
   revalidatePath("/gifting");
+  revalidatePath(`/gifting/${reservation.giftItemId}`);
   revalidatePath("/dashboard");
   return { success: true };
 }
@@ -278,6 +297,7 @@ export async function completeGiftReservation(id: string) {
   });
 
   revalidatePath("/gifting");
+  revalidatePath(`/gifting/${reservation.giftItemId}`);
   revalidatePath("/dashboard");
   return { success: true };
 }

@@ -7,6 +7,26 @@ import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { getInventoryAvailableQty } from "@/lib/availability";
 
+export async function checkInventoryAvailability(
+  inventoryItemId: string,
+  eventId: string
+) {
+  const session = await getServerSession(authOptions);
+  if (!session) throw new Error("Unauthorized");
+
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { startDate: true, endDate: true },
+  });
+  if (!event) throw new Error("Event not found");
+
+  return getInventoryAvailableQty(
+    inventoryItemId,
+    event.startDate,
+    event.endDate
+  );
+}
+
 async function requireSession() {
   const session = await getServerSession(authOptions);
   if (!session) throw new Error("Unauthorized");
@@ -72,6 +92,7 @@ export async function createInventoryReservation(formData: {
   });
 
   revalidatePath("/inventory");
+  revalidatePath(`/inventory/${formData.inventoryItemId}`);
   revalidatePath("/dashboard");
   return { success: true, id: reservation.id };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 interface SearchBarProps {
@@ -15,18 +15,22 @@ export function SearchBar({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const params = new URLSearchParams(searchParams.toString());
+      if (timerRef.current) clearTimeout(timerRef.current);
       const value = e.target.value;
-      if (value) {
-        params.set(paramName, value);
-      } else {
-        params.delete(paramName);
-      }
-      params.delete("page");
-      router.replace(`${pathname}?${params.toString()}`);
+      timerRef.current = setTimeout(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value) {
+          params.set(paramName, value);
+        } else {
+          params.delete(paramName);
+        }
+        params.delete("page");
+        router.replace(`${pathname}?${params.toString()}`);
+      }, 300);
     },
     [router, pathname, searchParams, paramName]
   );
@@ -56,38 +60,6 @@ export function SearchBar({
           onChange={handleChange}
         />
       </div>
-
-      <style jsx>{`
-        .search-bar {
-          position: relative;
-          display: flex;
-          align-items: center;
-        }
-        .search-icon {
-          position: absolute;
-          left: 10px;
-          color: #9ca3af;
-          pointer-events: none;
-          flex-shrink: 0;
-        }
-        .search-input {
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          padding: 8px 12px 8px 34px;
-          font-size: 14px;
-          width: 280px;
-          outline: none;
-          background: white;
-          transition: border-color 0.15s;
-        }
-        .search-input:focus {
-          border-color: #00b4d8;
-          box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1);
-        }
-        .search-input::placeholder {
-          color: #9ca3af;
-        }
-      `}</style>
     </>
   );
 }

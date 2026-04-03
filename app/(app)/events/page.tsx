@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { SearchBar } from "@/components/SearchBar";
 import { FilterDropdown } from "@/components/FilterDropdown";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Pagination } from "@/components/Pagination";
 import { getEventStatus } from "@/lib/availability";
 import Link from "next/link";
 import { EventRowActions } from "./EventRowActions";
@@ -15,16 +16,19 @@ const STATUS_FILTERS = [
   { label: "Upcoming", value: "future" },
 ];
 
+const PAGE_SIZE = 20;
+
 export default async function EventsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; filter?: string }>;
+  searchParams: Promise<{ q?: string; filter?: string; page?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user.role === "ADMIN";
   const params = await searchParams;
   const query = params.q ?? "";
   const filterStatus = params.filter ?? "";
+  const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
   const events = await prisma.event.findMany({
     where: {
@@ -50,12 +54,15 @@ export default async function EventsPage({
   });
 
   // Enrich with computed status and apply status filter
-  const enriched = events
+  const allEnriched = events
     .map((e) => ({
       ...e,
       computedStatus: getEventStatus(e.startDate, e.endDate),
     }))
     .filter((e) => !filterStatus || e.computedStatus === filterStatus);
+
+  const totalCount = allEnriched.length;
+  const enriched = allEnriched.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <>
@@ -78,7 +85,7 @@ export default async function EventsPage({
           defaultLabel="All Events"
           paramName="filter"
         />
-        <span className="item-count">{enriched.length} events</span>
+        <span className="item-count">{totalCount} events</span>
       </div>
 
       <div className="table-container">
@@ -154,98 +161,7 @@ export default async function EventsPage({
         </table>
       </div>
 
-      <style>{`
-        .table-toolbar {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 16px;
-        }
-        .item-count {
-          font-size: 13px;
-          color: #6b7280;
-          margin-left: 4px;
-        }
-        .table-container {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          overflow: hidden;
-        }
-        .data-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        .data-table thead tr {
-          border-bottom: 1px solid #e5e7eb;
-        }
-        .data-table th {
-          padding: 12px 16px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #374151;
-          text-align: left;
-        }
-        .data-table td {
-          padding: 14px 16px;
-          font-size: 14px;
-          border-bottom: 1px solid #f3f4f6;
-          vertical-align: middle;
-        }
-        .table-row:last-child td {
-          border-bottom: none;
-        }
-        .table-row:hover td {
-          background: #f9fafb;
-        }
-        .row-past td {
-          opacity: 0.55;
-        }
-        .font-medium {
-          font-weight: 500;
-          color: #111827;
-        }
-        .event-title-link {
-          font-weight: 500;
-          color: #111827;
-          text-decoration: none;
-        }
-        .event-title-link:hover {
-          color: #00b4d8;
-        }
-        .text-muted {
-          color: #6b7280;
-        }
-        .date-range {
-          white-space: nowrap;
-        }
-        .empty-row {
-          text-align: center;
-          color: #9ca3af;
-          padding: 48px 16px;
-          font-size: 14px;
-        }
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          border: none;
-          border-radius: 8px;
-          padding: 9px 16px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          text-decoration: none;
-          transition: background 0.12s;
-          white-space: nowrap;
-        }
-        .btn-dark {
-          background: #111827;
-          color: white;
-        }
-        .btn-dark:hover {
-          background: #1f2937;
-        }
-      `}</style>
+      <Pagination total={totalCount} pageSize={PAGE_SIZE} currentPage={currentPage} />
     </>
   );
 }

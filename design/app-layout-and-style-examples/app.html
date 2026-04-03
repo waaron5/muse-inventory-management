@@ -1,0 +1,88 @@
+<ng-container *ngIf="isAuthenticated; else authShell">
+  <div class="app-shell">
+    <header class="top-nav">
+      <div class="brand" aria-label="Muse brand">
+        <img class="brand-logo" src="/images/muse-logo.png" alt="Muse logo" />
+      </div>
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <span class="nav-icon dashboard-icon" aria-hidden="true"></span>
+          Dashboard
+        </a>
+        <a routerLink="/inventory" routerLinkActive="active">
+          <span class="nav-icon inventory-icon" aria-hidden="true"></span>
+          Inventory
+        </a>
+      </nav>
+
+      <div class="session-panel">
+        <div class="session-copy">
+          <span class="session-email">{{ sessionUser?.email }}</span>
+          <span class="session-role">{{ roleLabel }}</span>
+        </div>
+        <button type="button" class="session-button" (click)="logout()">Log Out</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</ng-container>
+
+<ng-template #authShell>
+  <div class="auth-shell">
+    <section class="auth-card" *ngIf="authState !== 'loading'; else loadingState">
+      <div class="brand auth-brand" aria-label="Muse brand">
+        <img class="brand-logo" src="/images/muse-logo.png" alt="Muse logo" />
+      </div>
+
+      <div class="auth-copy">
+        <h1>Sign In</h1>
+        <p>Use your Muse inventory account to continue.</p>
+      </div>
+
+      <form class="auth-form" (ngSubmit)="submitLogin()">
+        <label>
+          <span>Email</span>
+          <input
+            type="email"
+            name="email"
+            [(ngModel)]="loginForm.email"
+            autocomplete="username"
+            [disabled]="isLoggingIn"
+            required
+          />
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input
+            type="password"
+            name="password"
+            [(ngModel)]="loginForm.password"
+            autocomplete="current-password"
+            [disabled]="isLoggingIn"
+            required
+          />
+        </label>
+
+        <p class="auth-helper">Local dev credentials are seeded from your `.env` file.</p>
+        <p class="auth-error" *ngIf="loginError">{{ loginError }}</p>
+
+        <button type="submit" class="auth-submit" [disabled]="isLoggingIn">
+          {{ isLoggingIn ? 'Signing In...' : 'Sign In' }}
+        </button>
+      </form>
+    </section>
+
+    <ng-template #loadingState>
+      <section class="auth-card auth-loading">
+        <div class="brand auth-brand" aria-label="Muse brand">
+          <img class="brand-logo" src="/images/muse-logo.png" alt="Muse logo" />
+        </div>
+        <p>Checking your session...</p>
+      </section>
+    </ng-template>
+  </div>
+</ng-template>

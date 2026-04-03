@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/Toast";
 import {
   createGiftReservation,
   approveGiftReservation,
   rejectGiftReservation,
   completeGiftReservation,
+  checkGiftAvailability,
 } from "../actions";
 
 interface PendingReservation {
@@ -16,16 +18,41 @@ interface PendingReservation {
   eventName: string;
 }
 
+interface ApprovedReservation {
+  id: string;
+  quantity: number;
+  requestedByName: string;
+  eventName: string;
+}
+
+interface AvailableEvent {
+  id: string;
+  eventName: string;
+  companyName: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+}
+
 interface Props {
   itemId: string;
   itemTitle: string;
   isAdmin: boolean;
-  userId: string;
   pendingReservations: PendingReservation[];
+  approvedReservations: ApprovedReservation[];
+  availableEvents: AvailableEvent[];
 }
 
-export function GiftDetailActions({ itemId, itemTitle: _, isAdmin, userId: __, pendingReservations }: Props) {
+export function GiftDetailActions({
+  itemId,
+  itemTitle,
+  isAdmin,
+  pendingReservations,
+  approvedReservations,
+  availableEvents,
+}: Props) {
   const router = useRouter();
+  const { toast } = useToast();
   const [showReserveModal, setShowReserveModal] = useState(false);
   const [reserveEventId, setReserveEventId] = useState("");
   const [reserveQty, setReserveQty] = useState("1");
@@ -33,8 +60,38 @@ export function GiftDetailActions({ itemId, itemTitle: _, isAdmin, userId: __, p
   const [reserveError, setReserveError] = useState("");
   const [reserveLoading, setReserveLoading] = useState(false);
 
+  // Availability state
+  const [availableQty, setAvailableQty] = useState<number | null>(null);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState("");
+
+  const selectedEvent = availableEvents.find((e) => e.id === reserveEventId);
+
+  // Fetch availability when event selection changes
+  useEffect(() => {
+    if (!reserveEventId) {
+      setAvailableQty(null);
+      return;
+    }
+    let cancelled = false;
+    setLoadingAvailability(true);
+    checkGiftAvailability(itemId, reserveEventId)
+      .then((qty) => {
+        if (!cancelled) {
+          setAvailableQty(qty);
+          setLoadingAvailability(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAvailableQty(null);
+          setLoadingAvailability(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [reserveEventId, itemId]);
 
   async function handleReserve(e: React.FormEvent) {
     e.preventDefault();
@@ -51,6 +108,7 @@ export function GiftDetailActions({ itemId, itemTitle: _, isAdmin, userId: __, p
       setReserveEventId("");
       setReserveQty("1");
       setReserveNotes("");
+      toast("Gift reservation submitted for approval");
       router.refresh();
     } catch (err: unknown) {
       setReserveError(err instanceof Error ? err.message : "An error occurred.");
@@ -60,12 +118,15 @@ export function GiftDetailActions({ itemId, itemTitle: _, isAdmin, userId: __, p
   }
 
   async function handlePendingAction(type: "approve" | "reject" | "complete", reservationId: string) {
+    if (type === "reject" && !confirm("Reject this reservation?")) return;
     setActionLoading(true);
     setActionError("");
     try {
       if (type === "approve") await approveGiftReservation(reservationId);
       else if (type === "reject") await rejectGiftReservation(reservationId);
       else await completeGiftReservation(reservationId);
+      const labels = { approve: "Reservation approved", reject: "Reservation rejected", complete: "Gift marked as used" };
+      toast(labels[type]);
       router.refresh();
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : "An error occurred.");
@@ -108,6 +169,25 @@ export function GiftDetailActions({ itemId, itemTitle: _, isAdmin, userId: __, p
                   >
                     Reject
                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isAdmin && approvedReservations.length > 0 && (
+        <div className="approval-card">
+          <h4 className="approval-title">Ready to Complete ({approvedReservations.length})</h4>
+          {actionError && <p className="error-msg">{actionError}</p>}
+          <div className="approval-list">
+            {approvedReservations.map((r) => (
+              <div key={r.id} className="approval-row">
+                <div className="approval-info">
+                  <span className="approval-event">{r.eventName}</span>
+                  <span className="approval-meta">Qty: {r.quantity} · By: {r.requestedByName}</span>
+                </div>
+                <div className="approval-btns">
                   <button
                     className="btn btn-sm btn-outline"
                     disabled={actionLoading}
@@ -123,46 +203,82 @@ export function GiftDetailActions({ itemId, itemTitle: _, isAdmin, userId: __, p
       )}
 
       {showReserveModal && (
-        <div className="modal-overlay" onClick={() => !reserveLoading && setShowReserveModal(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">Reserve Gift Item</h3>
+        <div className="inline-modal-overlay" onClick={() => !reserveLoading && setShowReserveModal(false)}>
+          <div className="inline-modal-box" onClick={(e) => e.stopPropagation()}>
+            <h3 className="inline-modal-title">Reserve &ldquo;{itemTitle}&rdquo;</h3>
             <form onSubmit={handleReserve} className="modal-form">
-              <div className="field">
-                <label className="label">Event ID <span className="required">*</span></label>
-                <input
-                  className="input"
-                  placeholder="Event ID"
+              <div className="form-field">
+                <label className="form-label">Event <span className="required">*</span></label>
+                <select
+                  className="form-input"
                   value={reserveEventId}
-                  onChange={(e) => setReserveEventId(e.target.value)}
+                  onChange={(e) => { setReserveEventId(e.target.value); setReserveQty("1"); }}
                   required
-                />
+                >
+                  <option value="">Select an event…</option>
+                  {availableEvents.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.eventName} — {ev.companyName}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="field">
-                <label className="label">Quantity <span className="required">*</span></label>
+              {selectedEvent && (
+                <div className="event-info-box">
+                  <span className="event-info-detail">
+                    📍 {selectedEvent.location}
+                  </span>
+                  <span className="event-info-detail">
+                    📅 {new Date(selectedEvent.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    {" – "}
+                    {new Date(selectedEvent.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </span>
+                  <span className="event-info-detail">
+                    {loadingAvailability
+                      ? "Checking availability…"
+                      : availableQty !== null
+                        ? `${availableQty} unit(s) available for this window`
+                        : ""}
+                  </span>
+                </div>
+              )}
+              <div className="form-field">
+                <label className="form-label">Quantity <span className="required">*</span></label>
                 <input
-                  className="input"
+                  className="form-input"
                   type="number"
                   min={1}
+                  max={availableQty ?? undefined}
                   value={reserveQty}
                   onChange={(e) => setReserveQty(e.target.value)}
                   required
                 />
+                {availableQty !== null && parseInt(reserveQty, 10) > availableQty && (
+                  <span className="error-inline">
+                    Only {availableQty} available — reduce quantity
+                  </span>
+                )}
               </div>
-              <div className="field">
-                <label className="label">Notes</label>
+              <div className="form-field">
+                <label className="form-label">Notes</label>
                 <textarea
-                  className="input textarea"
+                  className="form-input"
                   value={reserveNotes}
                   onChange={(e) => setReserveNotes(e.target.value)}
                   rows={2}
+                  maxLength={1000}
                 />
               </div>
               {reserveError && <p className="error-msg">{reserveError}</p>}
-              <div className="modal-actions">
+              <div className="form-footer">
                 <button type="button" className="btn btn-outline" onClick={() => setShowReserveModal(false)} disabled={reserveLoading}>
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={reserveLoading}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={reserveLoading || loadingAvailability || (availableQty !== null && parseInt(reserveQty, 10) > availableQty)}
+                >
                   {reserveLoading ? "Submitting…" : "Submit Request"}
                 </button>
               </div>
@@ -170,89 +286,6 @@ export function GiftDetailActions({ itemId, itemTitle: _, isAdmin, userId: __, p
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .actions-bar { display: flex; gap: 10px; margin-bottom: 16px; }
-        .approval-card {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 20px;
-        }
-        .approval-title { font-size: 14px; font-weight: 600; color: #111827; margin: 0 0 12px; }
-        .approval-list { display: flex; flex-direction: column; gap: 10px; }
-        .approval-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          padding: 10px;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-        }
-        .approval-info { display: flex; flex-direction: column; gap: 2px; }
-        .approval-event { font-size: 13px; font-weight: 500; color: #111827; }
-        .approval-meta { font-size: 12px; color: #6b7280; }
-        .approval-btns { display: flex; gap: 6px; flex-shrink: 0; }
-        .error-msg { color: #dc2626; font-size: 13px; margin: 0 0 10px; }
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.45);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 50;
-        }
-        .modal-box {
-          background: white;
-          border-radius: 12px;
-          padding: 28px;
-          width: 100%;
-          max-width: 420px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        }
-        .modal-title { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 20px; }
-        .modal-form { display: flex; flex-direction: column; gap: 14px; }
-        .field { display: flex; flex-direction: column; gap: 6px; }
-        .label { font-size: 13px; font-weight: 500; color: #374151; }
-        .required { color: #dc2626; }
-        .input {
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          padding: 8px 12px;
-          font-size: 14px;
-          outline: none;
-          transition: border-color 0.15s;
-          width: 100%;
-          box-sizing: border-box;
-        }
-        .input:focus { border-color: #111827; }
-        .textarea { resize: vertical; min-height: 60px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          border-radius: 8px;
-          padding: 8px 16px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          border: none;
-          white-space: nowrap;
-          transition: background 0.12s;
-        }
-        .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-        .btn-primary { background: #111827; color: white; }
-        .btn-primary:hover:not(:disabled) { background: #1f2937; }
-        .btn-outline { border: 1px solid #d1d5db; background: white; color: #374151; }
-        .btn-outline:hover:not(:disabled) { background: #f3f4f6; }
-        .btn-success { background: #d1fae5; color: #065f46; font-size: 12px; padding: 6px 10px; border-radius: 6px; }
-        .btn-success:hover:not(:disabled) { background: #a7f3d0; }
-        .btn-danger { background: #fee2e2; color: #991b1b; font-size: 12px; padding: 6px 10px; border-radius: 6px; }
-        .btn-danger:hover:not(:disabled) { background: #fecaca; }
-        .btn-sm { font-size: 12px; padding: 6px 10px; border-radius: 6px; }
-      `}</style>
     </>
   );
 }

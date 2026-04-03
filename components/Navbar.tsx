@@ -1,16 +1,17 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import styles from "./Navbar.module.css";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard", icon: "⊞" },
-  { label: "Events", href: "/events", icon: "◇" },
-  { label: "Inventory", href: "/inventory", icon: "◇" },
-  { label: "Gifting", href: "/gifting", icon: "◇" },
-];
+  { label: "Events", href: "/events", iconClass: "eventsIcon" },
+  { label: "Inventory", href: "/inventory", iconClass: "inventoryIcon" },
+  { label: "Gifting", href: "/gifting", iconClass: "giftingIcon" },
+] as const;
 
 interface NavbarProps {
   user: {
@@ -22,143 +23,124 @@ interface NavbarProps {
 
 export function Navbar({ user }: NavbarProps) {
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  const displayName = user.name.trim() || user.email;
+  const initials = getInitials(displayName);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!accountRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + "/");
   }
 
   return (
-    <>
-      <header className="navbar">
-        <div className="navbar-left">
-          <Link href="/dashboard" className="navbar-logo">
-            <Image
-              src="/muse-logo.png"
-              alt="Muse"
-              width={72}
-              height={28}
-              style={{ objectFit: "contain" }}
-              priority
-            />
-          </Link>
+    <header className={styles.navbar}>
+      <div className={styles.navbarLeft}>
+        <Link href="/dashboard" className={styles.navbarLogo} aria-label="Go to dashboard">
+          <Image
+            src="/muse-logo.png"
+            alt="Muse"
+            width={84}
+            height={30}
+            style={{ objectFit: "contain" }}
+            priority
+          />
+        </Link>
 
-          <nav className="navbar-nav">
-            {NAV_ITEMS.map((item) => (
+        <nav className={styles.navbarNav} aria-label="Primary navigation">
+          {NAV_ITEMS.map(({ href, label, iconClass }) => {
+            const active = isActive(href);
+
+            return (
               <Link
-                key={item.href}
-                href={item.href}
-                className={`nav-link ${isActive(item.href) ? "nav-link--active" : ""}`}
+                key={href}
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={`${styles.navLink} ${active ? styles.navLinkActive : ""}`}
               >
-                {item.label}
+                <span className={`${styles.navIcon} ${styles[iconClass]}`} aria-hidden="true" />
+                <span className={styles.navLinkLabel}>{label}</span>
               </Link>
-            ))}
-          </nav>
-        </div>
+            );
+          })}
+        </nav>
+      </div>
 
-        <div className="navbar-right">
-          <div className="navbar-user">
-            <span className="navbar-user-email">{user.email}</span>
-            <span className="navbar-user-role">
-              {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
-            </span>
+      <div className={styles.navbarRight} ref={accountRef}>
+        <span className={styles.navbarUserName}>{displayName}</span>
+        <button
+          type="button"
+          className={`${styles.accountTrigger} ${menuOpen ? styles.accountTriggerOpen : ""}`}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          aria-label={`Open account menu for ${displayName}`}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <span className={styles.accountAvatar}>{initials}</span>
+        </button>
+
+        {menuOpen && (
+          <div className={styles.accountMenu} aria-label="Account menu">
+            <button
+              type="button"
+              className={styles.accountMenuItem}
+              onClick={() => signOut({ callbackUrl: "/login" })}
+            >
+              <LogoutIcon className={styles.accountMenuIcon} />
+              <span>Log out</span>
+            </button>
           </div>
-          <button
-            className="btn-logout"
-            onClick={() => signOut({ callbackUrl: "/login" })}
-          >
-            Log Out
-          </button>
-        </div>
-      </header>
+        )}
+      </div>
+    </header>
+  );
+}
 
-      <style jsx>{`
-        .navbar {
-          height: 52px;
-          background: white;
-          border-bottom: 1px solid #e5e7eb;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 24px;
-          position: sticky;
-          top: 0;
-          z-index: 50;
-        }
-        .navbar-left {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-        }
-        .navbar-logo {
-          display: flex;
-          align-items: center;
-          flex-shrink: 0;
-        }
-        .navbar-nav {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-        .nav-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #6b7280;
-          transition: background 0.12s, color 0.12s;
-          text-decoration: none;
-        }
-        .nav-link:hover {
-          background: #f3f4f6;
-          color: #111827;
-        }
-        .nav-link--active {
-          background: #111827;
-          color: white;
-        }
-        .nav-link--active:hover {
-          background: #1f2937;
-          color: white;
-        }
-        .navbar-right {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        .navbar-user {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 1px;
-        }
-        .navbar-user-email {
-          font-size: 13px;
-          font-weight: 500;
-          color: #111827;
-        }
-        .navbar-user-role {
-          font-size: 11px;
-          color: #6b7280;
-        }
-        .btn-logout {
-          border: 1px solid #d1d5db;
-          background: white;
-          border-radius: 8px;
-          padding: 6px 14px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #374151;
-          cursor: pointer;
-          transition: background 0.12s, border-color 0.12s;
-        }
-        .btn-logout:hover {
-          background: #f3f4f6;
-          border-color: #9ca3af;
-        }
-      `}</style>
-    </>
+function getInitials(name: string) {
+  const parts = name
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length === 0) return "ME";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function LogoutIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path d="M10 17.5H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h4" />
+      <path d="M14 16.5 19 12l-5-4.5" />
+      <path d="M9 12h10" />
+    </svg>
   );
 }

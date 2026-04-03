@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/Toast";
 import { retireInventoryItem, activateInventoryItem } from "./actions";
 
 interface Item {
@@ -18,15 +20,26 @@ export function InventoryActions({
   isAdmin: boolean;
 }) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
   async function handleRetireToggle() {
+    if (
+      item.status === "ACTIVE" &&
+      !confirm(`Retire "${item.title}"? It will no longer be available for new reservations.`)
+    ) return;
     setLoading(true);
     try {
       if (item.status === "ACTIVE") {
         await retireInventoryItem(item.id);
+        toast(`"${item.title}" retired`);
       } else {
         await activateInventoryItem(item.id);
+        toast(`"${item.title}" re-activated`);
       }
+      router.refresh();
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Action failed", "error");
     } finally {
       setLoading(false);
     }
@@ -53,40 +66,6 @@ export function InventoryActions({
           </>
         )}
       </div>
-
-      <style jsx>{`
-        .row-actions {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .btn-action {
-          border: 1px solid #d1d5db;
-          background: white;
-          border-radius: 6px;
-          padding: 5px 12px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #374151;
-          cursor: pointer;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          transition: background 0.12s, border-color 0.12s;
-          white-space: nowrap;
-        }
-        .btn-action:hover:not(:disabled) {
-          background: #f3f4f6;
-          border-color: #9ca3af;
-        }
-        .btn-action:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .btn-action-admin {
-          font-size: 12px;
-        }
-      `}</style>
     </>
   );
 }

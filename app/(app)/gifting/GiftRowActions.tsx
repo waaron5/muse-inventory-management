@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/Toast";
 import { consumeGiftItem, activateGiftItem } from "./actions";
 
 interface GiftItem {
@@ -12,15 +14,26 @@ interface GiftItem {
 
 export function GiftRowActions({ item, isAdmin }: { item: GiftItem; isAdmin: boolean }) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
   async function handleStatusToggle() {
+    if (
+      item.status === "ACTIVE" &&
+      !confirm(`Mark "${item.title}" as consumed? This indicates the gift has been used up.`)
+    ) return;
     setLoading(true);
     try {
       if (item.status === "ACTIVE") {
         await consumeGiftItem(item.id);
+        toast(`"${item.title}" marked as consumed`);
       } else {
         await activateGiftItem(item.id);
+        toast(`"${item.title}" re-activated`);
       }
+      router.refresh();
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Action failed", "error");
     } finally {
       setLoading(false);
     }
@@ -47,26 +60,6 @@ export function GiftRowActions({ item, isAdmin }: { item: GiftItem; isAdmin: boo
           </>
         )}
       </div>
-      <style jsx>{`
-        .row-actions { display: flex; gap: 6px; }
-        .btn-action {
-          border: 1px solid #d1d5db;
-          background: white;
-          border-radius: 6px;
-          padding: 5px 12px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #374151;
-          cursor: pointer;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          transition: background 0.12s;
-          white-space: nowrap;
-        }
-        .btn-action:hover:not(:disabled) { background: #f3f4f6; }
-        .btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
-      `}</style>
     </>
   );
 }

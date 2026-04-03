@@ -1,0 +1,315 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+.top-nav {
+  height: 56px;
+  padding: 0 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 20px;
+  max-width: 180px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.primary-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-panel {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.session-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.session-email {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.session-role {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.session-button {
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.session-button:hover {
+  background: #f9fafb;
+}
+
+.primary-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  color: #4b5563;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.primary-nav a.active {
+  background: #eee;
+  color: #111827;
+}
+
+.nav-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  color: currentColor;
+}
+
+.dashboard-icon {
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.dashboard-icon::before,
+.dashboard-icon::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+
+.dashboard-icon::before {
+  left: 4px;
+  top: 0;
+  width: 1px;
+  height: 100%;
+}
+
+.dashboard-icon::after {
+  left: 0;
+  top: 4px;
+  width: 100%;
+  height: 1px;
+}
+
+.inventory-icon {
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  box-sizing: border-box;
+}
+
+.workspace {
+  padding: 24px 60px 48px;
+}
+
+.auth-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.92), rgba(243, 244, 246, 0.94)),
+    #eef1f5;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: min(100%, 420px);
+  padding: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+}
+
+.auth-brand {
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.auth-copy {
+  margin-bottom: 24px;
+}
+
+.auth-copy h1 {
+  margin: 0 0 8px;
+  color: #111827;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.auth-copy p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-form label span {
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.auth-form input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #111827;
+  padding: 13px 14px;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
+}
+
+.auth-helper,
+.auth-error {
+  margin: 0;
+  font-size: 13px;
+}
+
+.auth-helper {
+  color: #6b7280;
+}
+
+.auth-error {
+  color: #b91c1c;
+}
+
+.auth-submit {
+  border: 0;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 13px 16px;
+  cursor: pointer;
+}
+
+.auth-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.auth-loading {
+  text-align: center;
+}
+
+.auth-loading p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 15px;
+}
+
+:host ::ng-deep .page-card h2 {
+  margin-top: 0;
+}
+
+:host ::ng-deep .page-card p {
+  margin-bottom: 0;
+  color: #334155;
+}
+
+@media (max-width: 800px) {
+  .top-nav {
+    padding: 0 14px;
+    gap: 14px;
+  }
+
+  .brand {
+    margin-right: 2px;
+  }
+
+  .brand-logo {
+    height: 26px;
+    max-width: 150px;
+  }
+
+  .primary-nav a {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .workspace {
+    padding: 18px 16px 32px;
+  }
+
+  .top-nav {
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .session-panel {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .session-copy {
+    align-items: flex-start;
+  }
+
+  .auth-card {
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+}

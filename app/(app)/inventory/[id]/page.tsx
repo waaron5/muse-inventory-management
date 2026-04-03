@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import Link from "next/link";
 import Image from "next/image";
 import { InventoryDetailActions } from "./InventoryDetailActions";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export default async function InventoryDetailPage({
   params,
@@ -27,7 +28,7 @@ export default async function InventoryDetailPage({
         take: 20,
         include: {
           event: { select: { companyName: true, eventName: true, startDate: true, endDate: true } },
-          requestedBy: { select: { name: true, email: true } },
+          requestedBy: { select: { id: true, name: true } },
           approvedBy: { select: { name: true } },
         },
       },
@@ -47,13 +48,26 @@ export default async function InventoryDetailPage({
     ["PENDING", "APPROVED"].includes(r.status)
   );
 
+  // Fetch current/future events for reservation dropdown
+  const availableEvents = await prisma.event.findMany({
+    where: { endDate: { gte: new Date() } },
+    orderBy: { startDate: "asc" },
+    select: {
+      id: true,
+      eventName: true,
+      companyName: true,
+      location: true,
+      startDate: true,
+      endDate: true,
+    },
+  });
+
   return (
     <>
-      <div className="back-link-wrap">
-        <Link href="/inventory" className="back-link">
-          ← Back to Inventory
-        </Link>
-      </div>
+      <Breadcrumbs items={[
+        { label: "Inventory", href: "/inventory" },
+        { label: item.title },
+      ]} />
 
       <PageHeader
         title={item.title}
@@ -141,12 +155,20 @@ export default async function InventoryDetailPage({
                 id: r.id,
                 quantity: r.quantity,
                 status: r.status as string,
-                requestedById: r.requestedBy.email,
+                requestedById: r.requestedBy.id,
                 requestedByName: r.requestedBy.name,
                 eventName: r.event.eventName,
                 eventStartDate: r.event.startDate.toISOString(),
                 eventEndDate: r.event.endDate.toISOString(),
                 notes: r.notes ?? undefined,
+              }))}
+              availableEvents={availableEvents.map((e) => ({
+                id: e.id,
+                eventName: e.eventName,
+                companyName: e.companyName,
+                location: e.location,
+                startDate: e.startDate.toISOString(),
+                endDate: e.endDate.toISOString(),
               }))}
             />
           )}
@@ -216,172 +238,6 @@ export default async function InventoryDetailPage({
           )}
         </div>
       </div>
-
-      <style>{`
-        .back-link-wrap {
-          margin-bottom: 16px;
-        }
-        .back-link {
-          font-size: 14px;
-          color: #6b7280;
-          text-decoration: none;
-          transition: color 0.12s;
-        }
-        .back-link:hover {
-          color: #111827;
-        }
-        .detail-grid {
-          display: grid;
-          grid-template-columns: 1fr 340px;
-          gap: 24px;
-          align-items: start;
-        }
-        .detail-card {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 24px;
-          display: flex;
-          gap: 24px;
-          margin-bottom: 20px;
-        }
-        .detail-image-section {
-          flex-shrink: 0;
-        }
-        .image-placeholder-lg {
-          width: 120px;
-          height: 120px;
-          background: #f3f4f6;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-        }
-        .detail-fields {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .detail-row {
-          display: flex;
-          align-items: baseline;
-          gap: 8px;
-          font-size: 14px;
-        }
-        .detail-row-block {
-          flex-direction: column;
-          gap: 4px;
-        }
-        .detail-label {
-          font-weight: 500;
-          color: #6b7280;
-          min-width: 130px;
-          flex-shrink: 0;
-        }
-        .detail-notes {
-          margin: 0;
-          color: #374151;
-          font-size: 14px;
-        }
-        .detail-side {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 20px;
-        }
-        .section-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #111827;
-          margin: 0 0 14px;
-        }
-        .empty-hint {
-          font-size: 13px;
-          color: #9ca3af;
-          margin: 0;
-        }
-        .reservation-list {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .reservation-card {
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          padding: 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .res-top {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-        }
-        .res-event {
-          font-size: 13px;
-          font-weight: 500;
-          color: #111827;
-        }
-        .res-meta {
-          font-size: 12px;
-          color: #6b7280;
-        }
-        .res-notes {
-          font-size: 12px;
-          color: #6b7280;
-          margin: 4px 0 0;
-        }
-        .audit-list {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .audit-row {
-          border-left: 2px solid #e5e7eb;
-          padding-left: 10px;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-        .audit-action {
-          font-size: 11px;
-          font-weight: 600;
-          color: #374151;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-        .audit-meta {
-          font-size: 11px;
-          color: #9ca3af;
-        }
-        .audit-summary {
-          font-size: 12px;
-          color: #6b7280;
-          margin: 0;
-        }
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          border-radius: 8px;
-          padding: 8px 16px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          text-decoration: none;
-          transition: background 0.12s;
-          white-space: nowrap;
-        }
-        .btn-outline {
-          border: 1px solid #d1d5db;
-          background: white;
-          color: #374151;
-        }
-        .btn-outline:hover {
-          background: #f3f4f6;
-        }
-      `}</style>
     </>
   );
 }
