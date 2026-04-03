@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
+import { ReserveInventoryModal } from "@/components/ReserveInventoryModal";
 import { useToast } from "@/components/Toast";
 import {
   approveInventoryReservation,
   rejectInventoryReservation,
   cancelInventoryReservation,
   returnInventoryReservation,
-  createInventoryReservation,
-  checkInventoryAvailability,
 } from "../reservation-actions";
 
 interface ActiveReservation {
@@ -37,6 +36,8 @@ interface AvailableEvent {
 interface Props {
   itemId: string;
   itemTitle: string;
+  itemCurrentLocation: string | null;
+  itemTotalQuantity: number;
   isAdmin: boolean;
   userId: string;
   activeReservations: ActiveReservation[];
@@ -46,6 +47,8 @@ interface Props {
 export function InventoryDetailActions({
   itemId,
   itemTitle,
+  itemCurrentLocation,
+  itemTotalQuantity,
   isAdmin,
   userId,
   activeReservations,
@@ -60,63 +63,9 @@ export function InventoryDetailActions({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Reserve form state
-  const [eventId, setEventId] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [notes, setNotes] = useState("");
-
-  // Availability state
-  const [availableQty, setAvailableQty] = useState<number | null>(null);
-  const [loadingAvailability, setLoadingAvailability] = useState(false);
-
   // Return form state
   const [returnLocation, setReturnLocation] = useState("");
   const [returnNotes, setReturnNotes] = useState("");
-
-  const selectedEvent = availableEvents.find((e) => e.id === eventId);
-
-  // Fetch availability when event selection changes
-  useEffect(() => {
-    if (!eventId) {
-      setAvailableQty(null);
-      return;
-    }
-    let cancelled = false;
-    setLoadingAvailability(true);
-    checkInventoryAvailability(itemId, eventId)
-      .then((qty) => {
-        if (!cancelled) {
-          setAvailableQty(qty);
-          setLoadingAvailability(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setAvailableQty(null);
-          setLoadingAvailability(false);
-        }
-      });
-    return () => { cancelled = true; };
-  }, [eventId, itemId]);
-
-  async function handleReserve(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      await createInventoryReservation({ inventoryItemId: itemId, eventId, quantity, notes });
-      setReserveOpen(false);
-      setEventId("");
-      setQuantity(1);
-      setNotes("");
-      toast("Reservation submitted for approval");
-      router.refresh();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to create reservation");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleReturn(e: React.FormEvent) {
     e.preventDefault();
@@ -235,90 +184,21 @@ export function InventoryDetailActions({
         </div>
       )}
 
-      {/* Reserve Modal */}
-      <Modal
+      <ReserveInventoryModal
         open={reserveOpen}
-        onClose={() => { setReserveOpen(false); setError(""); setAvailableQty(null); }}
+        onClose={() => setReserveOpen(false)}
+        availableEvents={availableEvents}
+        initialSelectedItems={[
+          {
+            id: itemId,
+            title: itemTitle,
+            currentLocation: itemCurrentLocation,
+            totalQuantity: itemTotalQuantity,
+          },
+        ]}
         title={`Reserve "${itemTitle}"`}
-      >
-        <form onSubmit={handleReserve} className="modal-form">
-          <div className="form-field">
-            <label className="form-label">Event *</label>
-            <select
-              className="form-input"
-              value={eventId}
-              onChange={(e) => { setEventId(e.target.value); setQuantity(1); }}
-              required
-            >
-              <option value="">Select an event…</option>
-              {availableEvents.map((ev) => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.eventName} — {ev.companyName}
-                </option>
-              ))}
-            </select>
-          </div>
-          {selectedEvent && (
-            <div className="event-info-box">
-              <span className="event-info-detail">
-                📍 {selectedEvent.location}
-              </span>
-              <span className="event-info-detail">
-                📅 {new Date(selectedEvent.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                {" – "}
-                {new Date(selectedEvent.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              </span>
-              <span className="event-info-detail">
-                {loadingAvailability
-                  ? "Checking availability…"
-                  : availableQty !== null
-                    ? `${availableQty} unit(s) available for this window`
-                    : ""}
-              </span>
-            </div>
-          )}
-          <div className="form-field">
-            <label className="form-label">Quantity *</label>
-            <input
-              type="number"
-              className="form-input"
-              min={1}
-              max={availableQty ?? undefined}
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              required
-            />
-            {availableQty !== null && quantity > availableQty && (
-              <span className="form-error-inline">
-                Only {availableQty} available — reduce quantity
-              </span>
-            )}
-          </div>
-          <div className="form-field">
-            <label className="form-label">Notes (optional)</label>
-            <textarea
-              className="form-input"
-              rows={2}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              maxLength={1000}
-            />
-          </div>
-          {error && <p className="form-error">{error}</p>}
-          <div className="form-footer">
-            <button type="button" className="btn btn-outline" onClick={() => setReserveOpen(false)}>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn btn-dark"
-              disabled={loading || loadingAvailability || (availableQty !== null && quantity > availableQty)}
-            >
-              {loading ? "Reserving…" : "Submit Reservation"}
-            </button>
-          </div>
-        </form>
-      </Modal>
+        subtitle="Pick an event, then reserve this item and add any other inventory needed for the same event."
+      />
 
       {/* Return Modal */}
       <Modal

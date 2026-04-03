@@ -9,9 +9,23 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   size?: "sm" | "md" | "lg";
+  headerContent?: React.ReactNode;
+  headerClassName?: string;
+  bodyClassName?: string;
+  titleClassName?: string;
 }
 
-export function Modal({ open, onClose, title, children, size = "md" }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  size = "md",
+  headerContent,
+  headerClassName,
+  bodyClassName,
+  titleClassName,
+}: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -82,10 +96,13 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
         aria-labelledby="modal-title"
         style={{ maxWidth: sizeMap[size] }}
       >
-        <div className="modal-header">
-          <h2 id="modal-title" className="modal-title">
-            {title}
-          </h2>
+        <div className={`modal-header${headerClassName ? ` ${headerClassName}` : ""}`}>
+          <div className="modal-header-copy">
+            <h2 id="modal-title" className={`modal-title${titleClassName ? ` ${titleClassName}` : ""}`}>
+              {title}
+            </h2>
+            {headerContent}
+          </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">
             <svg
               width="18"
@@ -102,7 +119,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
             </svg>
           </button>
         </div>
-        <div className="modal-body">{children}</div>
+        <div className={`modal-body${bodyClassName ? ` ${bodyClassName}` : ""}`}>{children}</div>
       </div>
     </div>,
     document.body

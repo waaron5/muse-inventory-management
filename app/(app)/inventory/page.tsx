@@ -7,7 +7,6 @@ import { FilterDropdown } from "@/components/FilterDropdown";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Pagination } from "@/components/Pagination";
 import { InventoryActions } from "./InventoryActions";
-import { getInventoryAvailableQty } from "@/lib/availability";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -29,6 +28,8 @@ export default async function InventoryPage({
   const query = params.q ?? "";
   const filter = params.filter ?? "";
   const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
   const where = {
     ...(filter ? { status: filter as "ACTIVE" | "RETIRED" } : {}),
@@ -43,7 +44,7 @@ export default async function InventoryPage({
       : {}),
   };
 
-  const [items, totalCount] = await Promise.all([
+  const [items, totalCount, availableEvents] = await Promise.all([
     prisma.inventoryItem.findMany({
       where,
       orderBy: [{ status: "asc" }, { title: "asc" }],
@@ -54,6 +55,18 @@ export default async function InventoryPage({
       take: PAGE_SIZE,
     }),
     prisma.inventoryItem.count({ where }),
+    prisma.event.findMany({
+      where: { endDate: { gte: todayStart } },
+      orderBy: { startDate: "asc" },
+      select: {
+        id: true,
+        eventName: true,
+        companyName: true,
+        location: true,
+        startDate: true,
+        endDate: true,
+      },
+    }),
   ]);
 
   // Batch: get reserved quantities for all items in one query instead of N+1
@@ -79,6 +92,14 @@ export default async function InventoryPage({
       reservedQty: reserved,
     };
   });
+  const serializedAvailableEvents = availableEvents.map((event) => ({
+    id: event.id,
+    eventName: event.eventName,
+    companyName: event.companyName,
+    location: event.location,
+    startDate: event.startDate.toISOString(),
+    endDate: event.endDate.toISOString(),
+  }));
 
   return (
     <>
@@ -105,7 +126,7 @@ export default async function InventoryPage({
       </div>
 
       <div className="table-container">
-        <table className="data-table">
+        <table className="data-table inventory-table">
           <thead>
             <tr>
               <th className="col-image">Image</th>
@@ -189,7 +210,17 @@ export default async function InventoryPage({
                   </span>
                 </td>
                 <td className="col-actions">
-                  <InventoryActions item={item} isAdmin={isAdmin} />
+                  <InventoryActions
+                    item={{
+                      id: item.id,
+                      title: item.title,
+                      currentLocation: item.currentLocation ?? null,
+                      quantity: item.quantity,
+                      status: item.status,
+                    }}
+                    isAdmin={isAdmin}
+                    availableEvents={serializedAvailableEvents}
+                  />
                 </td>
               </tr>
             ))}

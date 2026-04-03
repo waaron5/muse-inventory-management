@@ -7,11 +7,15 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import styles from "./Navbar.module.css";
 
+type Theme = "light" | "dark";
+
 const NAV_ITEMS = [
   { label: "Events", href: "/events", iconClass: "eventsIcon" },
   { label: "Inventory", href: "/inventory", iconClass: "inventoryIcon" },
   { label: "Gifting", href: "/gifting", iconClass: "giftingIcon" },
 ] as const;
+
+const THEME_STORAGE_KEY = "muse-theme";
 
 interface NavbarProps {
   user: {
@@ -24,13 +28,33 @@ interface NavbarProps {
 export function Navbar({ user }: NavbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<Theme>("light");
   const accountRef = useRef<HTMLDivElement>(null);
   const displayName = user.name.trim() || user.email;
   const initials = getInitials(displayName);
+  const nextTheme: Theme = theme === "dark" ? "light" : "dark";
 
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const initialTheme = readTheme();
+    applyTheme(initialTheme);
+    setTheme(initialTheme);
+
+    function handleStorage(event: StorageEvent) {
+      if (event.key !== THEME_STORAGE_KEY) return;
+      const storedTheme = event.newValue;
+      if (storedTheme !== "light" && storedTheme !== "dark") return;
+
+      applyTheme(storedTheme);
+      setTheme(storedTheme);
+    }
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -60,6 +84,15 @@ export function Navbar({ user }: NavbarProps) {
     return pathname === href || pathname.startsWith(href + "/");
   }
 
+  function handleThemeToggle() {
+    applyTheme(nextTheme);
+    setTheme(nextTheme);
+
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    } catch {}
+  }
+
   return (
     <header className={styles.navbar}>
       <div className={styles.navbarLeft}>
@@ -67,9 +100,9 @@ export function Navbar({ user }: NavbarProps) {
           <Image
             src="/muse-logo.png"
             alt="Muse"
-            width={84}
+            width={124}
             height={30}
-            style={{ objectFit: "contain" }}
+            style={{ width: "auto", height: 21, objectFit: "contain" }}
             priority
           />
         </Link>
@@ -77,6 +110,9 @@ export function Navbar({ user }: NavbarProps) {
         <nav className={styles.navbarNav} aria-label="Primary navigation">
           {NAV_ITEMS.map(({ href, label, iconClass }) => {
             const active = isActive(href);
+            const isEventsIcon = iconClass === "eventsIcon";
+            const isInventoryIcon = iconClass === "inventoryIcon";
+            const isGiftingIcon = iconClass === "giftingIcon";
 
             return (
               <Link
@@ -85,7 +121,15 @@ export function Navbar({ user }: NavbarProps) {
                 aria-current={active ? "page" : undefined}
                 className={`${styles.navLink} ${active ? styles.navLinkActive : ""}`}
               >
-                <span className={`${styles.navIcon} ${styles[iconClass]}`} aria-hidden="true" />
+                {isEventsIcon ? (
+                  <EventsIcon className={styles.navIcon} />
+                ) : isInventoryIcon ? (
+                  <InventoryIcon className={styles.navIcon} />
+                ) : isGiftingIcon ? (
+                  <GiftingIcon className={styles.navIcon} />
+                ) : (
+                  <span className={`${styles.navIcon} ${styles[iconClass]}`} aria-hidden="true" />
+                )}
                 <span className={styles.navLinkLabel}>{label}</span>
               </Link>
             );
@@ -108,6 +152,15 @@ export function Navbar({ user }: NavbarProps) {
 
         {menuOpen && (
           <div className={styles.accountMenu} aria-label="Account menu">
+            <button
+              type="button"
+              className={styles.accountMenuItem}
+              aria-label={`Switch to ${nextTheme} mode`}
+              onClick={handleThemeToggle}
+            >
+              <ThemeIcon className={styles.accountMenuIcon} theme={nextTheme} />
+              <span>{nextTheme === "dark" ? "Dark mode" : "Light mode"}</span>
+            </button>
             <button
               type="button"
               className={styles.accountMenuItem}
@@ -135,12 +188,81 @@ function getInitials(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+function readTheme(): Theme {
+  if (typeof document !== "undefined") {
+    const documentTheme = document.documentElement.dataset.theme;
+    if (documentTheme === "light" || documentTheme === "dark") {
+      return documentTheme;
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+      if (storedTheme === "light" || storedTheme === "dark") {
+        return storedTheme;
+      }
+    } catch {}
+
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return "dark";
+    }
+  }
+
+  return "light";
+}
+
+function applyTheme(theme: Theme) {
+  document.documentElement.dataset.theme = theme;
+}
+
+function ThemeIcon({ className, theme }: { className?: string; theme: Theme }) {
+  if (theme === "dark") {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 1 0 9.8 9.8Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <circle cx="12" cy="12" r="4.2" />
+      <path d="M12 2.5v2.4M12 19.1v2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7" />
+    </svg>
+  );
+}
+
 function LogoutIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
       <path d="M10 17.5H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h4" />
       <path d="M14 16.5 19 12l-5-4.5" />
       <path d="M9 12h10" />
+    </svg>
+  );
+}
+
+function EventsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-68-76a12,12,0,1,1-12-12A12,12,0,0,1,140,132Zm44,0a12,12,0,1,1-12-12A12,12,0,0,1,184,132ZM96,172a12,12,0,1,1-12-12A12,12,0,0,1,96,172Zm44,0a12,12,0,1,1-12-12A12,12,0,0,1,140,172Zm44,0a12,12,0,1,1-12-12A12,12,0,0,1,184,172Z" />
+    </svg>
+  );
+}
+
+function InventoryIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM40,112H80v32H40Zm56,0H216v32H96ZM216,64V96H40V64ZM40,160H80v32H40Zm176,32H96V160H216v32Z" />
+    </svg>
+  );
+}
+
+function GiftingIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M216,72H180.92c.39-.33.79-.65,1.17-1A29.53,29.53,0,0,0,192,49.57,32.62,32.62,0,0,0,158.44,16,29.53,29.53,0,0,0,137,25.91a54.94,54.94,0,0,0-9,14.48,54.94,54.94,0,0,0-9-14.48A29.53,29.53,0,0,0,97.56,16,32.62,32.62,0,0,0,64,49.57,29.53,29.53,0,0,0,73.91,71c.38.33.78.65,1.17,1H40A16,16,0,0,0,24,88v32a16,16,0,0,0,16,16v64a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V136a16,16,0,0,0,16-16V88A16,16,0,0,0,216,72ZM149,36.51a13.69,13.69,0,0,1,10-4.5h.49A16.62,16.62,0,0,1,176,49.08a13.69,13.69,0,0,1-4.5,10c-9.49,8.4-25.24,11.36-35,12.4C137.7,60.89,141,45.5,149,36.51Zm-64.09.36A16.63,16.63,0,0,1,96.59,32h.49a13.69,13.69,0,0,1,10,4.5c8.39,9.48,11.35,25.2,12.39,34.92-9.72-1-25.44-4-34.92-12.39a13.69,13.69,0,0,1-4.5-10A16.6,16.6,0,0,1,84.87,36.87ZM40,88h80v32H40Zm16,48h64v64H56Zm144,64H136V136h64Zm16-80H136V88h80v32Z" />
     </svg>
   );
 }

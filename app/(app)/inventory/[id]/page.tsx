@@ -47,10 +47,12 @@ export default async function InventoryDetailPage({
   const activeReservations = item.reservations.filter((r) =>
     ["PENDING", "APPROVED"].includes(r.status)
   );
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
   // Fetch current/future events for reservation dropdown
   const availableEvents = await prisma.event.findMany({
-    where: { endDate: { gte: new Date() } },
+    where: { endDate: { gte: todayStart } },
     orderBy: { startDate: "asc" },
     select: {
       id: true,
@@ -149,6 +151,8 @@ export default async function InventoryDetailPage({
             <InventoryDetailActions
               itemId={item.id}
               itemTitle={item.title}
+              itemCurrentLocation={item.currentLocation ?? null}
+              itemTotalQuantity={item.quantity}
               isAdmin={isAdmin}
               userId={session!.user.id}
               activeReservations={activeReservations.map((r) => ({

@@ -6,14 +6,38 @@ export const metadata: Metadata = {
   description: "Internal inventory and event management for Muse",
 };
 
+const themeInitScript = `
+  (() => {
+    try {
+      const storageKey = "muse-theme";
+      const storedTheme = window.localStorage.getItem(storageKey);
+      const theme =
+        storedTheme === "light" || storedTheme === "dark"
+          ? storedTheme
+          : window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+
+      document.documentElement.dataset.theme = theme;
+    } catch {
+      document.documentElement.dataset.theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    }
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {children}
+      </body>
     </html>
   );
 }

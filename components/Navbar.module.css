@@ -39,9 +39,8 @@
   border-radius: 9px;
   color: var(--gray-600, #4b5563);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  transition: background-color 120ms ease, color 120ms ease;
   white-space: nowrap;
 }
 
@@ -60,8 +59,8 @@
 }
 
 .navIcon {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   display: inline-block;
   position: relative;
   flex-shrink: 0;
@@ -74,58 +73,6 @@
   content: "";
   position: absolute;
   box-sizing: border-box;
-}
-
-.eventsIcon {
-  border: 1.5px solid currentColor;
-  border-radius: 3px;
-  background:
-    linear-gradient(currentColor, currentColor) left 3px top 5px / 8px 1.5px no-repeat,
-    linear-gradient(currentColor, currentColor) left 3px top 8px / 6px 1.5px no-repeat;
-}
-
-.eventsIcon::before,
-.eventsIcon::after {
-  width: 1.5px;
-  height: 3px;
-  top: -1.5px;
-  background: currentColor;
-  border-radius: 999px;
-}
-
-.eventsIcon::before {
-  left: 3px;
-}
-
-.eventsIcon::after {
-  right: 3px;
-}
-
-.inventoryIcon {
-  border: 1.5px solid currentColor;
-  border-radius: 2px;
-  transform: rotate(45deg);
-}
-
-.giftingIcon {
-  border: 1.5px solid currentColor;
-  border-radius: 2px;
-}
-
-.giftingIcon::before {
-  left: 5.5px;
-  top: 0;
-  width: 1.5px;
-  height: 100%;
-  background: currentColor;
-}
-
-.giftingIcon::after {
-  left: 0;
-  top: 5.5px;
-  width: 100%;
-  height: 1.5px;
-  background: currentColor;
 }
 
 .navLinkLabel {

@@ -17,6 +17,8 @@ export function EventRowActions({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
+  if (!isAdmin) return null;
+
   async function handleDelete() {
     if (
       !confirm(
@@ -38,26 +40,56 @@ export function EventRowActions({
   }
 
   return (
-    <>
-      <div className="row-actions">
-        <Link href={`/events/${event.id}`} className="btn-action">
-          Open
-        </Link>
-        {isAdmin && (
-          <>
-            <Link href={`/events/${event.id}/edit`} className="btn-action">
-              Edit
-            </Link>
-            <button
-              className="btn-action btn-action-danger"
-              onClick={handleDelete}
-              disabled={loading}
-            >
-              {loading ? "…" : "Delete"}
-            </button>
-          </>
+    <div className="event-row-actions">
+      <Link
+        href={`/events/${event.id}/edit`}
+        className="event-icon-button"
+        aria-label={`Edit ${event.eventName}`}
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      </Link>
+      <button
+        type="button"
+        className="event-icon-button event-icon-button-danger"
+        onClick={handleDelete}
+        disabled={loading}
+        aria-label={`Delete ${event.eventName}`}
+      >
+        {loading ? (
+          <span aria-hidden="true">…</span>
+        ) : (
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 6h18" />
+            <path d="M8 6V4h8v2" />
+            <path d="M19 6l-1 14H6L5 6" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+          </svg>
         )}
-      </div>
-    </>
+      </button>
+    </div>
   );
 }

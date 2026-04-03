@@ -3,23 +3,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ReserveInventoryModal, type ReserveInventoryEventOption } from "@/components/ReserveInventoryModal";
 import { useToast } from "@/components/Toast";
 import { retireInventoryItem, activateInventoryItem } from "./actions";
 
 interface Item {
   id: string;
   title: string;
+  currentLocation: string | null;
+  quantity: number;
   status: "ACTIVE" | "RETIRED";
 }
 
 export function InventoryActions({
   item,
   isAdmin,
+  availableEvents,
 }: {
   item: Item;
   isAdmin: boolean;
+  availableEvents: ReserveInventoryEventOption[];
 }) {
   const [loading, setLoading] = useState(false);
+  const [reserveOpen, setReserveOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -51,6 +57,15 @@ export function InventoryActions({
         <Link href={`/inventory/${item.id}`} className="btn-action">
           Open
         </Link>
+        {item.status === "ACTIVE" && (
+          <button
+            type="button"
+            className="btn-action btn-action-primary"
+            onClick={() => setReserveOpen(true)}
+          >
+            Reserve
+          </button>
+        )}
         {isAdmin && (
           <>
             <Link href={`/inventory/${item.id}/edit`} className="btn-action btn-action-admin">
@@ -66,6 +81,22 @@ export function InventoryActions({
           </>
         )}
       </div>
+
+      <ReserveInventoryModal
+        open={reserveOpen}
+        onClose={() => setReserveOpen(false)}
+        availableEvents={availableEvents}
+        initialSelectedItems={[
+          {
+            id: item.id,
+            title: item.title,
+            currentLocation: item.currentLocation,
+            totalQuantity: item.quantity,
+          },
+        ]}
+        title={`Reserve "${item.title}"`}
+        subtitle="Choose an event, adjust quantity, and add more inventory for the same reservation request if needed."
+      />
     </>
   );
 }

@@ -123,6 +123,38 @@ a.secondary {
   }
 }
 
+:global(html[data-theme="light"]) .logo {
+  filter: none;
+}
+
+:global(html[data-theme="light"]) .page {
+  --background: #fafafa;
+  --foreground: #fff;
+
+  --text-primary: #000;
+  --text-secondary: #666;
+
+  --button-primary-hover: #383838;
+  --button-secondary-hover: #f2f2f2;
+  --button-secondary-border: #ebebeb;
+}
+
+:global(html[data-theme="dark"]) .logo {
+  filter: invert();
+}
+
+:global(html[data-theme="dark"]) .page {
+  --background: #000;
+  --foreground: #000;
+
+  --text-primary: #ededed;
+  --text-secondary: #999;
+
+  --button-primary-hover: #ccc;
+  --button-secondary-hover: #1a1a1a;
+  --button-secondary-border: #1a1a1a;
+}
+
 @media (prefers-color-scheme: dark) {
   .logo {
     filter: invert();

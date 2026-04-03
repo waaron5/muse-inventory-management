@@ -40,9 +40,9 @@ export default function LoginPage() {
           <Image
             src="/muse-logo.png"
             alt="Muse"
-            width={120}
+            width={165}
             height={40}
-            style={{ objectFit: "contain" }}
+            style={{ width: "auto", height: 40, objectFit: "contain" }}
             priority
           />
         </div>

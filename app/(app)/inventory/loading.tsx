@@ -7,7 +7,7 @@ export default function InventoryLoading() {
         <div style={{ width: 140, height: 32, background: "#e5e7eb", borderRadius: 6, marginBottom: 8 }} />
         <div style={{ width: 320, height: 14, background: "#e5e7eb", borderRadius: 6 }} />
       </div>
-      <TableSkeleton columns={7} rows={8} />
+      <TableSkeleton columns={9} rows={8} />
     </>
   );
 }

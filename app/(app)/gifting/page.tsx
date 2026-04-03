@@ -77,7 +77,7 @@ export default async function GiftingPage({
     <>
       <PageHeader
         title="Gifting"
-        subtitle="Manage consumable gift items and event gift reservations"
+        subtitle="Manage and reserve gifts"
         action={
           isAdmin ? (
             <Link href="/gifting/new" className="btn btn-dark">
