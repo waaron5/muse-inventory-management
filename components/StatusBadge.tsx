@@ -14,7 +14,7 @@ type StatusVariant =
 const VARIANT_LABELS: Record<StatusVariant, string> = {
   active:    "Active",
   retired:   "Retired",
-  pending:   "Pending",
+  pending:   "Pending Approval",
   approved:  "Approved",
   rejected:  "Rejected",
   canceled:  "Canceled",

@@ -2,11 +2,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
+import { InventoryReservationRowActions } from "@/components/InventoryReservationRowActions";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getEventStatus } from "@/lib/availability";
+import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { ReserveInventoryForEventButton } from "../ReserveInventoryForEventButton";
 
 export default async function EventDetailPage({
   params,
@@ -16,6 +19,7 @@ export default async function EventDetailPage({
   const { id } = await params;
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user.role === "ADMIN";
+  const userId = session?.user.id ?? "";
 
   const event = await prisma.event.findUnique({
     where: { id },
@@ -26,7 +30,7 @@ export default async function EventDetailPage({
         orderBy: { createdAt: "desc" },
         include: {
           inventoryItem: { select: { title: true } },
-          requestedBy: { select: { name: true } },
+          requestedBy: { select: { id: true, name: true } },
           approvedBy: { select: { name: true } },
         },
       },
@@ -44,6 +48,40 @@ export default async function EventDetailPage({
   if (!event) notFound();
 
   const status = getEventStatus(event.startDate, event.endDate);
+  const myPendingCount = event.inventoryReservations.filter(
+    (reservation) =>
+      reservation.requestedById === userId && reservation.status === "PENDING"
+  ).length;
+  const myApprovedCount = event.inventoryReservations.filter(
+    (reservation) =>
+      reservation.requestedById === userId && reservation.status === "APPROVED"
+  ).length;
+  const headerActions =
+    status === "past" && !isAdmin ? undefined : (
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {status !== "past" && (
+          <ReserveInventoryForEventButton
+            event={{
+              id: event.id,
+              eventName: event.eventName,
+              companyName: event.companyName,
+              location: event.location,
+              startDate: event.startDate.toISOString(),
+              endDate: event.endDate.toISOString(),
+            }}
+            reservationState={{
+              pendingCount: myPendingCount,
+              approvedCount: myApprovedCount,
+            }}
+          />
+        )}
+        {isAdmin && (
+          <Link href={`/events/${id}/edit`} className="btn btn-outline">
+            Edit Event
+          </Link>
+        )}
+      </div>
+    );
 
   return (
     <>
@@ -53,15 +91,9 @@ export default async function EventDetailPage({
       ]} />
 
       <PageHeader
-        title={event.eventName}
+        title={<span className="event-name-inline">{event.eventName}</span>}
         subtitle={event.companyName}
-        action={
-          isAdmin ? (
-            <Link href={`/events/${id}/edit`} className="btn btn-outline">
-              Edit Event
-            </Link>
-          ) : undefined
-        }
+        action={headerActions}
       />
 
       <div className="detail-grid-stacked">
@@ -123,6 +155,9 @@ export default async function EventDetailPage({
                   <th>Qty</th>
                   <th>Status</th>
                   <th>Requested By</th>
+                  <th className="res-actions-header">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -137,9 +172,25 @@ export default async function EventDetailPage({
                     <td>
                       <StatusBadge
                         variant={r.status.toLowerCase() as Parameters<typeof StatusBadge>[0]["variant"]}
+                        label={getInventoryReservationStatusLabel(r.status)}
                       />
                     </td>
                     <td className="text-muted">{r.requestedBy.name}</td>
+                    <td className="res-actions-cell">
+                      <InventoryReservationRowActions
+                        reservation={{
+                          id: r.id,
+                          status: r.status as string,
+                          inventoryItemId: r.inventoryItemId,
+                          inventoryItemTitle: r.inventoryItem.title,
+                          requestedById: r.requestedById,
+                          eventName: event.eventName,
+                          quantity: r.quantity,
+                        }}
+                        isAdmin={isAdmin}
+                        userId={userId}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

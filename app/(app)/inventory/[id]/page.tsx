@@ -2,8 +2,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
+import { InventoryReservationRowActions } from "@/components/InventoryReservationRowActions";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
+import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import Link from "next/link";
 import Image from "next/image";
 import { InventoryDetailActions } from "./InventoryDetailActions";
@@ -17,6 +19,7 @@ export default async function InventoryDetailPage({
   const { id } = await params;
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user.role === "ADMIN";
+  const userId = session?.user.id ?? "";
 
   const item = await prisma.inventoryItem.findUnique({
     where: { id },
@@ -46,6 +49,9 @@ export default async function InventoryDetailPage({
 
   const activeReservations = item.reservations.filter((r) =>
     ["PENDING", "APPROVED"].includes(r.status)
+  );
+  const reservationHistory = item.reservations.filter(
+    (reservation) => !["PENDING", "APPROVED"].includes(reservation.status)
   );
   const today = new Date();
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -112,12 +118,19 @@ export default async function InventoryDetailPage({
                 <span>{item.quantity}</span>
               </div>
               <div className="detail-row">
-                <span className="detail-label">Currently Reserved</span>
+                <span className="detail-label">Active Reservations</span>
                 <span>
-                  {item.reservations
-                    .filter((r) => r.status === "APPROVED")
-                    .reduce((s, r) => s + r.quantity, 0)}
+                  {activeReservations.length === 0
+                    ? "None"
+                    : `${activeReservations.length} active`}
                 </span>
+              </div>
+              <div className="detail-row detail-row-block">
+                <span className="detail-label">Availability</span>
+                <p className="detail-notes">
+                  Availability is calculated per event. This item can be reserved
+                  for multiple events when approved event dates do not overlap.
+                </p>
               </div>
               <div className="detail-row">
                 <span className="detail-label">Location</span>
@@ -153,18 +166,10 @@ export default async function InventoryDetailPage({
               itemTitle={item.title}
               itemCurrentLocation={item.currentLocation ?? null}
               itemTotalQuantity={item.quantity}
-              isAdmin={isAdmin}
-              userId={session!.user.id}
+              userId={userId}
               activeReservations={activeReservations.map((r) => ({
-                id: r.id,
-                quantity: r.quantity,
                 status: r.status as string,
                 requestedById: r.requestedBy.id,
-                requestedByName: r.requestedBy.name,
-                eventName: r.event.eventName,
-                eventStartDate: r.event.startDate.toISOString(),
-                eventEndDate: r.event.endDate.toISOString(),
-                notes: r.notes ?? undefined,
               }))}
               availableEvents={availableEvents.map((e) => ({
                 id: e.id,
@@ -176,21 +181,107 @@ export default async function InventoryDetailPage({
               }))}
             />
           )}
+
+          <div className="reservations-section">
+            <h3 className="section-title">
+              Active Reservations ({activeReservations.length})
+            </h3>
+            {activeReservations.length === 0 ? (
+              <p className="empty-hint">No active reservations.</p>
+            ) : (
+              <table className="res-table">
+                <thead>
+                  <tr>
+                    <th>Event</th>
+                    <th>Date Range</th>
+                    <th>Qty</th>
+                    <th>Status</th>
+                    <th>Requested By</th>
+                    <th className="res-actions-header">
+                      <span className="sr-only">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeReservations.map((reservation) => (
+                    <tr key={reservation.id}>
+                      <td>
+                        <div className="reservation-event-cell">
+                          <Link
+                            href={`/events/${reservation.eventId}`}
+                            className="event-title-link"
+                          >
+                            {reservation.event.eventName}
+                          </Link>
+                          <span className="reservation-event-meta">
+                            {reservation.event.companyName}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="reservation-date-primary">
+                          {reservation.event.startDate.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                          {" – "}
+                          {reservation.event.endDate.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </td>
+                      <td>{reservation.quantity}</td>
+                      <td>
+                        <StatusBadge
+                          variant={
+                            reservation.status.toLowerCase() as Parameters<
+                              typeof StatusBadge
+                            >[0]["variant"]
+                          }
+                          label={getInventoryReservationStatusLabel(reservation.status)}
+                        />
+                      </td>
+                      <td className="text-muted">{reservation.requestedBy.name}</td>
+                      <td className="res-actions-cell">
+                        <InventoryReservationRowActions
+                          reservation={{
+                            id: reservation.id,
+                            status: reservation.status as string,
+                            inventoryItemId: item.id,
+                            inventoryItemTitle: item.title,
+                            requestedById: reservation.requestedBy.id,
+                            eventName: reservation.event.eventName,
+                            quantity: reservation.quantity,
+                          }}
+                          isAdmin={isAdmin}
+                          userId={userId}
+                          fallbackHref={`/events/${reservation.eventId}`}
+                          fallbackLabel="View Event"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
 
-        {/* Reservation history */}
         <div className="detail-side">
-          <h3 className="section-title">Reservations</h3>
-          {item.reservations.length === 0 ? (
-            <p className="empty-hint">No reservations yet.</p>
+          <h3 className="section-title">Reservation History</h3>
+          {reservationHistory.length === 0 ? (
+            <p className="empty-hint">No past reservation history.</p>
           ) : (
             <div className="reservation-list">
-              {item.reservations.map((r) => (
+              {reservationHistory.map((r) => (
                 <div key={r.id} className="reservation-card">
                   <div className="res-top">
                     <span className="res-event">{r.event.eventName}</span>
                     <StatusBadge
                       variant={r.status.toLowerCase() as Parameters<typeof StatusBadge>[0]["variant"]}
+                      label={getInventoryReservationStatusLabel(r.status)}
                     />
                   </div>
                   <div className="res-meta">

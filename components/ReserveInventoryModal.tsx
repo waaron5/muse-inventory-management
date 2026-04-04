@@ -353,15 +353,38 @@ export function ReserveInventoryModal({
       });
 
       onClose();
-      toast(
-        result.autoApproved
-          ? result.count === 1
-            ? "Reservation approved"
-            : `${result.count} reservations approved`
-          : result.count === 1
-            ? "Reservation submitted for approval"
-            : `${result.count} reservations submitted for approval`
-      );
+      const multipleReservations = result.count !== 1;
+      const updatedOnly = result.mergedCount > 0 && result.createdCount === 0;
+
+      if (result.autoApproved) {
+        toast(
+          updatedOnly
+            ? multipleReservations
+              ? "Reservations updated"
+              : "Reservation updated"
+            : result.count === 1
+              ? "Reservation approved"
+              : `${result.count} reservations approved`
+        );
+      } else if (result.revertedToPendingCount > 0) {
+        toast(
+          multipleReservations
+            ? "Reservations updated and pending approval"
+            : "Reservation updated and pending approval"
+        );
+      } else if (updatedOnly) {
+        toast(
+          multipleReservations
+            ? "Reservation requests updated"
+            : "Reservation request updated"
+        );
+      } else {
+        toast(
+          result.count === 1
+            ? "Reservation pending approval"
+            : `${result.count} reservations pending approval`
+        );
+      }
       router.refresh();
     } catch (err: unknown) {
       setSubmitError(
@@ -540,11 +563,11 @@ export function ReserveInventoryModal({
             )}
           </div>
 
-          {!canSearchInventory ? (
-            <p className="reserve-search-message">
-              Select an event to start searching inventory.
-            </p>
-          ) : null}
+          <p className="reserve-search-message">
+            {canSearchInventory
+              ? "Availability is based on this event. If you already have a reservation for an item, adding it again will increase the quantity on your existing request."
+              : "Select an event to see event-specific availability and start searching inventory."}
+          </p>
         </div>
 
         <div className="reserve-field-group">
@@ -577,12 +600,12 @@ export function ReserveInventoryModal({
                         {item.checkingAvailability
                           ? "Checking availability…"
                           : item.availableQty !== null
-                            ? `${item.availableQty} available`
-                            : "Select an event to load availability"}
+                            ? `Available for this event: ${item.availableQty}${typeof item.totalQuantity === "number" ? ` of ${item.totalQuantity}` : ""}`
+                            : "Select an event to see availability for this event"}
                       </div>
                       {item.availableQty !== null && item.quantity > item.availableQty && (
                         <span className="form-error-inline">
-                          Only {item.availableQty} available.
+                          Only {item.availableQty} available for this event.
                         </span>
                       )}
                     </div>

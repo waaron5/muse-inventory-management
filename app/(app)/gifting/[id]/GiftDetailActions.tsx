@@ -108,7 +108,7 @@ export function GiftDetailActions({
       setReserveEventId("");
       setReserveQty("1");
       setReserveNotes("");
-      toast(result.autoApproved ? "Gift reservation approved" : "Gift reservation submitted for approval");
+      toast(result.autoApproved ? "Gift reservation approved" : "Gift reservation pending approval");
       router.refresh();
     } catch (err: unknown) {
       setReserveError(err instanceof Error ? err.message : "An error occurred.");
@@ -145,7 +145,7 @@ export function GiftDetailActions({
 
       {isAdmin && pendingReservations.length > 0 && (
         <div className="approval-card">
-          <h4 className="approval-title">Pending Approvals ({pendingReservations.length})</h4>
+          <h4 className="approval-title">Pending Approval ({pendingReservations.length})</h4>
           {actionError && <p className="error-msg">{actionError}</p>}
           <div className="approval-list">
             {pendingReservations.map((r) => (

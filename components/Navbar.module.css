@@ -39,7 +39,7 @@
   border-radius: 9px;
   color: var(--gray-600, #4b5563);
   text-decoration: none;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -77,6 +77,22 @@
 
 .navLinkLabel {
   line-height: 1;
+}
+
+.navLinkLabelWrap {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.navIndicatorDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ef4444;
+  box-shadow: 0 0 0 2px var(--color-bg);
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .navbarRight {
@@ -181,8 +197,8 @@
 }
 
 .accountMenuIcon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
 }
 

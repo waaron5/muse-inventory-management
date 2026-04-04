@@ -12,27 +12,42 @@ type Theme = "light" | "dark";
 const NAV_ITEMS = [
   { label: "Events", href: "/events", iconClass: "eventsIcon" },
   { label: "Inventory", href: "/inventory", iconClass: "inventoryIcon" },
+  { label: "Reservations", href: "/reservations", iconClass: "reservationsIcon" },
   { label: "Gifting", href: "/gifting", iconClass: "giftingIcon" },
 ] as const;
 
 const THEME_STORAGE_KEY = "muse-theme";
+const RESERVATIONS_SEEN_STORAGE_KEY_PREFIX = "muse-reservations-seen";
 
 interface NavbarProps {
   user: {
+    id: string;
     name: string;
     email: string;
     role: string;
   };
+  reservationsHasAttention?: boolean;
+  reservationNotificationAt?: string | null;
 }
 
-export function Navbar({ user }: NavbarProps) {
+export function Navbar({
+  user,
+  reservationsHasAttention = false,
+  reservationNotificationAt = null,
+}: NavbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
+  const [reservationsSeenAt, setReservationsSeenAt] = useState<string | null>(null);
   const accountRef = useRef<HTMLDivElement>(null);
   const displayName = user.name.trim() || user.email;
   const initials = getInitials(displayName);
   const nextTheme: Theme = theme === "dark" ? "light" : "dark";
+  const reservationsSeenStorageKey = `${RESERVATIONS_SEEN_STORAGE_KEY_PREFIX}:${user.id}`;
+  const hasUnseenReservationUpdate =
+    parseTimestamp(reservationNotificationAt) > parseTimestamp(reservationsSeenAt);
+  const showReservationsIndicator =
+    reservationsHasAttention || hasUnseenReservationUpdate;
 
   useEffect(() => {
     setMenuOpen(false);
@@ -55,6 +70,30 @@ export function Navbar({ user }: NavbarProps) {
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
+
+  useEffect(() => {
+    try {
+      setReservationsSeenAt(
+        window.localStorage.getItem(reservationsSeenStorageKey)
+      );
+    } catch {
+      setReservationsSeenAt(null);
+    }
+  }, [reservationsSeenStorageKey]);
+
+  useEffect(() => {
+    if (!pathname.startsWith("/reservations")) return;
+    if (!reservationNotificationAt) return;
+
+    try {
+      window.localStorage.setItem(
+        reservationsSeenStorageKey,
+        reservationNotificationAt
+      );
+    } catch {}
+
+    setReservationsSeenAt(reservationNotificationAt);
+  }, [pathname, reservationNotificationAt, reservationsSeenStorageKey]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -112,7 +151,10 @@ export function Navbar({ user }: NavbarProps) {
             const active = isActive(href);
             const isEventsIcon = iconClass === "eventsIcon";
             const isInventoryIcon = iconClass === "inventoryIcon";
+            const isReservationsIcon = iconClass === "reservationsIcon";
             const isGiftingIcon = iconClass === "giftingIcon";
+            const showIndicator =
+              isReservationsIcon && showReservationsIndicator;
 
             return (
               <Link
@@ -125,12 +167,19 @@ export function Navbar({ user }: NavbarProps) {
                   <EventsIcon className={styles.navIcon} />
                 ) : isInventoryIcon ? (
                   <InventoryIcon className={styles.navIcon} />
+                ) : isReservationsIcon ? (
+                  <ReservationsIcon className={styles.navIcon} />
                 ) : isGiftingIcon ? (
                   <GiftingIcon className={styles.navIcon} />
                 ) : (
                   <span className={`${styles.navIcon} ${styles[iconClass]}`} aria-hidden="true" />
                 )}
-                <span className={styles.navLinkLabel}>{label}</span>
+                <span className={styles.navLinkLabelWrap}>
+                  <span className={styles.navLinkLabel}>{label}</span>
+                  {showIndicator && (
+                    <span className={styles.navIndicatorDot} aria-hidden="true" />
+                  )}
+                </span>
               </Link>
             );
           })}
@@ -216,6 +265,12 @@ function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;
 }
 
+function parseTimestamp(value: string | null | undefined) {
+  if (!value) return 0;
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
 function ThemeIcon({ className, theme }: { className?: string; theme: Theme }) {
   if (theme === "dark") {
     return (
@@ -254,7 +309,7 @@ function EventsIcon({ className }: { className?: string }) {
 function InventoryIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM40,112H80v32H40Zm56,0H216v32H96ZM216,64V96H40V64ZM40,160H80v32H40Zm176,32H96V160H216v32Z" />
+      <path d="M200,40H56A16,16,0,0,0,40,56V200a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,80H136V56h64ZM120,56v64H56V56ZM56,136h64v64H56Zm144,64H136V136h64v64Z" />
     </svg>
   );
 }
@@ -263,6 +318,14 @@ function GiftingIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
       <path d="M216,72H180.92c.39-.33.79-.65,1.17-1A29.53,29.53,0,0,0,192,49.57,32.62,32.62,0,0,0,158.44,16,29.53,29.53,0,0,0,137,25.91a54.94,54.94,0,0,0-9,14.48,54.94,54.94,0,0,0-9-14.48A29.53,29.53,0,0,0,97.56,16,32.62,32.62,0,0,0,64,49.57,29.53,29.53,0,0,0,73.91,71c.38.33.78.65,1.17,1H40A16,16,0,0,0,24,88v32a16,16,0,0,0,16,16v64a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V136a16,16,0,0,0,16-16V88A16,16,0,0,0,216,72ZM149,36.51a13.69,13.69,0,0,1,10-4.5h.49A16.62,16.62,0,0,1,176,49.08a13.69,13.69,0,0,1-4.5,10c-9.49,8.4-25.24,11.36-35,12.4C137.7,60.89,141,45.5,149,36.51Zm-64.09.36A16.63,16.63,0,0,1,96.59,32h.49a13.69,13.69,0,0,1,10,4.5c8.39,9.48,11.35,25.2,12.39,34.92-9.72-1-25.44-4-34.92-12.39a13.69,13.69,0,0,1-4.5-10A16.6,16.6,0,0,1,84.87,36.87ZM40,88h80v32H40Zm16,48h64v64H56Zm144,64H136V136h64Zm16-80H136V88h80v32Z" />
+    </svg>
+  );
+}
+
+function ReservationsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M208,40H48A16,16,0,0,0,32,56V200a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V56A16,16,0,0,0,208,40ZM48,56H208V88H48Zm160,144H48V104H208v96ZM88,136a8,8,0,0,1,8-8h72a8,8,0,0,1,0,16H96A8,8,0,0,1,88,136Zm0,40a8,8,0,0,1,8-8h40a8,8,0,0,1,0,16H96A8,8,0,0,1,88,176Z" />
     </svg>
   );
 }

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
+import { deleteManagedInventoryImage } from "@/lib/inventory-image-storage";
 import { revalidatePath } from "next/cache";
 import { InventoryStatus } from "@prisma/client";
 
@@ -22,7 +23,7 @@ async function requireAdmin() {
 export async function createInventoryItem(formData: {
   title: string;
   description?: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   quantity: number;
   currentLocation?: string;
   notes?: string;
@@ -54,13 +55,21 @@ export async function updateInventoryItem(
   formData: {
     title?: string;
     description?: string;
-    imageUrl?: string;
+    imageUrl?: string | null;
     quantity?: number;
     currentLocation?: string;
     notes?: string;
   }
 ) {
   const session = await requireAdmin();
+  const existingItem = await prisma.inventoryItem.findUnique({
+    where: { id },
+    select: { imageUrl: true },
+  });
+
+  if (!existingItem) {
+    throw new Error("Item not found");
+  }
 
   const item = await prisma.inventoryItem.update({
     where: { id },
@@ -78,6 +87,14 @@ export async function updateInventoryItem(
     summary: `Updated inventory item "${item.title}"`,
     metadata: formData as Record<string, unknown>,
   });
+
+  if (existingItem.imageUrl && existingItem.imageUrl !== item.imageUrl) {
+    try {
+      await deleteManagedInventoryImage(existingItem.imageUrl);
+    } catch (error) {
+      console.error("Failed to remove replaced inventory image", error);
+    }
+  }
 
   revalidatePath("/inventory");
   revalidatePath(`/inventory/${id}`);

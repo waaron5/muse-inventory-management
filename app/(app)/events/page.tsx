@@ -6,6 +6,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { CalendarIcon, LocationPinIcon } from "@/components/MetadataIcons";
 import { getEventStatus } from "@/lib/availability";
+import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import Link from "next/link";
 import { EventRowActions } from "./EventRowActions";
 import { ReserveInventoryForEventButton } from "./ReserveInventoryForEventButton";
@@ -46,6 +47,7 @@ export default async function EventsPage({
 }) {
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user.role === "ADMIN";
+  const userId = session?.user.id ?? "";
   const params = await searchParams;
   const query = params.q ?? "";
   const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
@@ -144,6 +146,14 @@ export default async function EventsPage({
                     if (statusDiff !== 0) return statusDiff;
                     return b.createdAt.getTime() - a.createdAt.getTime();
                   });
+                const myPendingCount = sortedReservations.filter(
+                  (reservation) =>
+                    reservation.requestedById === userId && reservation.status === "PENDING"
+                ).length;
+                const myApprovedCount = sortedReservations.filter(
+                  (reservation) =>
+                    reservation.requestedById === userId && reservation.status === "APPROVED"
+                ).length;
 
                 return (
                   <tr
@@ -210,7 +220,7 @@ export default async function EventsPage({
                                 <span
                                   className={`event-reservation-status event-reservation-status-${reservation.status.toLowerCase()}`}
                                 >
-                                  {reservation.status === "PENDING" ? "Pending" : "Approved"}
+                                  {getInventoryReservationStatusLabel(reservation.status)}
                                 </span>
                               </div>
                             ))}
@@ -233,6 +243,10 @@ export default async function EventsPage({
                               location: event.location,
                               startDate: event.startDate.toISOString(),
                               endDate: event.endDate.toISOString(),
+                            }}
+                            reservationState={{
+                              pendingCount: myPendingCount,
+                              approvedCount: myApprovedCount,
                             }}
                           />
                         )}

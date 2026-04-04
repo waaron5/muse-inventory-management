@@ -17,13 +17,13 @@ export function datesOverlap(
  * Compute available quantity for an inventory item during a proposed event window.
  * Available = total quantity - sum of approved reservation quantities for overlapping events.
  *
- * Excludes a specific reservation ID from the count (for edit scenarios).
+ * Excludes one or more reservation IDs from the count (for edit/merge scenarios).
  */
 export async function getInventoryAvailableQty(
   inventoryItemId: string,
   eventStart: Date,
   eventEnd: Date,
-  excludeReservationId?: string
+  excludeReservationIds?: string | string[]
 ): Promise<number> {
   const item = await prisma.inventoryItem.findUnique({
     where: { id: inventoryItemId },
@@ -32,12 +32,22 @@ export async function getInventoryAvailableQty(
 
   if (!item) return 0;
 
+  const excludedIds = Array.isArray(excludeReservationIds)
+    ? excludeReservationIds.filter(Boolean)
+    : excludeReservationIds
+      ? [excludeReservationIds]
+      : [];
+
   // Get all approved reservations for this item
   const approvedReservations = await prisma.inventoryReservation.findMany({
     where: {
       inventoryItemId,
       status: "APPROVED",
-      ...(excludeReservationId ? { id: { not: excludeReservationId } } : {}),
+      ...(excludedIds.length === 1
+        ? { id: { not: excludedIds[0] } }
+        : excludedIds.length > 1
+          ? { id: { notIn: excludedIds } }
+          : {}),
     },
     include: {
       event: { select: { startDate: true, endDate: true } },

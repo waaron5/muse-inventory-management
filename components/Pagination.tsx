@@ -6,15 +6,21 @@ interface PaginationProps {
   total: number;
   pageSize: number;
   currentPage: number;
+  alwaysShow?: boolean;
 }
 
-export function Pagination({ total, pageSize, currentPage }: PaginationProps) {
+export function Pagination({
+  total,
+  pageSize,
+  currentPage,
+  alwaysShow = false,
+}: PaginationProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1 && !alwaysShow) return null;
 
   function goTo(page: number) {
     const params = new URLSearchParams(searchParams.toString());

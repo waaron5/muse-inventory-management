@@ -15,6 +15,7 @@ function getTodayStart() {
 function revalidateInventoryReservationViews(itemIds: string[], eventId: string) {
   revalidatePath("/inventory");
   revalidatePath("/events");
+  revalidatePath("/reservations");
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/dashboard");
 
@@ -147,6 +148,37 @@ export async function createInventoryReservationsBatch(formData: {
   });
 
   const itemMap = new Map(inventoryItems.map((item) => [item.id, item]));
+  const existingActiveReservations = await prisma.inventoryReservation.findMany({
+    where: {
+      eventId: formData.eventId,
+      requestedById: session.user.id,
+      inventoryItemId: { in: itemIds },
+      status: { in: ["PENDING", "APPROVED"] },
+    },
+    select: {
+      id: true,
+      inventoryItemId: true,
+      quantity: true,
+      status: true,
+      approvedById: true,
+      notes: true,
+    },
+    orderBy: [{ inventoryItemId: "asc" }, { createdAt: "asc" }],
+  });
+  const existingReservationsByItemId = new Map<
+    string,
+    typeof existingActiveReservations
+  >();
+
+  for (const reservation of existingActiveReservations) {
+    const reservationsForItem =
+      existingReservationsByItemId.get(reservation.inventoryItemId) ?? [];
+    reservationsForItem.push(reservation);
+    existingReservationsByItemId.set(
+      reservation.inventoryItemId,
+      reservationsForItem
+    );
+  }
 
   for (const item of normalizedItems) {
     const inventoryItem = itemMap.get(item.inventoryItemId);
@@ -155,21 +187,85 @@ export async function createInventoryReservationsBatch(formData: {
       throw new Error(`"${inventoryItem.title}" is not available for new reservations.`);
     }
 
+    const existingReservations =
+      existingReservationsByItemId.get(item.inventoryItemId) ?? [];
+    const existingApprovedReservationIds = existingReservations
+      .filter((reservation) => reservation.status === "APPROVED")
+      .map((reservation) => reservation.id);
+    const requestedTotalQuantity =
+      existingReservations.reduce(
+        (sum, reservation) => sum + reservation.quantity,
+        0
+      ) + item.quantity;
     const available = await getInventoryAvailableQty(
       item.inventoryItemId,
       event.startDate,
-      event.endDate
+      event.endDate,
+      existingApprovedReservationIds
     );
 
-    if (item.quantity > available) {
+    if (requestedTotalQuantity > available) {
       throw new Error(`Only ${available} unit(s) of "${inventoryItem.title}" are available for that event window.`);
     }
   }
 
   const reservations = await prisma.$transaction(async (tx) => {
     const created = await Promise.all(
-      normalizedItems.map((item) =>
-        tx.inventoryReservation.create({
+      normalizedItems.map(async (item) => {
+        const existingReservations =
+          existingReservationsByItemId.get(item.inventoryItemId) ?? [];
+        const [primaryReservation, ...duplicateReservations] = existingReservations;
+        const existingQuantity = existingReservations.reduce(
+          (sum, reservation) => sum + reservation.quantity,
+          0
+        );
+        const nextQuantity = existingQuantity + item.quantity;
+        const hadApprovedReservation = existingReservations.some(
+          (reservation) => reservation.status === "APPROVED"
+        );
+
+        if (primaryReservation) {
+          const updatedReservation = await tx.inventoryReservation.update({
+            where: { id: primaryReservation.id },
+            data: {
+              quantity: nextQuantity,
+              notes: item.notes ?? primaryReservation.notes,
+              status: autoApproved ? "APPROVED" : "PENDING",
+              lastModifiedById: session.user.id,
+              approvedById: autoApproved ? session.user.id : null,
+            },
+            include: {
+              inventoryItem: { select: { title: true } },
+              event: { select: { eventName: true } },
+            },
+          });
+
+          if (duplicateReservations.length > 0) {
+            await tx.inventoryReservation.updateMany({
+              where: {
+                id: {
+                  in: duplicateReservations.map((reservation) => reservation.id),
+                },
+              },
+              data: {
+                status: "CANCELED",
+                lastModifiedById: session.user.id,
+              },
+            });
+          }
+
+          return {
+            ...updatedReservation,
+            action: "merged" as const,
+            previousQuantity: existingQuantity,
+            revertedToPending: !autoApproved && hadApprovedReservation,
+            mergedDuplicateIds: duplicateReservations.map(
+              (reservation) => reservation.id
+            ),
+          };
+        }
+
+        const newReservation = await tx.inventoryReservation.create({
           data: {
             inventoryItemId: item.inventoryItemId,
             eventId: formData.eventId,
@@ -188,8 +284,16 @@ export async function createInventoryReservationsBatch(formData: {
             inventoryItem: { select: { title: true } },
             event: { select: { eventName: true } },
           },
-        })
-      )
+        });
+
+        return {
+          ...newReservation,
+          action: "created" as const,
+          previousQuantity: 0,
+          revertedToPending: false,
+          mergedDuplicateIds: [] as string[],
+        };
+      })
     );
 
     if (autoApproved) {
@@ -207,16 +311,40 @@ export async function createInventoryReservationsBatch(formData: {
   });
 
   await Promise.all(
-    reservations.map((reservation) =>
-      logAudit({
+    reservations.flatMap((reservation) => {
+      const primaryAudit = logAudit({
         entityType: "INVENTORY_RESERVATION",
         entityId: reservation.id,
-        actionType: "CREATED",
+        actionType: reservation.action === "created" ? "CREATED" : "UPDATED",
         performedById: session.user.id,
-        summary: `Reserved ${reservation.quantity}x "${reservation.inventoryItem.title}" for event "${reservation.event.eventName}"${autoApproved ? " (auto-approved)" : ""}`,
-      })
-    )
+        summary:
+          reservation.action === "created"
+            ? `Reserved ${reservation.quantity}x "${reservation.inventoryItem.title}" for event "${reservation.event.eventName}"${autoApproved ? " (auto-approved)" : ""}`
+            : `Updated reservation for "${reservation.inventoryItem.title}" for event "${reservation.event.eventName}" — qty ${reservation.previousQuantity} → ${reservation.quantity}${reservation.revertedToPending ? " (pending approval again)" : ""}`,
+      });
+
+      const mergedDuplicateAudits = reservation.mergedDuplicateIds.map(
+        (reservationId) =>
+          logAudit({
+            entityType: "INVENTORY_RESERVATION",
+            entityId: reservationId,
+            actionType: "CANCELED",
+            performedById: session.user.id,
+            summary: `Merged duplicate active reservation into "${reservation.inventoryItem.title}" for event "${reservation.event.eventName}"`,
+          })
+      );
+
+      return [primaryAudit, ...mergedDuplicateAudits];
+    })
   );
+
+  const createdCount = reservations.filter(
+    (reservation) => reservation.action === "created"
+  ).length;
+  const mergedCount = reservations.length - createdCount;
+  const revertedToPendingCount = reservations.filter(
+    (reservation) => reservation.revertedToPending
+  ).length;
 
   revalidateInventoryReservationViews(itemIds, formData.eventId);
   return {
@@ -224,6 +352,9 @@ export async function createInventoryReservationsBatch(formData: {
     count: reservations.length,
     ids: reservations.map((reservation) => reservation.id),
     autoApproved,
+    createdCount,
+    mergedCount,
+    revertedToPendingCount,
   };
 }
 
@@ -271,7 +402,7 @@ export async function approveInventoryReservation(id: string, notes?: string) {
 
   if (reservation.quantity > available) {
     throw new Error(
-      `Insufficient availability: only ${available} unit(s) available now.`
+      `Insufficient availability: only ${available} unit(s) available for this event window now.`
     );
   }
 
@@ -471,7 +602,7 @@ export async function editInventoryReservation(
   );
 
   if (formData.quantity > available) {
-    throw new Error(`Only ${available} unit(s) available.`);
+    throw new Error(`Only ${available} unit(s) available for this event.`);
   }
 
   const newStatus =
@@ -498,4 +629,79 @@ export async function editInventoryReservation(
 
   revalidateInventoryReservationViews([reservation.inventoryItemId], reservation.eventId);
   return { success: true };
+}
+
+export async function bulkApproveInventoryReservations(ids: string[]) {
+  const session = await requireAdmin();
+
+  if (ids.length === 0) throw new Error("No reservations selected");
+
+  const reservations = await prisma.inventoryReservation.findMany({
+    where: { id: { in: ids }, status: "PENDING" },
+    include: {
+      event: { select: { startDate: true, endDate: true, eventName: true } },
+      inventoryItem: { select: { title: true } },
+    },
+  });
+
+  if (reservations.length === 0) {
+    throw new Error("No pending reservations found for the selected IDs");
+  }
+
+  const results: { approved: number; failed: Array<{ id: string; item: string; reason: string }> } = {
+    approved: 0,
+    failed: [],
+  };
+
+  // Process sequentially so availability checks account for prior approvals in this batch
+  for (const reservation of reservations) {
+    const available = await getInventoryAvailableQty(
+      reservation.inventoryItemId,
+      reservation.event.startDate,
+      reservation.event.endDate,
+      reservation.id
+    );
+
+    if (reservation.quantity > available) {
+      results.failed.push({
+        id: reservation.id,
+        item: reservation.inventoryItem.title,
+        reason: `Only ${available} unit(s) available`,
+      });
+      continue;
+    }
+
+    await prisma.$transaction([
+      prisma.inventoryReservation.update({
+        where: { id: reservation.id },
+        data: {
+          status: "APPROVED",
+          approvedById: session.user.id,
+          lastModifiedById: session.user.id,
+        },
+      }),
+      prisma.inventoryItem.update({
+        where: { id: reservation.inventoryItemId },
+        data: { updatedById: session.user.id },
+      }),
+    ]);
+
+    await logAudit({
+      entityType: "INVENTORY_RESERVATION",
+      entityId: reservation.id,
+      actionType: "APPROVED",
+      performedById: session.user.id,
+      summary: `Approved reservation for ${reservation.quantity}x "${reservation.inventoryItem.title}" (bulk)`,
+    });
+
+    results.approved++;
+  }
+
+  const allItemIds = reservations.map((r) => r.inventoryItemId);
+  const allEventIds = [...new Set(reservations.map((r) => r.eventId))];
+  for (const eventId of allEventIds) {
+    revalidateInventoryReservationViews(allItemIds, eventId);
+  }
+
+  return results;
 }

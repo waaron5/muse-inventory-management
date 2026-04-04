@@ -67,7 +67,15 @@ export function EventForm({ mode, event }: EventFormProps) {
       ]} />
 
       <PageHeader
-        title={mode === "create" ? "Create Event" : `Edit "${event?.eventName}"`}
+        title={
+          mode === "create" ? (
+            "Create Event"
+          ) : (
+            <>
+              Edit "<span className="event-name-inline">{event?.eventName}</span>"
+            </>
+          )
+        }
         subtitle={
           mode === "create"
             ? "Add a new event to the system"

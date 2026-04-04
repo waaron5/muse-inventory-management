@@ -15,19 +15,29 @@ interface Item {
   status: "ACTIVE" | "RETIRED";
 }
 
+interface ReservationState {
+  pendingCount: number;
+  approvedCount: number;
+}
+
 export function InventoryActions({
   item,
   isAdmin,
   availableEvents,
+  reservationState,
 }: {
   item: Item;
   isAdmin: boolean;
   availableEvents: ReserveInventoryEventOption[];
+  reservationState: ReservationState;
 }) {
   const [loading, setLoading] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const hasReservationActivity =
+    reservationState.pendingCount > 0 || reservationState.approvedCount > 0;
+  const reserveLabel = hasReservationActivity ? "Update" : "Reserve";
 
   async function handleRetireToggle() {
     if (
@@ -57,16 +67,18 @@ export function InventoryActions({
         {item.status === "ACTIVE" && (
           <button
             type="button"
-            className="inventory-reserve-button"
+            className={`inventory-reserve-button${
+              hasReservationActivity ? " inventory-reserve-button-active" : ""
+            }`}
             onClick={() => setReserveOpen(true)}
-            aria-label={`Reserve ${item.title}`}
+            aria-label={`${reserveLabel} ${item.title}`}
           >
             <ReserveArrowIcon className="inventory-reserve-icon" />
-            Reserve
+            {reserveLabel}
           </button>
         )}
         {isAdmin && (
-          <>
+          <div className="inventory-admin-actions">
             <Link
               href={`/inventory/${item.id}/edit`}
               className="event-icon-button"
@@ -95,7 +107,7 @@ export function InventoryActions({
             >
               {loading ? <span aria-hidden="true">…</span> : <TrashIcon />}
             </button>
-          </>
+          </div>
         )}
       </div>
 
@@ -120,7 +132,7 @@ export function InventoryActions({
 function ReserveArrowIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M189.66,122.34a8,8,0,0,1,0,11.32l-72,72a8,8,0,0,1-11.32-11.32L164.69,136H32a8,8,0,0,1,0-16H164.69L106.34,61.66a8,8,0,0,1,11.32-11.32ZM216,32a8,8,0,0,0-8,8V216a8,8,0,0,0,16,0V40A8,8,0,0,0,216,32Z" />
+      <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z" />
     </svg>
   );
 }
