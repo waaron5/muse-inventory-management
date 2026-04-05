@@ -15,9 +15,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const prisma = createPrismaClient();
+  let prisma: ReturnType<typeof createPrismaClient> | null = null;
 
   try {
+    prisma = createPrismaClient();
+
     // Truncate all tables in FK-safe order
     await prisma.auditLog.deleteMany();
     await prisma.inventoryReservation.deleteMany();
@@ -141,6 +143,12 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   } finally {
-    await prisma.$disconnect();
+    if (prisma) {
+      try {
+        await prisma.$disconnect();
+      } catch (disconnectError) {
+        console.error("Demo reset disconnect failed:", disconnectError);
+      }
+    }
   }
 }
