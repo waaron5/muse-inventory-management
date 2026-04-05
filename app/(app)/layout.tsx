@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { SessionProvider } from "@/components/SessionProvider";
 import { Navbar } from "@/components/Navbar";
 import { ToastProvider } from "@/components/Toast";
+import { DemoBanner } from "@/components/DemoBanner";
 
 function getTodayStart() {
   const now = new Date();
@@ -76,6 +77,7 @@ export default async function AppLayout({
   return (
     <SessionProvider>
       <ToastProvider>
+        <DemoBanner />
         <div className="app-shell">
           <Navbar
             user={session.user}

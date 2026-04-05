@@ -2561,3 +2561,64 @@ html[data-theme="light"] .form-input:focus {
 
 /* --- Small button variant --- */
 .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+/* ===== Demo Mode ===== */
+.demo-banner {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  color: #fff;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  z-index: 1000;
+}
+.demo-banner strong {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.demo-credentials {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+.demo-credentials h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 12px;
+}
+.demo-credentials-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.demo-credentials-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 13px;
+}
+.demo-credentials-account .demo-role {
+  font-weight: 600;
+  color: var(--color-text);
+  min-width: 50px;
+}
+.demo-credentials-account .demo-email {
+  color: var(--color-text-muted);
+  flex: 1;
+}
+.demo-credentials-account .btn {
+  padding: 4px 12px;
+  font-size: 12px;
+}

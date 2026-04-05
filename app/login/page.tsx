@@ -11,6 +11,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const isDemo = process.env.APP_MODE === "demo";
+
+  function fillCredentials(demoEmail: string, demoPassword: string) {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -88,6 +94,36 @@ export default function LoginPage() {
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
+
+        {isDemo && (
+          <div className="demo-credentials">
+            <h3>Demo Accounts</h3>
+            <div className="demo-credentials-accounts">
+              <div className="demo-credentials-account">
+                <span className="demo-role">Admin</span>
+                <span className="demo-email">admin@muse.local</span>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => fillCredentials("admin@muse.local", "admin123")}
+                >
+                  Use
+                </button>
+              </div>
+              <div className="demo-credentials-account">
+                <span className="demo-role">User</span>
+                <span className="demo-email">user@muse.local</span>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => fillCredentials("user@muse.local", "user123")}
+                >
+                  Use
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
     </div>

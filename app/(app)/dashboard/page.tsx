@@ -138,10 +138,10 @@ export default async function DashboardPage() {
   ]);
 
   const upcomingEvents = allEvents
-    .filter((event) => getEventStatus(event.startDate, event.endDate) === "future")
+    .filter((event: { startDate: Date; endDate: Date }) => getEventStatus(event.startDate, event.endDate) === "future")
     .slice(0, 5);
   const currentEvents = allEvents.filter(
-    (event) => getEventStatus(event.startDate, event.endDate) === "current"
+    (event: { startDate: Date; endDate: Date }) => getEventStatus(event.startDate, event.endDate) === "current"
   );
 
   const reservationUpdateHref =
