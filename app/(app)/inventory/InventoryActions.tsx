@@ -25,11 +25,13 @@ export function InventoryActions({
   isAdmin,
   availableEvents,
   reservationState,
+  bulkSelectionActive,
 }: {
   item: Item;
   isAdmin: boolean;
   availableEvents: ReserveInventoryEventOption[];
   reservationState: ReservationState;
+  bulkSelectionActive: boolean;
 }) {
   const [loading, setLoading] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
@@ -38,6 +40,7 @@ export function InventoryActions({
   const hasReservationActivity =
     reservationState.pendingCount > 0 || reservationState.approvedCount > 0;
   const reserveLabel = "Reserve";
+  const reserveDisabled = bulkSelectionActive;
 
   async function handleRetireToggle() {
     if (
@@ -72,6 +75,12 @@ export function InventoryActions({
             }`}
             onClick={() => setReserveOpen(true)}
             aria-label={`${reserveLabel} ${item.title}`}
+            title={
+              reserveDisabled
+                ? "Clear bulk selection to reserve individual items."
+                : `${reserveLabel} ${item.title}`
+            }
+            disabled={reserveDisabled}
           >
             <ReserveArrowIcon className="inventory-reserve-icon" />
             {reserveLabel}

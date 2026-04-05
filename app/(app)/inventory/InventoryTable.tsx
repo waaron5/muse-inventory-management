@@ -97,26 +97,6 @@ export function InventoryTable({
   return (
     <>
       <div className="inventory-table-frame">
-        {selected.size > 0 && (
-          <div className="inventory-bulk-bar" data-inventory-extra-height>
-            <span className="bulk-approve-count">{selected.size} selected</span>
-            <button
-              type="button"
-              className="btn btn-dark btn-sm"
-              onClick={() => setReserveOpen(true)}
-            >
-              Reserve Selected ({selected.size})
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={() => setSelected(new Set())}
-            >
-              Clear
-            </button>
-          </div>
-        )}
-
         <div className="table-container">
           <table className="data-table inventory-table">
             <thead>
@@ -269,6 +249,7 @@ export function InventoryTable({
                         pendingCount: item.pendingCount,
                         approvedCount: item.approvedCount,
                       }}
+                      bulkSelectionActive={selected.size > 0}
                     />
                   </td>
                 </tr>
@@ -276,6 +257,45 @@ export function InventoryTable({
             </tbody>
           </table>
         </div>
+
+        {showSelectionColumn && (
+          <div className="inventory-bulk-dock-shell" data-inventory-extra-height>
+            <div
+              className={`inventory-bulk-dock${
+                selected.size > 0 ? " inventory-bulk-dock-active" : ""
+              }`}
+            >
+              <div className="inventory-bulk-dock-leading">
+                <div className="inventory-bulk-dock-copy" aria-live="polite">
+                  <span className="bulk-approve-count">
+                    {selected.size} {selected.size === 1 ? "item" : "items"} selected
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setSelected(new Set())}
+                  disabled={selected.size === 0}
+                >
+                  Clear
+                </button>
+              </div>
+
+              <div className="inventory-bulk-dock-actions">
+                <button
+                  type="button"
+                  className="inventory-reserve-button"
+                  onClick={() => setReserveOpen(true)}
+                  disabled={selected.size === 0}
+                >
+                  <ReserveSelectedIcon className="inventory-reserve-icon" />
+                  Reserve Selected
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <ReserveInventoryModal
@@ -287,5 +307,13 @@ export function InventoryTable({
         title={`Reserve ${selected.size} ${selected.size === 1 ? "Item" : "Items"}`}
       />
     </>
+  );
+}
+
+function ReserveSelectedIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M141.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L124.69,128,50.34,53.66A8,8,0,0,1,61.66,42.34l80,80A8,8,0,0,1,141.66,133.66Zm80-11.32-80-80a8,8,0,0,0-11.32,11.32L204.69,128l-74.35,74.34a8,8,0,0,0,11.32,11.32l80-80A8,8,0,0,0,221.66,122.34Z" />
+    </svg>
   );
 }
