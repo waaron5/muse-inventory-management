@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
+import { createPrismaClient } from "@/lib/db";
 
 export async function POST(request: Request) {
   // Only available in demo mode
@@ -16,12 +15,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    const adapter = new PrismaPg({
-      connectionString: process.env.DATABASE_URL,
-    });
-    const prisma = new PrismaClient({ adapter });
+  const prisma = createPrismaClient();
 
+  try {
     // Truncate all tables in FK-safe order
     await prisma.auditLog.deleteMany();
     await prisma.inventoryReservation.deleteMany();
@@ -127,8 +123,6 @@ export async function POST(request: Request) {
       },
     });
 
-    await prisma.$disconnect();
-
     return NextResponse.json({
       success: true,
       message: "Demo data reset successfully",
@@ -145,5 +139,7 @@ export async function POST(request: Request) {
       { error: "Reset failed" },
       { status: 500 },
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
