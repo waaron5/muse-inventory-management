@@ -419,8 +419,14 @@ export function ReserveInventoryModal({
   const showSearchDropdown = canSearchInventory && searchOpen;
 
   return (
-    <Modal open={open} onClose={onClose} title={title} size="lg">
-      <form onSubmit={handleSubmit} className="modal-form">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      size="lg"
+      bodyClassName="reserve-modal-body"
+    >
+      <form onSubmit={handleSubmit} className="modal-form reserve-modal-form">
         {subtitle && <p className="event-info-detail modal-helper-text">{subtitle}</p>}
 
         {!presetEvent && (
@@ -484,7 +490,7 @@ export function ReserveInventoryModal({
           </p>
         )}
 
-        <div className="form-field">
+        <div className="form-field reserve-search-field">
           <label className="form-label">Search inventory</label>
           <div
             className="reserve-search-area"
@@ -554,7 +560,7 @@ export function ReserveInventoryModal({
           </div>
         </div>
 
-        <div className="form-field">
+        <div className="form-field reserve-selected-field">
           <label className="form-label">Items to reserve ({selectedItems.length})</label>
 
           {selectedItems.length === 0 ? (
@@ -636,7 +642,7 @@ export function ReserveInventoryModal({
 
         {submitError && <p className="form-error">{submitError}</p>}
 
-        <div className="modal-actions">
+        <div className="modal-actions reserve-modal-actions">
           <button
             type="button"
             className="btn btn-outline"

@@ -1580,6 +1580,20 @@ select {
   margin: 0;
 }
 
+.reserve-modal-body {
+  display: flex;
+  flex-direction: column;
+  height: min(620px, calc(100vh - 176px));
+  min-height: 0;
+}
+
+.reserve-modal-form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .reserve-search-input-wrap {
   position: relative;
 }
@@ -1671,14 +1685,26 @@ select {
   color: var(--gray-500);
 }
 
+.reserve-selected-field {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .reserve-selected-list {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 10px;
-  max-height: min(248px, 30vh);
+  min-height: 0;
   overflow-y: auto;
   padding-right: 4px;
   overscroll-behavior: contain;
+}
+
+.reserve-modal-actions {
+  margin-top: auto;
 }
 
 .reserve-selected-item {
