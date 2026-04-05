@@ -1,12 +1,27 @@
 "use server";
 
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { GiftStatus } from "@prisma/client";
+import { authOptions } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 import { getGiftAvailableQty } from "@/lib/availability";
+import { prisma } from "@/lib/db";
+import { deleteManagedInventoryImage } from "@/lib/inventory-image-storage";
+
+function revalidateGiftViews(giftItemIds: string[], eventId?: string) {
+  revalidatePath("/gifting");
+  revalidatePath("/events");
+  revalidatePath("/dashboard");
+
+  if (eventId) {
+    revalidatePath(`/events/${eventId}`);
+  }
+
+  for (const giftItemId of new Set(giftItemIds)) {
+    revalidatePath(`/gifting/${giftItemId}`);
+  }
+}
 
 export async function checkGiftAvailability(
   giftItemId: string,
@@ -17,11 +32,11 @@ export async function checkGiftAvailability(
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { startDate: true, endDate: true },
+    select: { id: true },
   });
   if (!event) throw new Error("Event not found");
 
-  return getGiftAvailableQty(giftItemId, event.startDate, event.endDate);
+  return getGiftAvailableQty(giftItemId);
 }
 
 async function requireSession() {
@@ -36,19 +51,21 @@ async function requireAdmin() {
   return session;
 }
 
-// ── Gift Item CRUD ──────────────────────────────────────────────────────────
-
 export async function createGiftItem(formData: {
   title: string;
   description?: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   quantity: number;
   notes?: string;
 }) {
   const session = await requireAdmin();
 
   const item = await prisma.giftItem.create({
-    data: { ...formData, createdById: session.user.id, updatedById: session.user.id },
+    data: {
+      ...formData,
+      createdById: session.user.id,
+      updatedById: session.user.id,
+    },
   });
 
   await logAudit({
@@ -59,7 +76,7 @@ export async function createGiftItem(formData: {
     summary: `Created gift item "${item.title}"`,
   });
 
-  revalidatePath("/gifting");
+  revalidateGiftViews([item.id]);
   return { success: true, id: item.id };
 }
 
@@ -68,16 +85,27 @@ export async function updateGiftItem(
   formData: {
     title?: string;
     description?: string;
-    imageUrl?: string;
+    imageUrl?: string | null;
     quantity?: number;
     notes?: string;
   }
 ) {
   const session = await requireAdmin();
+  const existingItem = await prisma.giftItem.findUnique({
+    where: { id },
+    select: { imageUrl: true },
+  });
+
+  if (!existingItem) {
+    throw new Error("Item not found");
+  }
 
   const item = await prisma.giftItem.update({
     where: { id },
-    data: { ...formData, updatedById: session.user.id },
+    data: {
+      ...formData,
+      updatedById: session.user.id,
+    },
   });
 
   await logAudit({
@@ -88,8 +116,15 @@ export async function updateGiftItem(
     summary: `Updated gift item "${item.title}"`,
   });
 
-  revalidatePath("/gifting");
-  revalidatePath(`/gifting/${id}`);
+  if (existingItem.imageUrl && existingItem.imageUrl !== item.imageUrl) {
+    try {
+      await deleteManagedInventoryImage(existingItem.imageUrl);
+    } catch (error) {
+      console.error("Failed to remove replaced gift image", error);
+    }
+  }
+
+  revalidateGiftViews([id]);
   return { success: true };
 }
 
@@ -109,8 +144,7 @@ export async function consumeGiftItem(id: string) {
     summary: `Marked gift item "${item.title}" as consumed`,
   });
 
-  revalidatePath("/gifting");
-  revalidatePath(`/gifting/${id}`);
+  revalidateGiftViews([id]);
   return { success: true };
 }
 
@@ -130,12 +164,9 @@ export async function activateGiftItem(id: string) {
     summary: `Re-activated gift item "${item.title}"`,
   });
 
-  revalidatePath("/gifting");
-  revalidatePath(`/gifting/${id}`);
+  revalidateGiftViews([id]);
   return { success: true };
 }
-
-// ── Gift Reservations ────────────────────────────────────────────────────────
 
 export async function createGiftReservation(formData: {
   giftItemId: string;
@@ -148,19 +179,15 @@ export async function createGiftReservation(formData: {
 
   const event = await prisma.event.findUnique({
     where: { id: formData.eventId },
-    select: { startDate: true, endDate: true, eventName: true },
+    select: { eventName: true },
   });
 
   if (!event) throw new Error("Event not found");
 
-  const available = await getGiftAvailableQty(
-    formData.giftItemId,
-    event.startDate,
-    event.endDate
-  );
+  const available = await getGiftAvailableQty(formData.giftItemId);
 
   if (formData.quantity > available) {
-    throw new Error(`Only ${available} unit(s) available for that event window.`);
+    throw new Error(`Only ${available} unit(s) available to use right now.`);
   }
 
   const reservation = await prisma.$transaction(async (tx) => {
@@ -200,12 +227,10 @@ export async function createGiftReservation(formData: {
     entityId: reservation.id,
     actionType: "CREATED",
     performedById: session.user.id,
-    summary: `Reserved ${formData.quantity}x "${reservation.giftItem.title}" for event "${reservation.event.eventName}"${autoApproved ? " (auto-approved)" : ""}`,
+    summary: `Requested ${formData.quantity}x "${reservation.giftItem.title}" for event "${reservation.event.eventName}"${autoApproved ? " (auto-approved)" : ""}`,
   });
 
-  revalidatePath("/gifting");
-  revalidatePath(`/gifting/${formData.giftItemId}`);
-  revalidatePath("/dashboard");
+  revalidateGiftViews([formData.giftItemId], formData.eventId);
   return { success: true, id: reservation.id, autoApproved };
 }
 
@@ -214,21 +239,24 @@ export async function approveGiftReservation(id: string) {
 
   const reservation = await prisma.giftReservation.findUnique({
     where: { id },
-    include: { event: true, giftItem: true },
+    include: {
+      event: { select: { id: true, eventName: true } },
+      giftItem: true,
+    },
   });
 
   if (!reservation) throw new Error("Reservation not found");
-  if (reservation.status !== "PENDING") throw new Error("Reservation is not pending");
+  if (reservation.status !== "PENDING") throw new Error("Request is not pending");
 
   const available = await getGiftAvailableQty(
     reservation.giftItemId,
-    reservation.event.startDate,
-    reservation.event.endDate,
+    undefined,
+    undefined,
     id
   );
 
   if (reservation.quantity > available) {
-    throw new Error(`Insufficient availability: only ${available} unit(s) available now.`);
+    throw new Error(`Only ${available} unit(s) available to approve now.`);
   }
 
   await prisma.giftReservation.update({
@@ -245,12 +273,10 @@ export async function approveGiftReservation(id: string) {
     entityId: id,
     actionType: "APPROVED",
     performedById: session.user.id,
-    summary: `Approved gift reservation for ${reservation.quantity}x "${reservation.giftItem.title}"`,
+    summary: `Approved gift request for ${reservation.quantity}x "${reservation.giftItem.title}"`,
   });
 
-  revalidatePath("/gifting");
-  revalidatePath(`/gifting/${reservation.giftItemId}`);
-  revalidatePath("/dashboard");
+  revalidateGiftViews([reservation.giftItemId], reservation.event.id);
   return { success: true };
 }
 
@@ -259,10 +285,14 @@ export async function rejectGiftReservation(id: string) {
 
   const reservation = await prisma.giftReservation.findUnique({
     where: { id },
-    include: { giftItem: true },
+    include: {
+      event: { select: { id: true } },
+      giftItem: true,
+    },
   });
 
   if (!reservation) throw new Error("Reservation not found");
+  if (reservation.status !== "PENDING") throw new Error("Only pending requests can be rejected");
 
   await prisma.giftReservation.update({
     where: { id },
@@ -278,32 +308,57 @@ export async function rejectGiftReservation(id: string) {
     entityId: id,
     actionType: "REJECTED",
     performedById: session.user.id,
-    summary: `Rejected gift reservation for "${reservation.giftItem.title}"`,
+    summary: `Rejected gift request for "${reservation.giftItem.title}"`,
   });
 
-  revalidatePath("/gifting");
-  revalidatePath(`/gifting/${reservation.giftItemId}`);
-  revalidatePath("/dashboard");
+  revalidateGiftViews([reservation.giftItemId], reservation.event.id);
   return { success: true };
 }
 
 export async function completeGiftReservation(id: string) {
   const session = await requireAdmin();
 
-  const reservation = await prisma.giftReservation.findUnique({
-    where: { id },
-    include: { giftItem: true },
-  });
+  const result = await prisma.$transaction(async (tx) => {
+    const reservation = await tx.giftReservation.findUnique({
+      where: { id },
+      include: {
+        event: { select: { id: true, eventName: true } },
+        giftItem: true,
+      },
+    });
 
-  if (!reservation) throw new Error("Reservation not found");
-  if (reservation.status !== "APPROVED") throw new Error("Only approved reservations can be marked complete");
+    if (!reservation) throw new Error("Reservation not found");
+    if (reservation.status !== "APPROVED") {
+      throw new Error("Only approved requests can be marked used");
+    }
 
-  await prisma.giftReservation.update({
-    where: { id },
-    data: {
-      status: "COMPLETED",
-      lastModifiedById: session.user.id,
-    },
+    const remainingQuantity = Math.max(
+      0,
+      reservation.giftItem.quantity - reservation.quantity
+    );
+
+    await tx.giftReservation.update({
+      where: { id },
+      data: {
+        status: "COMPLETED",
+        lastModifiedById: session.user.id,
+      },
+    });
+
+    const item = await tx.giftItem.update({
+      where: { id: reservation.giftItemId },
+      data: {
+        quantity: remainingQuantity,
+        status: remainingQuantity > 0 ? GiftStatus.ACTIVE : GiftStatus.CONSUMED,
+        updatedById: session.user.id,
+      },
+    });
+
+    return {
+      reservation,
+      item,
+      remainingQuantity,
+    };
   });
 
   await logAudit({
@@ -311,11 +366,16 @@ export async function completeGiftReservation(id: string) {
     entityId: id,
     actionType: "CONSUMED",
     performedById: session.user.id,
-    summary: `Marked gift reservation for "${reservation.giftItem.title}" as consumed/complete`,
+    summary: `Marked ${result.reservation.quantity}x "${result.reservation.giftItem.title}" as used for event "${result.reservation.event.eventName}"`,
   });
 
-  revalidatePath("/gifting");
-  revalidatePath(`/gifting/${reservation.giftItemId}`);
-  revalidatePath("/dashboard");
-  return { success: true };
+  revalidateGiftViews(
+    [result.reservation.giftItemId],
+    result.reservation.event.id
+  );
+  return {
+    success: true,
+    remainingQuantity: result.remainingQuantity,
+    itemStatus: result.item.status,
+  };
 }

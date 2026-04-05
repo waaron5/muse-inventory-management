@@ -1,21 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarIcon } from "@/components/MetadataIcons";
+import { Modal } from "@/components/Modal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { InventoryReservationRowActions } from "@/components/InventoryReservationRowActions";
+import { InventoryImagePreview } from "@/app/(app)/inventory/InventoryImagePreview";
 import { useToast } from "@/components/Toast";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
-import { bulkApproveInventoryReservations } from "@/app/(app)/inventory/reservation-actions";
+import {
+  bulkApproveInventoryReservations,
+  bulkReturnInventoryReservations,
+} from "@/app/(app)/inventory/reservation-actions";
 
 interface PendingReservation {
   id: string;
   status: string;
   quantity: number;
   requestedById: string;
-  inventoryItem: { id: string; title: string; currentLocation: string | null };
+  inventoryItem: {
+    id: string;
+    title: string;
+    imageUrl: string | null;
+    currentLocation: string | null;
+  };
   event: {
     id: string;
     eventName: string;
@@ -49,31 +59,67 @@ export function PendingReservationsTable({
   emptyMessage: string;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<
+    "approve" | "approveAll" | "return" | null
+  >(null);
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [returnLocation, setReturnLocation] = useState("");
+  const [returnNotes, setReturnNotes] = useState("");
+  const [returnError, setReturnError] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const pendingReservations = reservations.filter(
     (reservation) => reservation.status === "PENDING"
   );
+  const returnableReservations = reservations.filter(
+    (reservation) =>
+      reservation.status === "APPROVED" &&
+      (isAdmin || reservation.requestedById === userId)
+  );
   const pendingReservationIds = pendingReservations.map((reservation) => reservation.id);
+  const returnableReservationIds = returnableReservations.map(
+    (reservation) => reservation.id
+  );
+  const actionableReservationIds = isAdmin
+    ? [...pendingReservationIds, ...returnableReservationIds]
+    : returnableReservationIds;
   const pendingReservationIdSet = new Set(pendingReservationIds);
+  const returnableReservationIdSet = new Set(returnableReservationIds);
+  const actionableReservationIdSet = new Set(actionableReservationIds);
+  const selectedPendingIds = [...selected].filter((id) => pendingReservationIdSet.has(id));
+  const selectedReturnableIds = [...selected].filter((id) =>
+    returnableReservationIdSet.has(id)
+  );
+  const selectedReturnableReservations = reservations.filter((reservation) =>
+    selectedReturnableIds.includes(reservation.id)
+  );
+  const showSelectionColumn = isAdmin || returnableReservationIds.length > 0;
+  const columnCount = isAdmin ? 9 : showSelectionColumn ? 8 : 7;
+  const busy = loadingAction !== null;
 
-  const columnCount = isAdmin ? 8 : 7; // +1 for checkbox column
+  function closeReturnModal() {
+    setReturnOpen(false);
+    setReturnLocation("");
+    setReturnNotes("");
+    setReturnError("");
+  }
 
   useEffect(() => {
     setSelected((prev) => {
       const next = new Set(
-        [...prev].filter((reservationId) => pendingReservationIdSet.has(reservationId))
+        [...prev].filter((reservationId) =>
+          actionableReservationIdSet.has(reservationId)
+        )
       );
       if (next.size === prev.size) {
         return prev;
       }
       return next;
     });
-  }, [reservations]);
+  }, [reservations, isAdmin, userId]);
 
   function toggleOne(id: string) {
-    if (!pendingReservationIdSet.has(id)) return;
+    if (!actionableReservationIdSet.has(id)) return;
 
     setSelected((prev) => {
       const next = new Set(prev);
@@ -84,18 +130,18 @@ export function PendingReservationsTable({
   }
 
   function toggleAll() {
-    if (selected.size === pendingReservationIds.length) {
+    if (selected.size === actionableReservationIds.length) {
       setSelected(new Set());
     } else {
-      setSelected(new Set(pendingReservationIds));
+      setSelected(new Set(actionableReservationIds));
     }
   }
 
   async function handleBulkApprove() {
-    if (selected.size === 0) return;
-    setLoading(true);
+    if (selectedPendingIds.length === 0) return;
+    setLoadingAction("approve");
     try {
-      const results = await bulkApproveInventoryReservations([...selected]);
+      const results = await bulkApproveInventoryReservations(selectedPendingIds);
       if (results.failed.length === 0) {
         toast(`Approved ${results.approved} reservation${results.approved === 1 ? "" : "s"}`);
       } else {
@@ -109,7 +155,7 @@ export function PendingReservationsTable({
     } catch (err: unknown) {
       toast(err instanceof Error ? err.message : "Bulk approve failed", "error");
     } finally {
-      setLoading(false);
+      setLoadingAction(null);
     }
   }
 
@@ -117,7 +163,7 @@ export function PendingReservationsTable({
     if (pendingReservations.length === 0) return;
     if (!confirm(`Approve all ${pendingReservations.length} pending reservation${pendingReservations.length === 1 ? "" : "s"}?`)) return;
     setSelected(new Set(pendingReservationIds));
-    setLoading(true);
+    setLoadingAction("approveAll");
     try {
       const results = await bulkApproveInventoryReservations(pendingReservationIds);
       if (results.failed.length === 0) {
@@ -133,14 +179,47 @@ export function PendingReservationsTable({
     } catch (err: unknown) {
       toast(err instanceof Error ? err.message : "Bulk approve failed", "error");
     } finally {
-      setLoading(false);
+      setLoadingAction(null);
+    }
+  }
+
+  async function handleBulkReturn(event: FormEvent) {
+    event.preventDefault();
+    if (selectedReturnableIds.length === 0) return;
+
+    setReturnError("");
+    setLoadingAction("return");
+    try {
+      const results = await bulkReturnInventoryReservations(
+        selectedReturnableIds,
+        returnLocation,
+        returnNotes || undefined
+      );
+
+      closeReturnModal();
+      if (results.failed.length === 0) {
+        toast(
+          `Returned ${results.returned} reservation${results.returned === 1 ? "" : "s"}`
+        );
+      } else {
+        toast(
+          `Returned ${results.returned}, ${results.failed.length} failed`,
+          results.returned > 0 ? "success" : "error"
+        );
+      }
+      setSelected(new Set());
+      router.refresh();
+    } catch (err: unknown) {
+      setReturnError(err instanceof Error ? err.message : "Bulk return failed");
+    } finally {
+      setLoadingAction(null);
     }
   }
 
   const allSelected =
-    pendingReservationIds.length > 0 && selected.size === pendingReservationIds.length;
+    actionableReservationIds.length > 0 && selected.size === actionableReservationIds.length;
   const someSelected =
-    selected.size > 0 && selected.size < pendingReservationIds.length;
+    selected.size > 0 && selected.size < actionableReservationIds.length;
 
   return (
     <>
@@ -150,9 +229,11 @@ export function PendingReservationsTable({
             type="button"
             className="btn btn-outline btn-sm"
             onClick={handleApproveAll}
-            disabled={loading}
+            disabled={busy}
           >
-            Approve All ({pendingReservations.length})
+            {loadingAction === "approveAll"
+              ? "Approving..."
+              : `Approve All (${pendingReservations.length})`}
           </button>
         </div>
       )}
@@ -161,18 +242,21 @@ export function PendingReservationsTable({
         <table className="data-table reservations-table">
           <thead>
             <tr>
-              {isAdmin && (
+              {showSelectionColumn && (
                 <th className="col-checkbox">
                   <input
                     type="checkbox"
                     checked={allSelected}
-                    disabled={pendingReservationIds.length === 0}
+                    disabled={actionableReservationIds.length === 0}
                     ref={(el) => { if (el) el.indeterminate = someSelected; }}
                     onChange={toggleAll}
                     aria-label="Select all reservations"
                   />
                 </th>
               )}
+              <th className="col-image">
+                <span className="sr-only">Image</span>
+              </th>
               <th>Item</th>
               <th>Event</th>
               <th>Date Range</th>
@@ -198,9 +282,9 @@ export function PendingReservationsTable({
                 key={reservation.id}
                 className={`table-row${selected.has(reservation.id) ? " row-selected" : ""}`}
               >
-                {isAdmin && (
+                {showSelectionColumn && (
                   <td className="col-checkbox">
-                    {reservation.status === "PENDING" ? (
+                    {actionableReservationIdSet.has(reservation.id) ? (
                       <input
                         type="checkbox"
                         checked={selected.has(reservation.id)}
@@ -212,6 +296,12 @@ export function PendingReservationsTable({
                     )}
                   </td>
                 )}
+                <td className="col-image">
+                  <InventoryImagePreview
+                    src={reservation.inventoryItem.imageUrl}
+                    alt={reservation.inventoryItem.title}
+                  />
+                </td>
                 <td>
                   <div className="reservation-item-cell">
                     <Link
@@ -280,6 +370,8 @@ export function PendingReservationsTable({
                     }}
                     isAdmin={isAdmin}
                     userId={userId}
+                    allowRemoveTerminal
+                    actionAppearance="reservations-page"
                   />
                 </td>
               </tr>
@@ -288,27 +380,115 @@ export function PendingReservationsTable({
         </table>
       </div>
 
-      {isAdmin && selected.size > 0 && (
+      {selected.size > 0 && (
         <div className="bulk-approve-bar">
           <span className="bulk-approve-count">{selected.size} selected</span>
-          <button
-            type="button"
-            className="btn btn-dark btn-sm"
-            onClick={handleBulkApprove}
-            disabled={loading}
-          >
-            {loading ? "Approving..." : `Approve Selected (${selected.size})`}
-          </button>
+          {selectedPendingIds.length > 0 && (
+            <button
+              type="button"
+              className="btn btn-dark btn-sm"
+              onClick={handleBulkApprove}
+              disabled={busy}
+            >
+              {loadingAction === "approve"
+                ? "Approving..."
+                : `Approve Selected (${selectedPendingIds.length})`}
+            </button>
+          )}
+          {selectedReturnableIds.length > 0 && (
+            <button
+              type="button"
+              className="btn btn-dark btn-sm"
+              onClick={() => {
+                setReturnError("");
+                setReturnOpen(true);
+              }}
+              disabled={busy}
+            >
+              Return Selected ({selectedReturnableIds.length})
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-ghost btn-sm"
             onClick={() => setSelected(new Set())}
-            disabled={loading}
+            disabled={busy}
           >
             Clear
           </button>
         </div>
       )}
+
+      <Modal
+        open={returnOpen}
+        onClose={closeReturnModal}
+        title={`Return ${selectedReturnableIds.length} ${
+          selectedReturnableIds.length === 1 ? "Reservation" : "Reservations"
+        }`}
+      >
+        <form onSubmit={handleBulkReturn} className="modal-form">
+          <div className="bulk-return-summary">
+            <p className="bulk-return-summary-title">
+              One return location will be applied to all selected items.
+            </p>
+            <div className="bulk-return-list">
+              {selectedReturnableReservations.slice(0, 4).map((reservation) => (
+                <div key={reservation.id} className="bulk-return-list-item">
+                  <span className="bulk-return-list-title">
+                    {reservation.inventoryItem.title}
+                  </span>
+                  <span className="bulk-return-list-meta">
+                    {reservation.event.eventName} • {reservation.quantity} item
+                    {reservation.quantity === 1 ? "" : "s"}
+                  </span>
+                </div>
+              ))}
+              {selectedReturnableReservations.length > 4 && (
+                <span className="bulk-return-list-more">
+                  +{selectedReturnableReservations.length - 4} more
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Return Location *</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. JP Display warehouse"
+              value={returnLocation}
+              onChange={(event) => setReturnLocation(event.target.value)}
+              required
+            />
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Notes (optional)</label>
+            <textarea
+              className="form-input"
+              rows={2}
+              value={returnNotes}
+              onChange={(event) => setReturnNotes(event.target.value)}
+            />
+          </div>
+
+          {returnError && <p className="form-error">{returnError}</p>}
+
+          <div className="form-footer">
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={closeReturnModal}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-dark" disabled={busy}>
+              {loadingAction === "return" ? "Returning..." : "Confirm Return"}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </>
   );
 }

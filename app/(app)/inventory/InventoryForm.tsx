@@ -288,7 +288,7 @@ export function InventoryForm({ mode, item }: InventoryFormProps) {
 
           {error && <p className="form-error">{error}</p>}
 
-          <div className="form-footer inventory-form-footer">
+          <div className="form-footer page-form-footer">
             <Link
               href={mode === "edit" ? `/inventory/${item?.id}` : "/inventory"}
               className="btn btn-outline"

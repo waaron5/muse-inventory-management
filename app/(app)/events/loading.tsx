@@ -12,21 +12,25 @@ export default function EventsLoading() {
 
       <div className="events-loading-table">
         <div className="events-loading-header">
-          {Array.from({ length: 6 }).map((_, index) => (
+          {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
               className="skeleton-box"
-              style={{ height: 14, width: index === 4 ? "100%" : "72%" }}
+              style={{ height: 14, width: index === 2 || index === 3 ? "100%" : "72%" }}
             />
           ))}
         </div>
 
         {Array.from({ length: 6 }).map((_, rowIndex) => (
           <div key={rowIndex} className="events-loading-row">
-            <div className="skeleton-box" style={{ height: 16, width: "76%" }} />
-            <div className="skeleton-box" style={{ height: 16, width: "82%" }} />
-            <div className="skeleton-box" style={{ height: 16, width: "78%" }} />
-            <div className="skeleton-box" style={{ height: 16, width: "72%" }} />
+            <div className="events-loading-line-group">
+              <div className="skeleton-box" style={{ height: 16, width: "76%" }} />
+              <div className="skeleton-box" style={{ height: 14, width: "52%" }} />
+            </div>
+            <div className="events-loading-line-group">
+              <div className="skeleton-box" style={{ height: 14, width: "78%" }} />
+              <div className="skeleton-box" style={{ height: 14, width: "86%" }} />
+            </div>
 
             <div className="events-loading-reservations">
               <div className="events-loading-summary">
@@ -38,6 +42,17 @@ export default function EventsLoading() {
                 <div className="skeleton-box" style={{ height: 14, width: "68%" }} />
               </div>
               <div className="skeleton-box" style={{ height: 28, width: 116, borderRadius: 999 }} />
+            </div>
+
+            <div className="events-loading-reservations">
+              <div className="events-loading-summary">
+                <div className="skeleton-box" style={{ height: 14, width: 96 }} />
+                <div className="skeleton-box" style={{ height: 18, width: 84, borderRadius: 999 }} />
+              </div>
+              <div className="events-loading-line-group">
+                <div className="skeleton-box" style={{ height: 14, width: "72%" }} />
+                <div className="skeleton-box" style={{ height: 14, width: "58%" }} />
+              </div>
             </div>
 
             <div className="skeleton-box" style={{ height: 30, width: 30, borderRadius: 8, justifySelf: "end" }} />

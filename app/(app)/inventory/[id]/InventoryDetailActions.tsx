@@ -50,7 +50,7 @@ export function InventoryDetailActions({
     <>
       <div className="action-bar">
         <button type="button" className="btn btn-dark" onClick={() => setReserveOpen(true)}>
-          {hasMyReservationActivity ? "Reserve More" : "Reserve"}
+          Reserve this item
         </button>
       </div>
       {hasMyReservationActivity && (

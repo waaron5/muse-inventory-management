@@ -1,171 +1,242 @@
 import { getServerSession } from "next-auth";
+import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/PageHeader";
-import { SearchBar } from "@/components/SearchBar";
-import { FilterDropdown } from "@/components/FilterDropdown";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Pagination } from "@/components/Pagination";
-import Link from "next/link";
+import { SearchBar } from "@/components/SearchBar";
+import { InventoryImagePreview } from "@/app/(app)/inventory/InventoryImagePreview";
+import { InventoryPageShell } from "@/app/(app)/inventory/InventoryPageShell";
 import { GiftRowActions } from "./GiftRowActions";
 
-const FILTER_OPTIONS = [
-  { label: "Active", value: "ACTIVE" },
-  { label: "Consumed", value: "CONSUMED" },
-];
-
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 8;
 
 export default async function GiftingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; filter?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; pageSize?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user.role === "ADMIN";
+  const userId = session?.user.id ?? "";
   const params = await searchParams;
   const query = params.q ?? "";
-  const filter = params.filter ?? "";
-  const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const pageSize = Math.max(
+    1,
+    parseInt(params.pageSize ?? String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE
+  );
+  const requestedPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
   const where = {
-    ...(filter ? { status: filter as "ACTIVE" | "CONSUMED" } : {}),
     ...(query
       ? {
           OR: [
             { title: { contains: query, mode: "insensitive" as const } },
             { description: { contains: query, mode: "insensitive" as const } },
+            { notes: { contains: query, mode: "insensitive" as const } },
           ],
         }
       : {}),
   };
 
-  const [items, totalCount] = await Promise.all([
+  const totalCount = await prisma.giftItem.count({ where });
+  const totalPages = Math.max(1, Math.ceil(Math.max(totalCount, 1) / pageSize));
+  const currentPage = Math.min(requestedPage, totalPages);
+
+  const [items, availableEvents] = await Promise.all([
     prisma.giftItem.findMany({
       where,
       orderBy: [{ status: "asc" }, { title: "asc" }],
       include: {
         updatedBy: { select: { name: true } },
+        reservations: {
+          where: {
+            requestedById: userId,
+            status: { in: ["PENDING", "APPROVED"] },
+          },
+          select: { status: true },
+        },
       },
-      skip: (currentPage - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
+      skip: (currentPage - 1) * pageSize,
+      take: pageSize,
     }),
-    prisma.giftItem.count({ where }),
+    prisma.event.findMany({
+      where: { endDate: { gte: todayStart } },
+      orderBy: { startDate: "asc" },
+      select: {
+        id: true,
+        eventName: true,
+        companyName: true,
+        location: true,
+        startDate: true,
+        endDate: true,
+      },
+    }),
   ]);
 
-  // Batch: get reserved quantities for all items in one query instead of N+1
-  const itemIds = items.map((i) => i.id);
-  const reservedAgg = await prisma.giftReservation.groupBy({
-    by: ["giftItemId"],
-    where: {
-      giftItemId: { in: itemIds },
-      status: "APPROVED",
-    },
-    _sum: { quantity: true },
-  });
-
-  const reservedMap = new Map(
-    reservedAgg.map((r) => [r.giftItemId, r._sum.quantity ?? 0])
-  );
-
-  const itemsWithAvailability = items.map((item) => {
-    const reserved = reservedMap.get(item.id) ?? 0;
-    return { ...item, availableQty: Math.max(0, item.quantity - reserved) };
-  });
+  const serializedAvailableEvents = availableEvents.map((event) => ({
+    id: event.id,
+    eventName: event.eventName,
+    companyName: event.companyName,
+    location: event.location,
+    startDate: event.startDate.toISOString(),
+    endDate: event.endDate.toISOString(),
+  }));
 
   return (
-    <>
-      <PageHeader
-        title="Gifting"
-        subtitle="Manage and reserve gifts"
-        action={
-          isAdmin ? (
-            <Link href="/gifting/new" className="btn btn-dark">
-              + Add Gift
-            </Link>
-          ) : undefined
-        }
-      />
-
-      <div className="table-toolbar">
-        <SearchBar placeholder="Search gifts, descriptions..." />
-        <FilterDropdown options={FILTER_OPTIONS} defaultLabel="All Gifts" paramName="filter" />
-        <span className="item-count">{totalCount} items</span>
-      </div>
-
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Description</th>
-              <th>Avail / Total</th>
-              <th>Status</th>
-              <th>Notes</th>
-              <th>Last Updated</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {itemsWithAvailability.length === 0 && (
+    <InventoryPageShell
+      totalCount={totalCount}
+      currentPage={currentPage}
+      pageSize={pageSize}
+      showPagination={totalCount > 0}
+      header={
+        <PageHeader
+          title="Gifting"
+          subtitle="View and manage gift inventory, request items for events"
+          action={
+            isAdmin ? (
+              <Link href="/gifting/new" className="btn btn-dark">
+                + Add Item
+              </Link>
+            ) : undefined
+          }
+        />
+      }
+      controls={
+        <div className="table-toolbar inventory-toolbar">
+          <SearchBar placeholder="Search items and descriptions..." />
+          <span className="item-count">{totalCount} items</span>
+        </div>
+      }
+      table={
+        <div className="table-container inventory-table-frame">
+          <table className="data-table inventory-table gifting-table">
+            <thead>
               <tr>
-                <td colSpan={7} className="empty-row">
-                  No gift items found.
-                </td>
+                <th className="col-image">
+                  <span className="sr-only">Image</span>
+                </th>
+                <th className="col-item">Item</th>
+                <th className="col-details">Details</th>
+                <th className="col-qty">Qty</th>
+                <th className="inventory-actions-header">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
-            )}
-            {itemsWithAvailability.map((item) => (
-              <tr
-                key={item.id}
-                className={`table-row ${item.status === "CONSUMED" ? "row-consumed" : ""}`}
-              >
-                <td>
-                  <Link
-                    href={`/gifting/${item.id}`}
-                    className={`item-title-link ${item.status === "CONSUMED" ? "strikethrough" : ""}`}
-                  >
-                    {item.title}
-                  </Link>
-                </td>
-                <td>
-                  <span className="text-muted">{item.description ?? "—"}</span>
-                </td>
-                <td>
-                  <span className="qty-available">{item.availableQty}</span>
-                  <span className="qty-sep"> / </span>
-                  <span className="qty-total">{item.quantity}</span>
-                </td>
-                <td>
-                  <StatusBadge variant={item.status === "ACTIVE" ? "active" : "consumed"} />
-                </td>
-                <td>
-                  {item.notes ? (
-                    <span className="text-muted">
-                      {item.notes.length > 30 ? item.notes.slice(0, 30) + "…" : item.notes}
-                    </span>
-                  ) : (
-                    <span className="text-muted">—</span>
-                  )}
-                </td>
-                <td>
-                  <span className="text-muted">
-                    {item.updatedAt.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
-                </td>
-                <td>
-                  <GiftRowActions item={item} isAdmin={isAdmin} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {items.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="empty-row">
+                    No gift items found.
+                  </td>
+                </tr>
+              )}
+              {items.map((item) => {
+                const pendingCount = item.reservations.filter(
+                  (reservation) => reservation.status === "PENDING"
+                ).length;
+                const approvedCount = item.reservations.filter(
+                  (reservation) => reservation.status === "APPROVED"
+                ).length;
+                const detailText = [item.description?.trim(), item.notes?.trim() ? `Note: ${item.notes.trim()}` : null]
+                  .filter(Boolean)
+                  .join(" • ");
+                const updatedDate = item.updatedAt.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                });
+                const updatedByText = item.updatedBy?.name?.trim();
 
-      <Pagination total={totalCount} pageSize={PAGE_SIZE} currentPage={currentPage} />
-    </>
+                return (
+                  <tr
+                    key={item.id}
+                    className={`table-row ${item.status === "CONSUMED" ? "row-consumed" : ""}`}
+                  >
+                    <td className="col-image">
+                      <InventoryImagePreview src={item.imageUrl ?? null} alt={item.title} />
+                    </td>
+                    <td className="col-item">
+                      <div className="inventory-item-cell">
+                        <Link
+                          href={`/gifting/${item.id}`}
+                          className={`item-title-link inventory-item-link${
+                            item.status === "CONSUMED" ? " inventory-item-link-retired" : ""
+                          }`}
+                        >
+                          {item.title}
+                        </Link>
+                        <div className="inventory-item-meta-row">
+                          <span
+                            className="inventory-item-meta-text"
+                            title={
+                              updatedByText
+                                ? `Updated ${updatedDate} by ${updatedByText}`
+                                : `Updated ${updatedDate}`
+                            }
+                          >
+                            Updated {updatedDate}
+                            {updatedByText ? ` by ${updatedByText}` : ""}
+                          </span>
+                          {pendingCount > 0 && (
+                            <span className="action-status-chip action-status-chip-pending">
+                              {pendingCount} pending
+                            </span>
+                          )}
+                          {approvedCount > 0 && (
+                            <span className="action-status-chip action-status-chip-approved">
+                              {approvedCount} approved
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="col-details">
+                      <span
+                        className={`inventory-text-block inventory-details-text${
+                          detailText ? "" : " inventory-details-empty"
+                        }`}
+                        title={detailText || undefined}
+                      >
+                        {detailText || "—"}
+                      </span>
+                    </td>
+                    <td className="col-qty">
+                      <span className="qty-primary">{item.quantity}</span>
+                    </td>
+                    <td className="inventory-action-cell">
+                      <GiftRowActions
+                        item={{
+                          id: item.id,
+                          title: item.title,
+                          quantity: item.quantity,
+                          status: item.status,
+                        }}
+                        isAdmin={isAdmin}
+                        availableEvents={serializedAvailableEvents}
+                        reservationState={{
+                          pendingCount,
+                          approvedCount,
+                        }}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      }
+      pagination={
+        <Pagination
+          total={totalCount}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          alwaysShow
+        />
+      }
+    />
   );
 }

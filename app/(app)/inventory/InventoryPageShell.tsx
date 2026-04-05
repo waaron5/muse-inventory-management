@@ -73,12 +73,27 @@ export function InventoryPageShell({
           showPagination && pagination
             ? Math.ceil(pagination.getBoundingClientRect().height)
             : 0;
+        const extraMeasuredHeight = Array.from(
+          tableShell.querySelectorAll<HTMLElement>("[data-inventory-extra-height]")
+        ).reduce(
+          (sum, element) => {
+            const styles = window.getComputedStyle(element);
+            return (
+              sum +
+              Math.ceil(element.getBoundingClientRect().height) +
+              Math.ceil(parseFloat(styles.marginTop) || 0) +
+              Math.ceil(parseFloat(styles.marginBottom) || 0)
+            );
+          },
+          0
+        );
         const availableRowArea = Math.max(
           0,
           shellHeight -
             headerSectionHeight -
             controlsSectionHeight -
             paginationHeight -
+            extraMeasuredHeight -
             headerHeight -
             2
         );

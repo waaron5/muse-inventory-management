@@ -1,0 +1,291 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { ReserveInventoryModal, type ReserveInventoryEventOption } from "@/components/ReserveInventoryModal";
+import { LocationPinIcon } from "@/components/MetadataIcons";
+import { InventoryActions } from "./InventoryActions";
+import { InventoryImagePreview } from "./InventoryImagePreview";
+
+interface InventoryTableItem {
+  id: string;
+  title: string;
+  imageUrl: string | null;
+  currentLocation: string | null;
+  quantity: number;
+  status: "ACTIVE" | "RETIRED";
+  detailText: string;
+  updatedDate: string;
+  updatedByText: string | null;
+  pendingCount: number;
+  approvedCount: number;
+  reserved: number;
+}
+
+interface InventoryTableProps {
+  items: InventoryTableItem[];
+  isAdmin: boolean;
+  availableEvents: ReserveInventoryEventOption[];
+}
+
+export function InventoryTable({
+  items,
+  isAdmin,
+  availableEvents,
+}: InventoryTableProps) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [reserveOpen, setReserveOpen] = useState(false);
+  const selectAllRef = useRef<HTMLInputElement>(null);
+
+  const selectableItems = items.filter((item) => item.status === "ACTIVE");
+  const selectableItemIds = selectableItems.map((item) => item.id);
+  const selectableItemIdSet = new Set(selectableItemIds);
+  const showSelectionColumn = selectableItemIds.length > 0;
+  const allSelected =
+    selectableItemIds.length > 0 && selected.size === selectableItemIds.length;
+  const someSelected =
+    selected.size > 0 && selected.size < selectableItemIds.length;
+  const selectedItems = selectableItems.filter((item) => selected.has(item.id));
+  const selectedReservationItems = selectedItems.map((item) => ({
+    id: item.id,
+    title: item.title,
+    currentLocation: item.currentLocation,
+    totalQuantity: item.quantity,
+  }));
+  const columnCount = showSelectionColumn ? 8 : 7;
+
+  useEffect(() => {
+    setSelected((prev) => {
+      const next = new Set(
+        [...prev].filter((itemId) => selectableItemIdSet.has(itemId))
+      );
+      if (next.size === prev.size) {
+        return prev;
+      }
+      return next;
+    });
+  }, [items]);
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someSelected;
+    }
+  }, [someSelected]);
+
+  function toggleOne(itemId: string) {
+    if (!selectableItemIdSet.has(itemId)) return;
+
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(selectableItemIds));
+    }
+  }
+
+  return (
+    <>
+      <div className="inventory-table-frame">
+        {selected.size > 0 && (
+          <div className="inventory-bulk-bar" data-inventory-extra-height>
+            <span className="bulk-approve-count">{selected.size} selected</span>
+            <button
+              type="button"
+              className="btn btn-dark btn-sm"
+              onClick={() => setReserveOpen(true)}
+            >
+              Reserve Selected ({selected.size})
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => setSelected(new Set())}
+            >
+              Clear
+            </button>
+          </div>
+        )}
+
+        <div className="table-container">
+          <table className="data-table inventory-table">
+            <thead>
+              <tr>
+                {showSelectionColumn && (
+                  <th className="col-checkbox">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      aria-label="Select all active inventory items"
+                    />
+                  </th>
+                )}
+                <th className="col-image">
+                  <span className="sr-only">Image</span>
+                </th>
+                <th className="col-item">Item</th>
+                <th className="col-details">Details</th>
+                <th className="col-qty">Qty</th>
+                <th className="col-reserved">Reserved</th>
+                <th className="col-location">Location</th>
+                <th className="inventory-actions-header">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.length === 0 && (
+                <tr>
+                  <td colSpan={columnCount} className="empty-row">
+                    No inventory items found.
+                  </td>
+                </tr>
+              )}
+
+              {items.map((item) => (
+                <tr
+                  key={item.id}
+                  className={`table-row ${
+                    item.status === "RETIRED" ? "row-retired" : ""
+                  }${selected.has(item.id) ? " row-selected" : ""}`}
+                >
+                  {showSelectionColumn && (
+                    <td className="col-checkbox">
+                      {item.status === "ACTIVE" ? (
+                        <input
+                          type="checkbox"
+                          checked={selected.has(item.id)}
+                          onChange={() => toggleOne(item.id)}
+                          aria-label={`Select ${item.title}`}
+                        />
+                      ) : (
+                        <span className="row-selection-placeholder" aria-hidden="true" />
+                      )}
+                    </td>
+                  )}
+                  <td className="col-image">
+                    <InventoryImagePreview src={item.imageUrl} alt={item.title} />
+                  </td>
+                  <td className="col-item">
+                    <div className="inventory-item-cell">
+                      <Link
+                        href={`/inventory/${item.id}`}
+                        className={`item-title-link inventory-item-link${
+                          item.status === "RETIRED" ? " inventory-item-link-retired" : ""
+                        }`}
+                      >
+                        {item.title}
+                      </Link>
+                      <div className="inventory-item-meta-row">
+                        <span
+                          className="inventory-item-meta-text"
+                          title={
+                            item.updatedByText
+                              ? `Updated ${item.updatedDate} by ${item.updatedByText}`
+                              : `Updated ${item.updatedDate}`
+                          }
+                        >
+                          Updated {item.updatedDate}
+                          {item.updatedByText ? ` by ${item.updatedByText}` : ""}
+                        </span>
+                        {item.pendingCount > 0 && (
+                          <span className="action-status-chip action-status-chip-pending">
+                            {item.pendingCount} pending
+                          </span>
+                        )}
+                        {item.approvedCount > 0 && (
+                          <span className="action-status-chip action-status-chip-approved">
+                            {item.approvedCount} approved
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="col-details">
+                    <span
+                      className={`inventory-text-block inventory-details-text${
+                        item.detailText ? "" : " inventory-details-empty"
+                      }`}
+                      title={item.detailText || undefined}
+                    >
+                      {item.detailText || "—"}
+                    </span>
+                  </td>
+                  <td className="col-qty">
+                    <span className="qty-primary">{item.quantity}</span>
+                  </td>
+                  <td className="col-reserved">
+                    {item.reserved > 0 ? (
+                      <span
+                        className={`reserved-count${
+                          item.reserved >= item.quantity ? " reserved-count-full" : ""
+                        }`}
+                      >
+                        {item.reserved}
+                      </span>
+                    ) : (
+                      <span className="reserved-count-none">—</span>
+                    )}
+                  </td>
+                  <td className="col-location">
+                    {item.currentLocation ? (
+                      <span className="table-meta-inline inventory-location-inline">
+                        <LocationPinIcon className="table-meta-icon" />
+                        <span
+                          className="inventory-text-block inventory-location-text"
+                          title={item.currentLocation}
+                        >
+                          {item.currentLocation}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="inventory-text-block inventory-location-text">—</span>
+                    )}
+                  </td>
+                  <td className="inventory-action-cell">
+                    <InventoryActions
+                      item={{
+                        id: item.id,
+                        title: item.title,
+                        currentLocation: item.currentLocation,
+                        quantity: item.quantity,
+                        status: item.status,
+                      }}
+                      isAdmin={isAdmin}
+                      availableEvents={availableEvents}
+                      reservationState={{
+                        pendingCount: item.pendingCount,
+                        approvedCount: item.approvedCount,
+                      }}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <ReserveInventoryModal
+        open={reserveOpen}
+        onClose={() => setReserveOpen(false)}
+        onSubmitted={() => setSelected(new Set())}
+        availableEvents={availableEvents}
+        initialSelectedItems={selectedReservationItems}
+        title={`Reserve ${selected.size} ${selected.size === 1 ? "Item" : "Items"}`}
+      />
+    </>
+  );
+}

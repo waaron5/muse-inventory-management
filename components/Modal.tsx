@@ -59,10 +59,13 @@ export function Modal({
     // Focus the first focusable element when the modal opens
     const timer = setTimeout(() => {
       if (panelRef.current) {
-        const first = panelRef.current.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        const preferred = panelRef.current.querySelector<HTMLElement>(
+          '[data-autofocus], .modal-body input:not([disabled]), .modal-body select:not([disabled]), .modal-body textarea:not([disabled]), .modal-body button:not([disabled]), .modal-body [href], .modal-body [tabindex]:not([tabindex="-1"])'
         );
-        first?.focus();
+        const fallback = panelRef.current.querySelector<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        (preferred ?? fallback)?.focus();
       }
     }, 0);
 

@@ -3,9 +3,14 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { InventoryReservationRowActions } from "@/components/InventoryReservationRowActions";
+import { GiftReservationRowActions } from "@/components/GiftReservationRowActions";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getEventStatus } from "@/lib/availability";
+import {
+  getGiftReservationStatusLabel,
+  getGiftReservationStatusVariant,
+} from "@/lib/gift-reservation-ui";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -38,7 +43,7 @@ export default async function EventDetailPage({
         orderBy: { createdAt: "desc" },
         include: {
           giftItem: { select: { title: true } },
-          requestedBy: { select: { name: true } },
+          requestedBy: { select: { id: true, name: true } },
           approvedBy: { select: { name: true } },
         },
       },
@@ -213,6 +218,11 @@ export default async function EventDetailPage({
                   <th>Qty</th>
                   <th>Status</th>
                   <th>Requested By</th>
+                  {isAdmin && (
+                    <th className="res-actions-header">
+                      <span className="sr-only">Actions</span>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -226,10 +236,24 @@ export default async function EventDetailPage({
                     <td>{r.quantity}</td>
                     <td>
                       <StatusBadge
-                        variant={r.status.toLowerCase() as Parameters<typeof StatusBadge>[0]["variant"]}
+                        variant={getGiftReservationStatusVariant(r.status)}
+                        label={getGiftReservationStatusLabel(r.status)}
                       />
                     </td>
                     <td className="text-muted">{r.requestedBy.name}</td>
+                    {isAdmin && (
+                      <td className="res-actions-cell">
+                        <GiftReservationRowActions
+                          reservation={{
+                            id: r.id,
+                            status: r.status,
+                            giftItemId: r.giftItemId,
+                            requestedById: r.requestedById,
+                          }}
+                          isAdmin={isAdmin}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

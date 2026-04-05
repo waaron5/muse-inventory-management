@@ -65,12 +65,15 @@ export async function getInventoryAvailableQty(
 }
 
 /**
- * Compute available quantity for a gift item during a proposed event window.
+ * Compute available quantity for a gift item.
+ *
+ * Gifts are consumable, so approved requests reduce availability globally,
+ * not just for overlapping event dates.
  */
 export async function getGiftAvailableQty(
   giftItemId: string,
-  eventStart: Date,
-  eventEnd: Date,
+  _eventStart?: Date,
+  _eventEnd?: Date,
   excludeReservationId?: string
 ): Promise<number> {
   const item = await prisma.giftItem.findUnique({
@@ -91,11 +94,10 @@ export async function getGiftAvailableQty(
     },
   });
 
-  const allocatedQty = approvedReservations
-    .filter((r) =>
-      datesOverlap(eventStart, eventEnd, r.event.startDate, r.event.endDate)
-    )
-    .reduce((sum, r) => sum + r.quantity, 0);
+  const allocatedQty = approvedReservations.reduce(
+    (sum, reservation) => sum + reservation.quantity,
+    0
+  );
 
   return Math.max(0, item.quantity - allocatedQty);
 }

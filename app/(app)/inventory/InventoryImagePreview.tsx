@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Modal } from "@/components/Modal";
 
 export function InventoryImagePreview({
@@ -31,12 +30,10 @@ export function InventoryImagePreview({
         title={`View larger image for ${alt}`}
       >
         <span className="item-image">
-          <Image
+          <img
             src={src}
             alt={alt}
-            width={40}
-            height={40}
-            style={{ objectFit: "cover", borderRadius: 4 }}
+            className="item-image-img"
           />
         </span>
       </button>
@@ -49,11 +46,9 @@ export function InventoryImagePreview({
         bodyClassName="inventory-image-modal-body"
       >
         <div className="inventory-image-preview-frame">
-          <Image
+          <img
             src={src}
             alt={alt}
-            fill
-            sizes="(max-width: 768px) 90vw, 640px"
             className="inventory-image-preview-img"
           />
         </div>

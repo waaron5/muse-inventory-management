@@ -11,6 +11,7 @@ import {
   cancelInventoryReservation,
   returnInventoryReservation,
   editInventoryReservation,
+  removeInventoryReservationHistory,
 } from "@/app/(app)/inventory/reservation-actions";
 
 interface InventoryReservationActionRow {
@@ -29,6 +30,8 @@ interface InventoryReservationRowActionsProps {
   userId: string;
   fallbackHref?: string;
   fallbackLabel?: string;
+  allowRemoveTerminal?: boolean;
+  actionAppearance?: "default" | "reservations-page";
 }
 
 export function InventoryReservationRowActions({
@@ -37,6 +40,8 @@ export function InventoryReservationRowActions({
   userId,
   fallbackHref,
   fallbackLabel = "View Item",
+  allowRemoveTerminal = false,
+  actionAppearance = "default",
 }: InventoryReservationRowActionsProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -47,7 +52,7 @@ export function InventoryReservationRowActions({
   const [editQuantity, setEditQuantity] = useState(String(reservation.quantity));
   const [error, setError] = useState("");
   const [loadingAction, setLoadingAction] = useState<
-    "approve" | "reject" | "cancel" | "return" | "edit" | null
+    "approve" | "reject" | "cancel" | "return" | "edit" | "remove" | null
   >(null);
 
   const canApprove = isAdmin && reservation.status === "PENDING";
@@ -58,6 +63,12 @@ export function InventoryReservationRowActions({
   const canReturn =
     reservation.status === "APPROVED" &&
     (reservation.requestedById === userId || isAdmin);
+  const canRemoveTerminal =
+    allowRemoveTerminal &&
+    ["REJECTED", "COMPLETED"].includes(reservation.status) &&
+    (reservation.requestedById === userId || isAdmin);
+  const useReservationsPageAppearance =
+    actionAppearance === "reservations-page";
   const resolvedFallbackHref =
     fallbackHref ?? `/inventory/${reservation.inventoryItemId}`;
 
@@ -132,7 +143,7 @@ export function InventoryReservationRowActions({
   async function handleCancel() {
     if (!window.confirm("Cancel this reservation request?")) return;
 
-    setLoadingAction("cancel");
+    setLoadingAction("remove");
     try {
       await cancelInventoryReservation(reservation.id);
       toast("Reservation canceled");
@@ -163,6 +174,29 @@ export function InventoryReservationRowActions({
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to return item");
+    } finally {
+      setLoadingAction(null);
+    }
+  }
+
+  async function handleRemoveTerminal() {
+    const label =
+      reservation.status === "COMPLETED" ? "returned" : "rejected";
+
+    if (!window.confirm(`Remove this ${label} reservation from the list?`)) {
+      return;
+    }
+
+    setLoadingAction("remove");
+    try {
+      await removeInventoryReservationHistory(reservation.id);
+      toast("Reservation removed");
+      router.refresh();
+    } catch (err: unknown) {
+      toast(
+        err instanceof Error ? err.message : "Failed to remove reservation",
+        "error"
+      );
     } finally {
       setLoadingAction(null);
     }
@@ -220,7 +254,11 @@ export function InventoryReservationRowActions({
         {canReturn && (
           <button
             type="button"
-            className="btn-action btn-action-with-icon"
+            className={`btn-action btn-action-with-icon${
+              useReservationsPageAppearance
+                ? " inventory-reserve-button reservation-table-action-button"
+                : ""
+            }`}
             onClick={() => {
               setError("");
               setReturnOpen(true);
@@ -231,7 +269,26 @@ export function InventoryReservationRowActions({
             Return Item
           </button>
         )}
-        {!canApprove && !canCancel && !canReturn && resolvedFallbackHref && (
+        {canRemoveTerminal && (
+          <button
+            type="button"
+            className={`btn-action btn-action-with-icon${
+              useReservationsPageAppearance
+                ? " inventory-reserve-button reservation-table-action-button reservation-table-action-button-muted"
+                : ""
+            }`}
+            onClick={handleRemoveTerminal}
+            disabled={loadingAction !== null}
+          >
+            <RemoveCircleIcon className="btn-action-inline-icon" />
+            {loadingAction === "remove" ? "Removing..." : "Remove"}
+          </button>
+        )}
+        {!canApprove &&
+          !canCancel &&
+          !canReturn &&
+          !canRemoveTerminal &&
+          resolvedFallbackHref && (
           <Link href={resolvedFallbackHref} className="btn-action">
             {fallbackLabel}
           </Link>
@@ -354,6 +411,19 @@ function EditIcon() {
     >
       <path d="M12 20h9" />
       <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+function RemoveCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 256 256"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M176,128a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,128Zm56,0A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" />
     </svg>
   );
 }

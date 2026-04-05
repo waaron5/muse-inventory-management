@@ -52,22 +52,12 @@ interface SelectedItem {
 interface ReserveInventoryModalProps {
   open: boolean;
   onClose: () => void;
+  onSubmitted?: () => void;
   availableEvents?: ReserveInventoryEventOption[];
   presetEvent?: ReserveInventoryEventOption;
   initialSelectedItems?: ReserveInventoryInitialItem[];
   title?: string;
   subtitle?: string;
-}
-
-function formatEventRange(event: ReserveInventoryEventOption) {
-  return `${new Date(event.startDate).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  })} – ${new Date(event.endDate).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })}`;
 }
 
 function buildSelectedItems(items: ReserveInventoryInitialItem[]): SelectedItem[] {
@@ -100,6 +90,7 @@ function getIncrementedQuantity(item: SelectedItem) {
 export function ReserveInventoryModal({
   open,
   onClose,
+  onSubmitted,
   availableEvents = EMPTY_AVAILABLE_EVENTS,
   presetEvent,
   initialSelectedItems = EMPTY_INITIAL_SELECTED_ITEMS,
@@ -353,6 +344,7 @@ export function ReserveInventoryModal({
       });
 
       onClose();
+      onSubmitted?.();
       const multipleReservations = result.count !== 1;
       const updatedOnly = result.mergedCount > 0 && result.createdCount === 0;
 
@@ -423,51 +415,19 @@ export function ReserveInventoryModal({
     );
   }
 
-  function renderEventSummary(event: ReserveInventoryEventOption) {
-    return (
-      <div className="reserve-header-meta">
-        <p className="reserve-header-event">{event.eventName}</p>
-        <div className="reserve-header-details">
-          <span className="reserve-header-detail">
-            <CalendarIcon className="reserve-header-icon" />
-            {formatEventRange(event)}
-          </span>
-          {event.location && (
-            <span className="reserve-header-detail">
-              <LocationPinIcon className="reserve-header-icon" />
-              {event.location}
-            </span>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  const headerEvent = presetEvent ?? selectedEvent;
   const totalItems = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
   const showSearchDropdown = canSearchInventory && searchOpen;
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Reserve Inventory"
-      size="lg"
-      headerContent={headerEvent ? renderEventSummary(headerEvent) : undefined}
-      headerClassName="reserve-modal-header"
-      bodyClassName="reserve-modal-body"
-      titleClassName="reserve-modal-title"
-    >
-      <form onSubmit={handleSubmit} className="modal-form reserve-modal-form">
-        {!headerEvent && subtitle && (
-          <p className="reserve-modal-subtitle">{subtitle}</p>
-        )}
+    <Modal open={open} onClose={onClose} title={title} size="lg">
+      <form onSubmit={handleSubmit} className="modal-form">
+        {subtitle && <p className="event-info-detail modal-helper-text">{subtitle}</p>}
 
         {!presetEvent && (
-          <div className="reserve-field-group">
-            <label className="reserve-field-label">Event</label>
+          <div className="form-field">
+            <label className="form-label">Event *</label>
             <select
-              className="form-input reserve-event-select"
+              className="form-input"
               value={eventId}
               onChange={(e) => {
                 setEventId(e.target.value);
@@ -488,14 +448,44 @@ export function ReserveInventoryModal({
           </div>
         )}
 
+        {selectedEvent && (
+          <div className="event-info-box">
+            {selectedEvent.location ? (
+              <span className="table-meta-inline">
+                <LocationPinIcon className="table-meta-icon" />
+                <span className="event-info-detail">{selectedEvent.location}</span>
+              </span>
+            ) : null}
+            <span className="table-meta-inline">
+              <CalendarIcon className="table-meta-icon" />
+              <span className="event-info-detail">
+                {new Date(selectedEvent.startDate).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+                {" – "}
+                {new Date(selectedEvent.endDate).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </span>
+            </span>
+            <span className="event-info-detail">
+              Availability is based on this event. Pending requests do not hold stock
+              until approved.
+            </span>
+          </div>
+        )}
+
         {!presetEvent && availableEvents.length === 0 && (
-          <p className="reserve-empty-state">
+          <p className="form-error-inline">
             No current or upcoming events are available for reservations.
           </p>
         )}
 
-        <div className="reserve-field-group">
-          <label className="reserve-field-label">Search inventory</label>
+        <div className="form-field">
+          <label className="form-label">Search inventory</label>
           <div
             className="reserve-search-area"
             onFocus={() => {
@@ -514,7 +504,7 @@ export function ReserveInventoryModal({
               <input
                 ref={searchInputRef}
                 type="search"
-                className="reserve-search-input"
+                className="form-input reserve-search-input"
                 placeholder={
                   canSearchInventory
                     ? "Type to search inventory items..."
@@ -562,115 +552,100 @@ export function ReserveInventoryModal({
               </div>
             )}
           </div>
-
-          <p className="reserve-search-message">
-            {canSearchInventory
-              ? "Availability is based on this event. If you already have a reservation for an item, adding it again will increase the quantity on your existing request."
-              : "Select an event to see event-specific availability and start searching inventory."}
-          </p>
         </div>
 
-        <div className="reserve-field-group">
-          <label className="reserve-field-label">
-            Items to Reserve ({selectedItems.length})
-          </label>
+        <div className="form-field">
+          <label className="form-label">Items to reserve ({selectedItems.length})</label>
 
           {selectedItems.length === 0 ? (
-            <div className="reserve-selected-empty">
-              <p className="reserve-selected-empty-title">No items added yet</p>
-              <p className="reserve-selected-empty-copy">
+            <div className="event-info-box">
+              <span className="event-info-detail">
                 Search and select inventory items to reserve for this event.
-              </p>
+              </span>
             </div>
           ) : (
-            <div className="reserve-selected-shell">
-              <div className="reserve-selected-list">
-                {selectedItems.map((item) => (
-                  <div key={item.id} className="reserve-selected-item">
-                    <div className="reserve-selected-copy">
-                      <div className="reserve-selected-header">
-                        <span className="reserve-selected-title">{item.title}</span>
-                      </div>
-                      {item.currentLocation ? (
-                        <div className="reserve-selected-meta">
-                          <span>{item.currentLocation}</span>
-                        </div>
-                      ) : null}
-                      <div className="reserve-availability">
-                        {item.checkingAvailability
-                          ? "Checking availability…"
-                          : item.availableQty !== null
-                            ? `Available for this event: ${item.availableQty}${typeof item.totalQuantity === "number" ? ` of ${item.totalQuantity}` : ""}`
-                            : "Select an event to see availability for this event"}
-                      </div>
-                      {item.availableQty !== null && item.quantity > item.availableQty && (
-                        <span className="form-error-inline">
-                          Only {item.availableQty} available for this event.
-                        </span>
-                      )}
-                    </div>
+            <div className="reserve-selected-list">
+              {selectedItems.map((item) => (
+                <div key={item.id} className="reserve-selected-item">
+                  <div className="reserve-selected-copy">
+                    <span className="reserve-selected-title">{item.title}</span>
+                    {item.currentLocation ? (
+                      <span className="reserve-selected-meta">{item.currentLocation}</span>
+                    ) : null}
+                    <span className="event-info-detail reserve-availability">
+                      {item.checkingAvailability
+                        ? "Checking availability…"
+                        : item.availableQty !== null
+                          ? `Available for this event: ${item.availableQty}${typeof item.totalQuantity === "number" ? ` of ${item.totalQuantity}` : ""}`
+                          : "Select an event to see availability for this event"}
+                    </span>
+                    {item.availableQty !== null && item.quantity > item.availableQty && (
+                      <span className="form-error-inline">
+                        Only {item.availableQty} available for this event.
+                      </span>
+                    )}
+                  </div>
 
-                    <div className="reserve-selected-controls">
-                      <div className="reserve-qty-stepper">
-                        <button
-                          type="button"
-                          className="reserve-step-button"
-                          onClick={() => handleDecrementQuantity(item.id)}
-                          disabled={item.quantity <= 1}
-                          aria-label={`Decrease quantity for ${item.title}`}
-                        >
-                          <MinusIcon className="reserve-step-icon" />
-                        </button>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          className="reserve-qty-input"
-                          aria-label={`Quantity for ${item.title}`}
-                          value={item.quantityInput}
-                          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                          onBlur={() => handleQuantityBlur(item.id)}
-                          onFocus={(e) => e.currentTarget.select()}
-                        />
-                        <button
-                          type="button"
-                          className="reserve-step-button"
-                          onClick={() => handleIncrementQuantity(item.id)}
-                          disabled={item.availableQty !== null && item.quantity >= item.availableQty}
-                          aria-label={`Increase quantity for ${item.title}`}
-                        >
-                          <PlusIcon className="reserve-step-icon" />
-                        </button>
-                      </div>
-
+                  <div className="reserve-selected-controls">
+                    <div className="reserve-qty-stepper">
                       <button
                         type="button"
-                        className="reserve-remove-icon"
-                        onClick={() => handleRemoveItem(item.id)}
-                        aria-label={`Remove ${item.title}`}
+                        className="reserve-step-button"
+                        onClick={() => handleDecrementQuantity(item.id)}
+                        disabled={item.quantity <= 1}
+                        aria-label={`Decrease quantity for ${item.title}`}
                       >
-                        <TrashIcon className="reserve-remove-icon-svg" />
+                        <MinusIcon className="reserve-step-icon" />
+                      </button>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        className="reserve-qty-input"
+                        aria-label={`Quantity for ${item.title}`}
+                        value={item.quantityInput}
+                        onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                        onBlur={() => handleQuantityBlur(item.id)}
+                        onFocus={(e) => e.currentTarget.select()}
+                      />
+                      <button
+                        type="button"
+                        className="reserve-step-button"
+                        onClick={() => handleIncrementQuantity(item.id)}
+                        disabled={item.availableQty !== null && item.quantity >= item.availableQty}
+                        aria-label={`Increase quantity for ${item.title}`}
+                      >
+                        <PlusIcon className="reserve-step-icon" />
                       </button>
                     </div>
+
+                    <button
+                      type="button"
+                      className="reserve-remove-icon"
+                      onClick={() => handleRemoveItem(item.id)}
+                      aria-label={`Remove ${item.title}`}
+                    >
+                      <TrashIcon className="reserve-remove-icon-svg" />
+                    </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
         {submitError && <p className="form-error">{submitError}</p>}
 
-        <div className="reserve-modal-footer">
+        <div className="modal-actions">
           <button
             type="button"
-            className="btn reserve-cancel-button"
+            className="btn btn-outline"
             onClick={onClose}
             disabled={submitting}
           >
             Cancel
           </button>
-          <button type="submit" className="btn reserve-submit-button" disabled={!canSubmit}>
+          <button type="submit" className="btn btn-dark" disabled={!canSubmit}>
             {submitting
               ? "Submitting…"
               : totalItems > 0

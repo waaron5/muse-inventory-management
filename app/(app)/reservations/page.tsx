@@ -34,6 +34,7 @@ export default async function ReservationsPage() {
           select: {
             id: true,
             title: true,
+            imageUrl: true,
             currentLocation: true,
           },
         },
@@ -117,6 +118,7 @@ export default async function ReservationsPage() {
           inventoryItem: {
             id: r.inventoryItem.id,
             title: r.inventoryItem.title,
+            imageUrl: r.inventoryItem.imageUrl,
             currentLocation: r.inventoryItem.currentLocation,
           },
           event: {

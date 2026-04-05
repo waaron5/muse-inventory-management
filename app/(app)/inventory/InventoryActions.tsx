@@ -37,7 +37,7 @@ export function InventoryActions({
   const { toast } = useToast();
   const hasReservationActivity =
     reservationState.pendingCount > 0 || reservationState.approvedCount > 0;
-  const reserveLabel = hasReservationActivity ? "Update" : "Reserve";
+  const reserveLabel = "Reserve";
 
   async function handleRetireToggle() {
     if (
@@ -90,7 +90,9 @@ export function InventoryActions({
             <button
               type="button"
               className={`event-icon-button${
-                item.status === "ACTIVE" ? " event-icon-button-danger" : ""
+                item.status === "ACTIVE"
+                  ? " event-icon-button-danger"
+                  : " event-icon-button-success"
               }`}
               onClick={handleRetireToggle}
               disabled={loading}
@@ -105,7 +107,13 @@ export function InventoryActions({
                   : `Activate ${item.title}`
               }
             >
-              {loading ? <span aria-hidden="true">…</span> : <TrashIcon />}
+              {loading ? (
+                <span aria-hidden="true">…</span>
+              ) : item.status === "ACTIVE" ? (
+                <TrashIcon />
+              ) : (
+                <ActivateIcon />
+              )}
             </button>
           </div>
         )}
@@ -174,6 +182,20 @@ function TrashIcon() {
       <path d="M19 6l-1 14H6L5 6" />
       <path d="M10 11v6" />
       <path d="M14 11v6" />
+    </svg>
+  );
+}
+
+function ActivateIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 256 256"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M229.66,114.34l-96-96a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,32,128H72v56a8,8,0,0,0,8,8h96a8,8,0,0,0,8-8V128h40a8,8,0,0,0,5.66-13.66ZM176,112a8,8,0,0,0-8,8v56H88V120a8,8,0,0,0-8-8H51.31L128,35.31,204.69,112Zm8,104a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,216Z" />
     </svg>
   );
 }

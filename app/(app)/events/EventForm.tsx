@@ -158,7 +158,7 @@ export function EventForm({ mode, event }: EventFormProps) {
 
           {error && <p className="form-error">{error}</p>}
 
-          <div className="form-footer">
+          <div className="form-footer page-form-footer">
             <Link
               href={mode === "edit" ? `/events/${event?.id}` : "/events"}
               className="btn btn-outline"

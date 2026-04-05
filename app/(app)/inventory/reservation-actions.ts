@@ -570,6 +570,66 @@ export async function returnInventoryReservation(
   return { success: true };
 }
 
+export async function removeInventoryReservationHistory(id: string) {
+  const session = await requireSession();
+
+  const reservation = await prisma.inventoryReservation.findUnique({
+    where: { id },
+    include: {
+      inventoryItem: true,
+      event: {
+        select: {
+          eventName: true,
+        },
+      },
+    },
+  });
+
+  if (!reservation) throw new Error("Reservation not found");
+
+  if (
+    reservation.requestedById !== session.user.id &&
+    session.user.role !== "ADMIN"
+  ) {
+    throw new Error("Forbidden");
+  }
+
+  if (!["REJECTED", "COMPLETED"].includes(reservation.status)) {
+    throw new Error("Only rejected or returned reservations can be removed");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    if (
+      reservation.status === "COMPLETED" &&
+      reservation.returnLocation?.trim() &&
+      reservation.inventoryItem.currentLocation !== reservation.returnLocation.trim()
+    ) {
+      await tx.inventoryItem.update({
+        where: { id: reservation.inventoryItemId },
+        data: {
+          currentLocation: reservation.returnLocation.trim(),
+          updatedById: session.user.id,
+        },
+      });
+    }
+
+    await tx.inventoryReservation.delete({
+      where: { id: reservation.id },
+    });
+  });
+
+  await logAudit({
+    entityType: "INVENTORY_RESERVATION",
+    entityId: id,
+    actionType: "DELETED",
+    performedById: session.user.id,
+    summary: `Removed ${reservation.status === "COMPLETED" ? "returned" : "rejected"} reservation for "${reservation.inventoryItem.title}" from event "${reservation.event.eventName}"`,
+  });
+
+  revalidateInventoryReservationViews([reservation.inventoryItemId], reservation.eventId);
+  return { success: true };
+}
+
 export async function editInventoryReservation(
   id: string,
   formData: { quantity: number; notes?: string }
@@ -701,6 +761,122 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
   const allEventIds = [...new Set(reservations.map((r) => r.eventId))];
   for (const eventId of allEventIds) {
     revalidateInventoryReservationViews(allItemIds, eventId);
+  }
+
+  return results;
+}
+
+export async function bulkReturnInventoryReservations(
+  ids: string[],
+  returnLocation: string,
+  notes?: string
+) {
+  const session = await requireSession();
+  const uniqueIds = [...new Set(ids)];
+  const trimmedReturnLocation = returnLocation.trim();
+
+  if (uniqueIds.length === 0) throw new Error("No reservations selected");
+  if (!trimmedReturnLocation) throw new Error("Return location is required");
+
+  const reservations = await prisma.inventoryReservation.findMany({
+    where: {
+      id: { in: uniqueIds },
+    },
+    include: {
+      event: {
+        select: {
+          eventName: true,
+        },
+      },
+      inventoryItem: {
+        select: {
+          title: true,
+        },
+      },
+    },
+  });
+
+  const reservationsById = new Map(
+    reservations.map((reservation) => [reservation.id, reservation])
+  );
+  const results: {
+    returned: number;
+    failed: Array<{ id: string; item: string; reason: string }>;
+  } = {
+    returned: 0,
+    failed: [],
+  };
+  const processedItemIds = new Set<string>();
+  const processedEventIds = new Set<string>();
+
+  for (const id of uniqueIds) {
+    const reservation = reservationsById.get(id);
+
+    if (!reservation) {
+      results.failed.push({
+        id,
+        item: "Unknown item",
+        reason: "Reservation not found",
+      });
+      continue;
+    }
+
+    if (
+      reservation.requestedById !== session.user.id &&
+      session.user.role !== "ADMIN"
+    ) {
+      results.failed.push({
+        id,
+        item: reservation.inventoryItem.title,
+        reason: "Forbidden",
+      });
+      continue;
+    }
+
+    if (reservation.status !== "APPROVED") {
+      results.failed.push({
+        id,
+        item: reservation.inventoryItem.title,
+        reason: "Only approved reservations can be returned",
+      });
+      continue;
+    }
+
+    await prisma.$transaction([
+      prisma.inventoryReservation.update({
+        where: { id: reservation.id },
+        data: {
+          status: "COMPLETED",
+          returnLocation: trimmedReturnLocation,
+          notes: notes ?? reservation.notes,
+          lastModifiedById: session.user.id,
+        },
+      }),
+      prisma.inventoryItem.update({
+        where: { id: reservation.inventoryItemId },
+        data: {
+          currentLocation: trimmedReturnLocation,
+          updatedById: session.user.id,
+        },
+      }),
+    ]);
+
+    await logAudit({
+      entityType: "INVENTORY_RESERVATION",
+      entityId: reservation.id,
+      actionType: "RETURNED",
+      performedById: session.user.id,
+      summary: `Returned "${reservation.inventoryItem.title}" to "${trimmedReturnLocation}" (bulk)`,
+      metadata: { returnLocation: trimmedReturnLocation, notes },
+    });
+
+    processedItemIds.add(reservation.inventoryItemId);
+    processedEventIds.add(reservation.eventId);
+    results.returned++;
+  }
+
+  for (const eventId of processedEventIds) {
+    revalidateInventoryReservationViews([...processedItemIds], eventId);
   }
 
   return results;

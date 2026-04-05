@@ -12,8 +12,8 @@ type Theme = "light" | "dark";
 const NAV_ITEMS = [
   { label: "Events", href: "/events", iconClass: "eventsIcon" },
   { label: "Inventory", href: "/inventory", iconClass: "inventoryIcon" },
-  { label: "Reservations", href: "/reservations", iconClass: "reservationsIcon" },
   { label: "Gifting", href: "/gifting", iconClass: "giftingIcon" },
+  { label: "Reservations", href: "/reservations", iconClass: "reservationsIcon" },
 ] as const;
 
 const THEME_STORAGE_KEY = "muse-theme";

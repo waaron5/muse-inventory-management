@@ -7,7 +7,6 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import Link from "next/link";
-import Image from "next/image";
 import { InventoryDetailActions } from "./InventoryDetailActions";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
@@ -96,13 +95,13 @@ export default async function InventoryDetailPage({
           <div className="detail-card">
             <div className="detail-image-section">
               {item.imageUrl ? (
-                <Image
-                  src={item.imageUrl}
-                  alt={item.title}
-                  width={120}
-                  height={120}
-                  style={{ objectFit: "cover", borderRadius: 8 }}
-                />
+                <div className="detail-image-frame">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="detail-image-img"
+                  />
+                </div>
               ) : (
                 <div className="image-placeholder-lg" />
               )}
@@ -116,14 +115,6 @@ export default async function InventoryDetailPage({
               <div className="detail-row">
                 <span className="detail-label">Total Quantity</span>
                 <span>{item.quantity}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Active Reservations</span>
-                <span>
-                  {activeReservations.length === 0
-                    ? "None"
-                    : `${activeReservations.length} active`}
-                </span>
               </div>
               <div className="detail-row detail-row-block">
                 <span className="detail-label">Availability</span>
@@ -159,28 +150,6 @@ export default async function InventoryDetailPage({
               </div>
             </div>
           </div>
-
-          {item.status === "ACTIVE" && (
-            <InventoryDetailActions
-              itemId={item.id}
-              itemTitle={item.title}
-              itemCurrentLocation={item.currentLocation ?? null}
-              itemTotalQuantity={item.quantity}
-              userId={userId}
-              activeReservations={activeReservations.map((r) => ({
-                status: r.status as string,
-                requestedById: r.requestedBy.id,
-              }))}
-              availableEvents={availableEvents.map((e) => ({
-                id: e.id,
-                eventName: e.eventName,
-                companyName: e.companyName,
-                location: e.location,
-                startDate: e.startDate.toISOString(),
-                endDate: e.endDate.toISOString(),
-              }))}
-            />
-          )}
 
           <div className="reservations-section">
             <h3 className="section-title">
@@ -329,6 +298,30 @@ export default async function InventoryDetailPage({
                   <p className="audit-summary">{log.summary}</p>
                 </div>
               ))}
+            </div>
+          )}
+
+          {item.status === "ACTIVE" && (
+            <div className="detail-side-action">
+              <InventoryDetailActions
+                itemId={item.id}
+                itemTitle={item.title}
+                itemCurrentLocation={item.currentLocation ?? null}
+                itemTotalQuantity={item.quantity}
+                userId={userId}
+                activeReservations={activeReservations.map((r) => ({
+                  status: r.status as string,
+                  requestedById: r.requestedBy.id,
+                }))}
+                availableEvents={availableEvents.map((e) => ({
+                  id: e.id,
+                  eventName: e.eventName,
+                  companyName: e.companyName,
+                  location: e.location,
+                  startDate: e.startDate.toISOString(),
+                  endDate: e.endDate.toISOString(),
+                }))}
+              />
             </div>
           )}
         </div>

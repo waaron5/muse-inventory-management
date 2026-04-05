@@ -9,6 +9,7 @@ import {
 interface ReserveInventoryForEventButtonProps {
   event: ReserveInventoryEventOption;
   disabled?: boolean;
+  variant?: "default" | "text";
   reservationState: {
     pendingCount: number;
     approvedCount: number;
@@ -18,12 +19,18 @@ interface ReserveInventoryForEventButtonProps {
 export function ReserveInventoryForEventButton({
   event,
   disabled = false,
+  variant = "default",
   reservationState,
 }: ReserveInventoryForEventButtonProps) {
   const [open, setOpen] = useState(false);
   const hasReservationActivity =
     reservationState.pendingCount > 0 || reservationState.approvedCount > 0;
-  const buttonLabel = hasReservationActivity ? "Add More Items" : "Reserve Inventory";
+  const buttonLabel =
+    variant === "text"
+      ? "Add Items"
+      : hasReservationActivity
+        ? "Add More Items"
+        : "Reserve Inventory";
 
   return (
     <>
@@ -31,27 +38,18 @@ export function ReserveInventoryForEventButton({
         <button
           type="button"
           className={`reserve-inline-button${
-            hasReservationActivity ? " reserve-inline-button-active" : ""
+            variant === "text" ? " reserve-inline-button-text" : ""
+          }${
+            hasReservationActivity && variant !== "text"
+              ? " reserve-inline-button-active"
+              : ""
           }`}
           onClick={() => setOpen(true)}
           disabled={disabled}
         >
+          {variant === "text" && <PlusIcon className="reserve-inline-text-icon" />}
           {buttonLabel}
         </button>
-        {hasReservationActivity && (
-          <div className="reserve-inline-statuses">
-            {reservationState.pendingCount > 0 && (
-              <span className="action-status-chip action-status-chip-pending">
-                You: {reservationState.pendingCount} pending
-              </span>
-            )}
-            {reservationState.approvedCount > 0 && (
-              <span className="action-status-chip action-status-chip-approved">
-                You: {reservationState.approvedCount} approved
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
       <ReserveInventoryModal
@@ -61,5 +59,18 @@ export function ReserveInventoryForEventButton({
         title={`Reserve inventory for ${event.eventName}`}
       />
     </>
+  );
+}
+
+function PlusIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 256 256"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
+    </svg>
   );
 }
