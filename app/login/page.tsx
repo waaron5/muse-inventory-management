@@ -2,16 +2,42 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+
+const DEFAULT_LOGIN_REDIRECT = "/dashboard";
+
+function getSafeCallbackUrl(callbackUrl: string | null) {
+  if (!callbackUrl) return DEFAULT_LOGIN_REDIRECT;
+
+  try {
+    const parsedUrl = new URL(callbackUrl, window.location.origin);
+
+    if (parsedUrl.origin !== window.location.origin) {
+      return DEFAULT_LOGIN_REDIRECT;
+    }
+
+    const path = `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+
+    if (path.startsWith("/login") || path.startsWith("/api/auth")) {
+      return DEFAULT_LOGIN_REDIRECT;
+    }
+
+    return path || DEFAULT_LOGIN_REDIRECT;
+  } catch {
+    return DEFAULT_LOGIN_REDIRECT;
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const isDemo = process.env.APP_MODE === "demo";
+  const callbackUrl = getSafeCallbackUrl(searchParams.get("callbackUrl"));
 
   function fillCredentials(demoEmail: string, demoPassword: string) {
     setEmail(demoEmail);
@@ -26,6 +52,7 @@ export default function LoginPage() {
     const result = await signIn("credentials", {
       email,
       password,
+      callbackUrl,
       redirect: false,
     });
 
@@ -34,7 +61,7 @@ export default function LoginPage() {
     if (result?.error) {
       setError("Invalid email or password.");
     } else {
-      router.push("/dashboard");
+      router.push(callbackUrl);
       router.refresh();
     }
   }
