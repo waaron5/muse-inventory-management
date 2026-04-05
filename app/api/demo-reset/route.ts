@@ -135,8 +135,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Demo reset failed:", error);
+    const details = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "Reset failed" },
+      { error: "Reset failed", details },
       { status: 500 },
     );
   } finally {
