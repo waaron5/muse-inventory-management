@@ -16,6 +16,7 @@ export function LoginPageClient({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   function fillCredentials(demoEmail: string, demoPassword: string) {
@@ -26,6 +27,7 @@ export function LoginPageClient({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setErrorCode(null);
     setLoading(true);
 
     const result = await signIn("credentials", {
@@ -38,6 +40,7 @@ export function LoginPageClient({
     setLoading(false);
 
     if (result?.error) {
+      setErrorCode(result.error);
       if (result.error === "CredentialsSignin") {
         setError("Invalid email or password.");
       } else {
@@ -102,7 +105,12 @@ export function LoginPageClient({
             />
           </div>
 
-          {error && <p className="login-error">{error}</p>}
+          {error && (
+            <p className="login-error">
+              {error}
+              {isDemo && errorCode ? ` (${errorCode})` : null}
+            </p>
+          )}
 
           <button type="submit" disabled={loading} className="btn btn-primary login-btn">
             {loading ? "Signing in…" : "Sign in"}
