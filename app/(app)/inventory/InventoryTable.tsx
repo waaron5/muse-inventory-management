@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ReserveInventoryModal, type ReserveInventoryEventOption } from "@/components/ReserveInventoryModal";
 import { LocationPinIcon } from "@/components/MetadataIcons";
+import { INVENTORY_BULK_DOCK_SLOT_ID } from "./InventoryPageShell";
 import { InventoryActions } from "./InventoryActions";
 import { InventoryImagePreview } from "./InventoryImagePreview";
 
@@ -35,6 +37,7 @@ export function InventoryTable({
 }: InventoryTableProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [reserveOpen, setReserveOpen] = useState(false);
+  const [bulkDockSlot, setBulkDockSlot] = useState<HTMLElement | null>(null);
   const selectAllRef = useRef<HTMLInputElement>(null);
 
   const selectableItems = items.filter((item) => item.status === "ACTIVE");
@@ -71,6 +74,10 @@ export function InventoryTable({
       selectAllRef.current.indeterminate = someSelected;
     }
   }, [someSelected]);
+
+  useEffect(() => {
+    setBulkDockSlot(document.getElementById(INVENTORY_BULK_DOCK_SLOT_ID));
+  }, []);
 
   function toggleOne(itemId: string) {
     if (!selectableItemIdSet.has(itemId)) return;
@@ -257,46 +264,49 @@ export function InventoryTable({
             </tbody>
           </table>
         </div>
+      </div>
 
-        {showSelectionColumn && (
-          <div className="inventory-bulk-dock-shell" data-inventory-extra-height>
-            <div
-              className={`inventory-bulk-dock${
-                selected.size > 0 ? " inventory-bulk-dock-active" : ""
-              }`}
-            >
-              <div className="inventory-bulk-dock-leading">
-                <div className="inventory-bulk-dock-copy" aria-live="polite">
-                  <span className="bulk-approve-count">
-                    {selected.size} {selected.size === 1 ? "item" : "items"} selected
-                  </span>
+      {showSelectionColumn && bulkDockSlot
+        ? createPortal(
+            <div className="inventory-bulk-dock-shell">
+              <div
+                className={`inventory-bulk-dock${
+                  selected.size > 0 ? " inventory-bulk-dock-active" : ""
+                }`}
+              >
+                <div className="inventory-bulk-dock-leading">
+                  <div className="inventory-bulk-dock-copy" aria-live="polite">
+                    <span className="bulk-approve-count">
+                      {selected.size} {selected.size === 1 ? "item" : "items"} selected
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setSelected(new Set())}
+                    disabled={selected.size === 0}
+                  >
+                    Clear
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => setSelected(new Set())}
-                  disabled={selected.size === 0}
-                >
-                  Clear
-                </button>
+                <div className="inventory-bulk-dock-actions">
+                  <button
+                    type="button"
+                    className="inventory-reserve-button"
+                    onClick={() => setReserveOpen(true)}
+                    disabled={selected.size === 0}
+                  >
+                    <ReserveSelectedIcon className="inventory-reserve-icon" />
+                    Reserve Selected
+                  </button>
+                </div>
               </div>
-
-              <div className="inventory-bulk-dock-actions">
-                <button
-                  type="button"
-                  className="inventory-reserve-button"
-                  onClick={() => setReserveOpen(true)}
-                  disabled={selected.size === 0}
-                >
-                  <ReserveSelectedIcon className="inventory-reserve-icon" />
-                  Reserve Selected
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+            </div>,
+            bulkDockSlot
+          )
+        : null}
 
       <ReserveInventoryModal
         open={reserveOpen}

@@ -427,9 +427,14 @@ select {
 }
 .data-table { width: 100%; border-collapse: collapse; }
 .inventory-page-shell {
-  height: calc(100dvh - 56px - 64px);
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.inventory-page-shell-paginated {
+  height: calc(100dvh - 56px - 64px);
+  gap: 0;
   min-height: 0;
 }
 
@@ -437,6 +442,41 @@ select {
 .inventory-page-controls,
 .inventory-page-pagination {
   flex-shrink: 0;
+}
+
+.inventory-page-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.inventory-page-controls-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.inventory-page-controls .table-toolbar {
+  margin-bottom: 0;
+  min-height: 40px;
+}
+
+.inventory-page-bulk-dock-slot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.inventory-page-bulk-dock-slot:empty {
+  display: none;
+}
+
+.inventory-page-bulk-dock-slot .inventory-bulk-dock {
+  width: auto;
 }
 
 .inventory-page-table-area {
@@ -2043,7 +2083,7 @@ select {
   .reservations-toolbar {
     align-items: flex-start;
   }
-  .inventory-page-shell {
+  .inventory-page-shell.inventory-page-shell-paginated {
     height: calc(100dvh - 56px - 48px);
   }
   .inventory-table .table-row td {
@@ -2075,8 +2115,15 @@ select {
     justify-content: space-between;
     margin-left: 0;
   }
-  .inventory-bulk-dock-shell {
-    min-height: 108px;
+  .inventory-page-controls-row {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+  .inventory-page-bulk-dock-slot {
+    width: 100%;
+  }
+  .inventory-page-bulk-dock-slot .inventory-bulk-dock {
+    width: 100%;
   }
   .inventory-bulk-dock {
     align-items: stretch;
@@ -2121,7 +2168,7 @@ select {
   .reservations-count {
     margin-left: 2px;
   }
-  .inventory-page-shell {
+  .inventory-page-shell.inventory-page-shell-paginated {
     height: calc(100dvh - 56px - 32px);
   }
   .table-toolbar {
@@ -2176,11 +2223,14 @@ select {
   .reserve-selected-controls {
     gap: 8px;
   }
-  .inventory-bulk-dock-shell {
-    min-height: 108px;
+  .inventory-page-bulk-dock-slot {
+    width: 100%;
+  }
+  .inventory-page-bulk-dock-slot .inventory-bulk-dock {
+    width: 100%;
   }
   .inventory-bulk-dock {
-    padding: 12px;
+    padding: 0;
   }
 }
 
@@ -2326,35 +2376,28 @@ html[data-theme="light"] .form-input:focus {
 
 /* --- Bulk actions --- */
 .inventory-bulk-dock-shell {
-  min-height: 84px;
-  padding-top: 12px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  min-height: 40px;
 }
 .inventory-bulk-dock {
-  width: 100%;
-  min-height: 72px;
+  width: auto;
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 16px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--gray-50);
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
   color: var(--gray-500);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
   transition:
-    background-color 0.18s ease,
-    border-color 0.18s ease,
     color 0.18s ease,
-    box-shadow 0.18s ease;
+    opacity 0.18s ease;
 }
 .inventory-bulk-dock-active {
-  background: var(--color-bg);
-  border-color: var(--color-border);
   color: var(--gray-700);
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
 }
 .inventory-bulk-dock-copy {
   display: flex;
@@ -2374,7 +2417,7 @@ html[data-theme="light"] .form-input:focus {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .inventory-bulk-dock-actions .btn,
 .inventory-bulk-dock-actions .inventory-reserve-button {

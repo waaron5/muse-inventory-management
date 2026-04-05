@@ -4,27 +4,19 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/PageHeader";
 import { SearchBar } from "@/components/SearchBar";
-import { Pagination } from "@/components/Pagination";
 import { InventoryPageShell } from "./InventoryPageShell";
 import { InventoryTable } from "./InventoryTable";
-
-const DEFAULT_PAGE_SIZE = 8;
 
 export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; pageSize?: string }>;
+  searchParams: Promise<{ q?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user.role === "ADMIN";
   const userId = session?.user.id ?? "";
   const params = await searchParams;
   const query = params.q ?? "";
-  const pageSize = Math.max(
-    1,
-    parseInt(params.pageSize ?? String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE
-  );
-  const requestedPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const today = new Date();
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -41,10 +33,6 @@ export default async function InventoryPage({
       : {}),
   };
 
-  const totalCount = await prisma.inventoryItem.count({ where });
-  const totalPages = Math.max(1, Math.ceil(Math.max(totalCount, 1) / pageSize));
-  const currentPage = Math.min(requestedPage, totalPages);
-
   const [items, availableEvents] = await Promise.all([
     prisma.inventoryItem.findMany({
       where,
@@ -59,8 +47,6 @@ export default async function InventoryPage({
           select: { status: true },
         },
       },
-      skip: (currentPage - 1) * pageSize,
-      take: pageSize,
     }),
     prisma.event.findMany({
       where: { endDate: { gte: todayStart } },
@@ -103,13 +89,11 @@ export default async function InventoryPage({
     startDate: event.startDate.toISOString(),
     endDate: event.endDate.toISOString(),
   }));
+  const totalCount = items.length;
 
   return (
     <InventoryPageShell
-      totalCount={totalCount}
-      currentPage={currentPage}
-      pageSize={pageSize}
-      showPagination={totalCount > 0}
+      stripLegacyPaginationParams
       header={
         <PageHeader
           title="Inventory"
@@ -164,14 +148,6 @@ export default async function InventoryPage({
           })}
           isAdmin={isAdmin}
           availableEvents={serializedAvailableEvents}
-        />
-      }
-      pagination={
-        <Pagination
-          total={totalCount}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          alwaysShow
         />
       }
     />

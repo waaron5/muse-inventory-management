@@ -3,29 +3,32 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-const FALLBACK_ROW_HEIGHT = 88;
+const ESTIMATED_ROW_HEIGHT = 88;
 const FALLBACK_HEADER_HEIGHT = 45;
+export const INVENTORY_BULK_DOCK_SLOT_ID = "inventory-bulk-dock-slot";
 
 interface InventoryPageShellProps {
-  totalCount: number;
-  currentPage: number;
-  pageSize: number;
-  showPagination: boolean;
+  totalCount?: number;
+  currentPage?: number;
+  pageSize?: number;
+  showPagination?: boolean;
   header: ReactNode;
   controls: ReactNode;
   table: ReactNode;
-  pagination: ReactNode;
+  pagination?: ReactNode;
+  stripLegacyPaginationParams?: boolean;
 }
 
 export function InventoryPageShell({
   totalCount,
   currentPage,
   pageSize,
-  showPagination,
+  showPagination = false,
   header,
   controls,
   table,
   pagination,
+  stripLegacyPaginationParams = false,
 }: InventoryPageShellProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -35,8 +38,38 @@ export function InventoryPageShell({
   const controlsRef = useRef<HTMLDivElement>(null);
   const tableShellRef = useRef<HTMLDivElement>(null);
   const paginationRef = useRef<HTMLDivElement>(null);
+  const usesViewportPagination =
+    typeof totalCount === "number" &&
+    typeof currentPage === "number" &&
+    typeof pageSize === "number";
 
   useEffect(() => {
+    if (!stripLegacyPaginationParams) {
+      return;
+    }
+
+    if (!searchParams.has("page") && !searchParams.has("pageSize")) {
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
+    params.delete("pageSize");
+
+    const nextSearch = params.toString();
+    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, {
+      scroll: false,
+    });
+  }, [pathname, router, searchParams, stripLegacyPaginationParams]);
+
+  useEffect(() => {
+    if (!usesViewportPagination) {
+      return;
+    }
+
+    const resolvedTotalCount = totalCount!;
+    const resolvedCurrentPage = currentPage!;
+    const resolvedPageSize = pageSize!;
     let frameId = 0;
 
     function syncPageSize() {
@@ -46,7 +79,7 @@ export function InventoryPageShell({
         const header = headerRef.current;
         const controls = controlsRef.current;
         const tableShell = tableShellRef.current;
-        const pagination = paginationRef.current;
+        const paginationElement = paginationRef.current;
 
         if (!shell || !header || !controls || !tableShell) {
           return;
@@ -54,15 +87,6 @@ export function InventoryPageShell({
 
         const tableElement = tableShell.querySelector("table");
         const tableHead = tableElement?.querySelector("thead");
-        const rowElements = Array.from(
-          tableElement?.querySelectorAll<HTMLTableRowElement>("tbody tr.table-row") ?? []
-        );
-        const rowHeight =
-          rowElements.length > 0
-            ? Math.max(
-                ...rowElements.map((row) => Math.ceil(row.getBoundingClientRect().height))
-              )
-            : FALLBACK_ROW_HEIGHT;
         const headerHeight = tableHead
           ? Math.ceil(tableHead.getBoundingClientRect().height)
           : FALLBACK_HEADER_HEIGHT;
@@ -70,45 +94,33 @@ export function InventoryPageShell({
         const headerSectionHeight = Math.ceil(header.getBoundingClientRect().height);
         const controlsSectionHeight = Math.ceil(controls.getBoundingClientRect().height);
         const paginationHeight =
-          showPagination && pagination
-            ? Math.ceil(pagination.getBoundingClientRect().height)
+          showPagination && paginationElement
+            ? Math.ceil(paginationElement.getBoundingClientRect().height)
             : 0;
-        const extraMeasuredHeight = Array.from(
-          tableShell.querySelectorAll<HTMLElement>("[data-inventory-extra-height]")
-        ).reduce(
-          (sum, element) => {
-            const styles = window.getComputedStyle(element);
-            return (
-              sum +
-              Math.ceil(element.getBoundingClientRect().height) +
-              Math.ceil(parseFloat(styles.marginTop) || 0) +
-              Math.ceil(parseFloat(styles.marginBottom) || 0)
-            );
-          },
-          0
-        );
         const availableRowArea = Math.max(
           0,
           shellHeight -
             headerSectionHeight -
             controlsSectionHeight -
             paginationHeight -
-            extraMeasuredHeight -
             headerHeight -
             2
         );
         const measuredPageSize = Math.max(
           1,
-          Math.floor(availableRowArea / Math.max(rowHeight, 1))
+          Math.floor(availableRowArea / ESTIMATED_ROW_HEIGHT)
         );
-        const nextPageSize = totalCount > 0 ? Math.min(totalCount, measuredPageSize) : pageSize;
+        const nextPageSize =
+          resolvedTotalCount > 0
+            ? Math.min(resolvedTotalCount, measuredPageSize)
+            : resolvedPageSize;
         const totalPages = Math.max(
           1,
-          Math.ceil(Math.max(totalCount, 1) / Math.max(nextPageSize, 1))
+          Math.ceil(Math.max(resolvedTotalCount, 1) / Math.max(nextPageSize, 1))
         );
-        const nextPage = Math.min(currentPage, totalPages);
+        const nextPage = Math.min(resolvedCurrentPage, totalPages);
 
-        if (nextPageSize === pageSize && nextPage === currentPage) {
+        if (nextPageSize === resolvedPageSize && nextPage === resolvedCurrentPage) {
           return;
         }
 
@@ -132,7 +144,7 @@ export function InventoryPageShell({
     const header = headerRef.current;
     const controls = controlsRef.current;
     const tableShell = tableShellRef.current;
-    const pagination = paginationRef.current;
+    const paginationElement = paginationRef.current;
 
     if (!shell || !header || !controls || !tableShell) {
       return;
@@ -143,8 +155,8 @@ export function InventoryPageShell({
     resizeObserver.observe(header);
     resizeObserver.observe(controls);
     resizeObserver.observe(tableShell);
-    if (pagination) {
-      resizeObserver.observe(pagination);
+    if (paginationElement) {
+      resizeObserver.observe(paginationElement);
     }
     window.addEventListener("resize", syncPageSize);
     syncPageSize();
@@ -154,15 +166,35 @@ export function InventoryPageShell({
       resizeObserver.disconnect();
       window.removeEventListener("resize", syncPageSize);
     };
-  }, [currentPage, pageSize, pathname, router, searchParams, showPagination, totalCount]);
+  }, [
+    currentPage,
+    pageSize,
+    pathname,
+    router,
+    searchParams,
+    showPagination,
+    totalCount,
+    usesViewportPagination,
+  ]);
 
   return (
-    <div className="inventory-page-shell" ref={shellRef}>
+    <div
+      className={`inventory-page-shell${
+        usesViewportPagination ? " inventory-page-shell-paginated" : ""
+      }`}
+      ref={shellRef}
+    >
       <div className="inventory-page-header" ref={headerRef}>
         {header}
       </div>
       <div className="inventory-page-controls" ref={controlsRef}>
-        {controls}
+        <div className="inventory-page-controls-row">
+          <div className="inventory-page-controls-main">{controls}</div>
+          <div
+            id={INVENTORY_BULK_DOCK_SLOT_ID}
+            className="inventory-page-bulk-dock-slot"
+          />
+        </div>
       </div>
       <div className="inventory-page-table-area">
         <div className="inventory-page-table-shell" ref={tableShellRef}>

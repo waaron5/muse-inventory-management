@@ -2,6 +2,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/PageHeader";
+import { SearchBar } from "@/components/SearchBar";
+import { InventoryPageShell } from "@/app/(app)/inventory/InventoryPageShell";
 import { NewReservationButton } from "./NewReservationButton";
 import { PendingReservationsTable } from "./PendingReservationsTable";
 
@@ -18,17 +20,57 @@ function getTodayStart() {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
-export default async function ReservationsPage() {
+export default async function ReservationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   if (!session) return null;
 
   const isAdmin = session.user.role === "ADMIN";
   const userId = session.user.id;
+  const params = await searchParams;
+  const query = params.q ?? "";
   const todayStart = getTodayStart();
+  const where = {
+    ...(isAdmin ? {} : { requestedById: userId }),
+    ...(query
+      ? {
+          OR: [
+            {
+              inventoryItem: {
+                title: { contains: query, mode: "insensitive" as const },
+              },
+            },
+            {
+              inventoryItem: {
+                currentLocation: { contains: query, mode: "insensitive" as const },
+              },
+            },
+            {
+              event: {
+                eventName: { contains: query, mode: "insensitive" as const },
+              },
+            },
+            {
+              event: {
+                companyName: { contains: query, mode: "insensitive" as const },
+              },
+            },
+            {
+              requestedBy: {
+                name: { contains: query, mode: "insensitive" as const },
+              },
+            },
+          ],
+        }
+      : {}),
+  };
 
   const [reservations, availableEvents] = await Promise.all([
     prisma.inventoryReservation.findMany({
-      where: isAdmin ? undefined : { requestedById: userId },
+      where,
       include: {
         inventoryItem: {
           select: {
@@ -95,48 +137,54 @@ export default async function ReservationsPage() {
     : "You do not have any inventory reservations yet.";
 
   return (
-    <>
-      <PageHeader
-        title="Reservations"
-        subtitle="Create and track inventory reservations. Pending requests do not hold inventory until approved."
-        action={<NewReservationButton availableEvents={serializedEvents} />}
-      />
-
-      <div className="reservations-toolbar">
-        <span className="reservations-count">
-          {sortedReservations.length}{" "}
-          {sortedReservations.length === 1 ? "reservation" : "reservations"}
-        </span>
-      </div>
-
-      <PendingReservationsTable
-        reservations={sortedReservations.map((r) => ({
-          id: r.id,
-          status: r.status,
-          quantity: r.quantity,
-          requestedById: r.requestedById,
-          inventoryItem: {
-            id: r.inventoryItem.id,
-            title: r.inventoryItem.title,
-            imageUrl: r.inventoryItem.imageUrl,
-            currentLocation: r.inventoryItem.currentLocation,
-          },
-          event: {
-            id: r.event.id,
-            eventName: r.event.eventName,
-            companyName: r.event.companyName,
-            startDate: r.event.startDate.toISOString(),
-            endDate: r.event.endDate.toISOString(),
-          },
-          requestedBy: {
-            id: r.requestedBy.id,
-            name: r.requestedBy.name ?? "Unknown",
-          },
-        }))}
-        isAdmin={isAdmin}
-        userId={userId}
-        emptyMessage={emptyMessage}
-      />
-    </>
+    <InventoryPageShell
+      stripLegacyPaginationParams
+      header={
+        <PageHeader
+          title="Reservations"
+          subtitle="Create and track inventory reservations. Pending requests do not hold inventory until approved."
+          action={<NewReservationButton availableEvents={serializedEvents} />}
+        />
+      }
+      controls={
+        <div className="table-toolbar inventory-toolbar">
+          <SearchBar placeholder="Search items, events, requesters..." />
+          <span className="item-count">
+            {sortedReservations.length}{" "}
+            {sortedReservations.length === 1 ? "reservation" : "reservations"}
+          </span>
+        </div>
+      }
+      table={
+        <PendingReservationsTable
+          reservations={sortedReservations.map((r) => ({
+            id: r.id,
+            status: r.status,
+            quantity: r.quantity,
+            requestedById: r.requestedById,
+            inventoryItem: {
+              id: r.inventoryItem.id,
+              title: r.inventoryItem.title,
+              imageUrl: r.inventoryItem.imageUrl,
+              currentLocation: r.inventoryItem.currentLocation,
+            },
+            event: {
+              id: r.event.id,
+              eventName: r.event.eventName,
+              companyName: r.event.companyName,
+              startDate: r.event.startDate.toISOString(),
+              endDate: r.event.endDate.toISOString(),
+            },
+            requestedBy: {
+              id: r.requestedBy.id,
+              name: r.requestedBy.name ?? "Unknown",
+            },
+          }))}
+          isAdmin={isAdmin}
+          userId={userId}
+          emptyMessage={emptyMessage}
+        />
+      }
+    />
   );
 }

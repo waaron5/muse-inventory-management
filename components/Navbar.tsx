@@ -204,15 +204,6 @@ export function Navbar({
             <button
               type="button"
               className={styles.accountMenuItem}
-              aria-label={`Switch to ${nextTheme} mode`}
-              onClick={handleThemeToggle}
-            >
-              <ThemeIcon className={styles.accountMenuIcon} theme={nextTheme} />
-              <span>{nextTheme === "dark" ? "Dark mode" : "Light mode"}</span>
-            </button>
-            <button
-              type="button"
-              className={styles.accountMenuItem}
               onClick={() => signOut({ callbackUrl: "/login" })}
             >
               <LogoutIcon className={styles.accountMenuIcon} />

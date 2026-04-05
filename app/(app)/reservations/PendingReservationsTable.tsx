@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarIcon } from "@/components/MetadataIcons";
@@ -8,6 +9,7 @@ import { Modal } from "@/components/Modal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { InventoryReservationRowActions } from "@/components/InventoryReservationRowActions";
 import { InventoryImagePreview } from "@/app/(app)/inventory/InventoryImagePreview";
+import { INVENTORY_BULK_DOCK_SLOT_ID } from "@/app/(app)/inventory/InventoryPageShell";
 import { useToast } from "@/components/Toast";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import {
@@ -66,6 +68,7 @@ export function PendingReservationsTable({
   const [returnLocation, setReturnLocation] = useState("");
   const [returnNotes, setReturnNotes] = useState("");
   const [returnError, setReturnError] = useState("");
+  const [bulkDockSlot, setBulkDockSlot] = useState<HTMLElement | null>(null);
   const router = useRouter();
   const { toast } = useToast();
   const pendingReservations = reservations.filter(
@@ -117,6 +120,10 @@ export function PendingReservationsTable({
       return next;
     });
   }, [reservations, isAdmin, userId]);
+
+  useEffect(() => {
+    setBulkDockSlot(document.getElementById(INVENTORY_BULK_DOCK_SLOT_ID));
+  }, []);
 
   function toggleOne(id: string) {
     if (!actionableReservationIdSet.has(id)) return;
@@ -380,44 +387,63 @@ export function PendingReservationsTable({
         </table>
       </div>
 
-      {selected.size > 0 && (
-        <div className="bulk-approve-bar">
-          <span className="bulk-approve-count">{selected.size} selected</span>
-          {selectedPendingIds.length > 0 && (
-            <button
-              type="button"
-              className="btn btn-dark btn-sm"
-              onClick={handleBulkApprove}
-              disabled={busy}
-            >
-              {loadingAction === "approve"
-                ? "Approving..."
-                : `Approve Selected (${selectedPendingIds.length})`}
-            </button>
-          )}
-          {selectedReturnableIds.length > 0 && (
-            <button
-              type="button"
-              className="btn btn-dark btn-sm"
-              onClick={() => {
-                setReturnError("");
-                setReturnOpen(true);
-              }}
-              disabled={busy}
-            >
-              Return Selected ({selectedReturnableIds.length})
-            </button>
-          )}
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => setSelected(new Set())}
-            disabled={busy}
-          >
-            Clear
-          </button>
-        </div>
-      )}
+      {showSelectionColumn && bulkDockSlot
+        ? createPortal(
+            <div className="inventory-bulk-dock-shell">
+              <div
+                className={`inventory-bulk-dock${
+                  selected.size > 0 ? " inventory-bulk-dock-active" : ""
+                }`}
+              >
+                <div className="inventory-bulk-dock-leading">
+                  <div className="inventory-bulk-dock-copy" aria-live="polite">
+                    <span className="bulk-approve-count">
+                      {selected.size}{" "}
+                      {selected.size === 1 ? "reservation" : "reservations"} selected
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setSelected(new Set())}
+                    disabled={selected.size === 0 || busy}
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                <div className="inventory-bulk-dock-actions">
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      className="inventory-reserve-button"
+                      onClick={handleBulkApprove}
+                      disabled={selectedPendingIds.length === 0 || busy}
+                    >
+                      {loadingAction === "approve"
+                        ? "Approving..."
+                        : `Approve Selected (${selectedPendingIds.length})`}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="inventory-reserve-button"
+                    onClick={() => {
+                      setReturnError("");
+                      setReturnOpen(true);
+                    }}
+                    disabled={selectedReturnableIds.length === 0 || busy}
+                  >
+                    <ReserveSelectedIcon className="inventory-reserve-icon" />
+                    Return Selected ({selectedReturnableIds.length})
+                  </button>
+                </div>
+              </div>
+            </div>,
+            bulkDockSlot
+          )
+        : null}
 
       <Modal
         open={returnOpen}
@@ -490,5 +516,13 @@ export function PendingReservationsTable({
         </form>
       </Modal>
     </>
+  );
+}
+
+function ReserveSelectedIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M141.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L124.69,128,50.34,53.66A8,8,0,0,1,61.66,42.34l80,80A8,8,0,0,1,141.66,133.66Zm80-11.32-80-80a8,8,0,0,0-11.32,11.32L204.69,128l-74.35,74.34a8,8,0,0,0,11.32,11.32l80-80A8,8,0,0,0,221.66,122.34Z" />
+    </svg>
   );
 }

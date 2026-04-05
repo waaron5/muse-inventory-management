@@ -3,29 +3,21 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination } from "@/components/Pagination";
 import { SearchBar } from "@/components/SearchBar";
 import { InventoryImagePreview } from "@/app/(app)/inventory/InventoryImagePreview";
 import { InventoryPageShell } from "@/app/(app)/inventory/InventoryPageShell";
 import { GiftRowActions } from "./GiftRowActions";
 
-const DEFAULT_PAGE_SIZE = 8;
-
 export default async function GiftingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; pageSize?: string }>;
+  searchParams: Promise<{ q?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user.role === "ADMIN";
   const userId = session?.user.id ?? "";
   const params = await searchParams;
   const query = params.q ?? "";
-  const pageSize = Math.max(
-    1,
-    parseInt(params.pageSize ?? String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE
-  );
-  const requestedPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const today = new Date();
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -41,10 +33,6 @@ export default async function GiftingPage({
       : {}),
   };
 
-  const totalCount = await prisma.giftItem.count({ where });
-  const totalPages = Math.max(1, Math.ceil(Math.max(totalCount, 1) / pageSize));
-  const currentPage = Math.min(requestedPage, totalPages);
-
   const [items, availableEvents] = await Promise.all([
     prisma.giftItem.findMany({
       where,
@@ -59,8 +47,6 @@ export default async function GiftingPage({
           select: { status: true },
         },
       },
-      skip: (currentPage - 1) * pageSize,
-      take: pageSize,
     }),
     prisma.event.findMany({
       where: { endDate: { gte: todayStart } },
@@ -84,13 +70,11 @@ export default async function GiftingPage({
     startDate: event.startDate.toISOString(),
     endDate: event.endDate.toISOString(),
   }));
+  const totalCount = items.length;
 
   return (
     <InventoryPageShell
-      totalCount={totalCount}
-      currentPage={currentPage}
-      pageSize={pageSize}
-      showPagination={totalCount > 0}
+      stripLegacyPaginationParams
       header={
         <PageHeader
           title="Gifting"
@@ -228,14 +212,6 @@ export default async function GiftingPage({
             </tbody>
           </table>
         </div>
-      }
-      pagination={
-        <Pagination
-          total={totalCount}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          alwaysShow
-        />
       }
     />
   );
