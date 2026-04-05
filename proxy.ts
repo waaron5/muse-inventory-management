@@ -8,6 +8,6 @@ export default withAuth({
 
 export const config = {
   matcher: [
-    "/((?!login|api/auth|_next/static|_next/image|favicon.ico|muse-logo.png|uploads).*)",
+    "/((?!login|api/auth|api/demo-reset|_next/static|_next/image|favicon.ico|muse-logo.png|uploads).*)",
   ],
 };
