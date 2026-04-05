@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createPrismaClient } from "@/lib/db";
 
+const DEMO_IMAGE_URL = "/demo/images/demo-image.jpg";
+
 export async function POST(request: Request) {
   // Only available in demo mode
   if (process.env.APP_MODE !== "demo") {
@@ -67,6 +69,7 @@ export async function POST(request: Request) {
         data: {
           title: item.title,
           description: item.description ?? undefined,
+          imageUrl: DEMO_IMAGE_URL,
           quantity: item.quantity,
           currentLocation: item.currentLocation,
           status: "ACTIVE",
@@ -88,6 +91,7 @@ export async function POST(request: Request) {
         data: {
           title: g.title,
           description: g.description,
+          imageUrl: DEMO_IMAGE_URL,
           quantity: g.quantity,
           status: "ACTIVE",
           createdById: admin.id,

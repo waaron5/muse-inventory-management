@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
+const DEMO_IMAGE_URL = "/demo/images/demo-image.jpg";
 
 // ---------- data ----------
 
@@ -156,6 +157,7 @@ async function main() {
       data: {
         title: item.title,
         description: item.description ?? undefined,
+        imageUrl: DEMO_IMAGE_URL,
         quantity: item.quantity ?? 1,
         currentLocation: item.currentLocation,
         notes: item.notes ?? undefined,
@@ -175,6 +177,7 @@ async function main() {
       data: {
         title: g.title,
         description: g.description,
+        imageUrl: DEMO_IMAGE_URL,
         quantity: g.quantity,
         status: "ACTIVE",
         createdById: admin.id,
