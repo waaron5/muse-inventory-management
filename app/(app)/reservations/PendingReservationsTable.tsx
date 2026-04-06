@@ -61,9 +61,9 @@ export function PendingReservationsTable({
   emptyMessage: string;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loadingAction, setLoadingAction] = useState<
-    "approve" | "approveAll" | "return" | null
-  >(null);
+  const [loadingAction, setLoadingAction] = useState<"approve" | "return" | null>(
+    null
+  );
   const [returnOpen, setReturnOpen] = useState(false);
   const [returnLocation, setReturnLocation] = useState("");
   const [returnNotes, setReturnNotes] = useState("");
@@ -166,30 +166,6 @@ export function PendingReservationsTable({
     }
   }
 
-  async function handleApproveAll() {
-    if (pendingReservations.length === 0) return;
-    if (!confirm(`Approve all ${pendingReservations.length} pending reservation${pendingReservations.length === 1 ? "" : "s"}?`)) return;
-    setSelected(new Set(pendingReservationIds));
-    setLoadingAction("approveAll");
-    try {
-      const results = await bulkApproveInventoryReservations(pendingReservationIds);
-      if (results.failed.length === 0) {
-        toast(`Approved ${results.approved} reservation${results.approved === 1 ? "" : "s"}`);
-      } else {
-        toast(
-          `Approved ${results.approved}, ${results.failed.length} failed (insufficient availability)`,
-          results.approved > 0 ? "success" : "error"
-        );
-      }
-      setSelected(new Set());
-      router.refresh();
-    } catch (err: unknown) {
-      toast(err instanceof Error ? err.message : "Bulk approve failed", "error");
-    } finally {
-      setLoadingAction(null);
-    }
-  }
-
   async function handleBulkReturn(event: FormEvent) {
     event.preventDefault();
     if (selectedReturnableIds.length === 0) return;
@@ -230,21 +206,6 @@ export function PendingReservationsTable({
 
   return (
     <>
-      {isAdmin && pendingReservations.length > 1 && (
-        <div className="bulk-approve-toolbar">
-          <button
-            type="button"
-            className="btn btn-outline btn-sm"
-            onClick={handleApproveAll}
-            disabled={busy}
-          >
-            {loadingAction === "approveAll"
-              ? "Approving..."
-              : `Approve All (${pendingReservations.length})`}
-          </button>
-        </div>
-      )}
-
       <div className="table-container">
         <table className="data-table reservations-table">
           <thead>
