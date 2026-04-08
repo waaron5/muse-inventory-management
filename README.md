@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Muse Event Management
 
-## Getting Started
+## Local Development
 
-First, run the development server:
+Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deployments
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This repo is meant to power two separate Vercel projects:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Production
+- Demo
 
-## Learn More
+Both projects can use the same GitHub repo and the same codebase, but they must use different environment variables, especially different `DATABASE_URL` values.
 
-To learn more about Next.js, take a look at the following resources:
+### Important change
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Vercel builds no longer run Prisma migrations automatically.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The build script now does this:
 
-## Deploy on Vercel
+```bash
+npm run build
+# prisma generate && next build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+That avoids multiple Vercel deployments fighting over Prisma's advisory lock during `prisma migrate deploy`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Database Commands
+
+Run these manually against the database for the environment you intend to change:
+
+```bash
+npm run db:migrate:deploy
+npm run db:migrate:status
+```
+
+These commands use the current `DATABASE_URL`.
+
+## Recommended Workflow
+
+### Code-only change
+
+1. Push to GitHub.
+2. Let Vercel auto-deploy both projects.
+
+### Schema change
+
+1. Create the Prisma migration locally.
+2. Run `npm run db:migrate:deploy` against the production database.
+3. Run `npm run db:migrate:deploy` against the demo database.
+4. If demo fixture data changed, run `npm run demo:reset` against the demo database.
+5. Push to GitHub.
+6. Let Vercel redeploy the app code.
+
+### Why this is safer
+
+- Production and demo no longer compete for migration locks during build.
+- Each database is migrated intentionally and separately.
+- Vercel deployments become code deploys, not schema-mutation jobs.
+
+## Notes
+
+- If you use Vercel's Git integration, pushes will still trigger automatic redeploys.
+- Those redeploys will not apply migrations anymore.
+- If a change requires new schema, migrate the target database first or deploy only after both databases are ready.
