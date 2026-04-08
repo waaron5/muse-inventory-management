@@ -54,11 +54,13 @@ export function PendingReservationsTable({
   isAdmin,
   userId,
   emptyMessage,
+  returnLocationOptions,
 }: {
   reservations: PendingReservation[];
   isAdmin: boolean;
   userId: string;
   emptyMessage: string;
+  returnLocationOptions: string[];
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loadingAction, setLoadingAction] = useState<"approve" | "return" | null>(
@@ -338,6 +340,7 @@ export function PendingReservationsTable({
                     }}
                     isAdmin={isAdmin}
                     userId={userId}
+                    returnLocationOptions={returnLocationOptions}
                     allowRemoveTerminal
                     actionAppearance="reservations-page"
                   />
@@ -440,14 +443,19 @@ export function PendingReservationsTable({
 
           <div className="form-field">
             <label className="form-label">Return Location *</label>
-            <input
-              type="text"
+            <select
               className="form-input"
-              placeholder="e.g. JP Display warehouse"
               value={returnLocation}
               onChange={(event) => setReturnLocation(event.target.value)}
               required
-            />
+            >
+              <option value="">Select a location</option>
+              {returnLocationOptions.map((location) => (
+                <option key={location} value={location}>
+                  {location}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-field">

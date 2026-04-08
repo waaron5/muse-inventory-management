@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { deleteManagedInventoryImage } from "@/lib/inventory-image-storage";
+import { requireStorageLocationName } from "@/lib/storage-locations";
 import { revalidatePath } from "next/cache";
 import { InventoryStatus } from "@prisma/client";
 
@@ -25,14 +26,18 @@ export async function createInventoryItem(formData: {
   description?: string;
   imageUrl?: string | null;
   quantity: number;
-  currentLocation?: string;
+  currentLocation: string;
   notes?: string;
 }) {
   const session = await requireAdmin();
+  const currentLocation = await requireStorageLocationName(
+    formData.currentLocation
+  );
 
   const item = await prisma.inventoryItem.create({
     data: {
       ...formData,
+      currentLocation,
       createdById: session.user.id,
       updatedById: session.user.id,
     },
@@ -57,11 +62,14 @@ export async function updateInventoryItem(
     description?: string;
     imageUrl?: string | null;
     quantity?: number;
-    currentLocation?: string;
+    currentLocation: string;
     notes?: string;
   }
 ) {
   const session = await requireAdmin();
+  const currentLocation = await requireStorageLocationName(
+    formData.currentLocation
+  );
   const existingItem = await prisma.inventoryItem.findUnique({
     where: { id },
     select: { imageUrl: true },
@@ -75,6 +83,7 @@ export async function updateInventoryItem(
     where: { id },
     data: {
       ...formData,
+      currentLocation,
       updatedById: session.user.id,
     },
   });
@@ -85,7 +94,7 @@ export async function updateInventoryItem(
     actionType: "UPDATED",
     performedById: session.user.id,
     summary: `Updated inventory item "${item.title}"`,
-    metadata: formData as Record<string, unknown>,
+    metadata: { ...formData, currentLocation } as Record<string, unknown>,
   });
 
   if (existingItem.imageUrl && existingItem.imageUrl !== item.imageUrl) {

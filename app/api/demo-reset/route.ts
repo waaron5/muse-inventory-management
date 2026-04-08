@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { createPrismaClient } from "@/lib/db";
 
 const DEMO_IMAGE_URL = "/demo/images/demo-image.jpg";
+const storageLocations = ["JP Display", "Nancy", "Muse Storage Unit"] as const;
 
 export async function POST(request: Request) {
   // Only available in demo mode
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
     await prisma.event.deleteMany();
     await prisma.inventoryItem.deleteMany();
     await prisma.giftItem.deleteMany();
+    await prisma.storageLocation.deleteMany();
     await prisma.user.deleteMany();
 
     // Re-seed users
@@ -51,6 +53,10 @@ export async function POST(request: Request) {
         passwordHash: userHash,
         role: "USER",
       },
+    });
+
+    await prisma.storageLocation.createMany({
+      data: storageLocations.map((name) => ({ name })),
     });
 
     // Re-seed inventory
@@ -81,9 +87,24 @@ export async function POST(request: Request) {
 
     // Re-seed gifts
     const giftData = [
-      { title: "Wine Bottle", description: "Bordeaux Red", quantity: 12 },
-      { title: "Gift Card", description: "$50 Restaurant", quantity: 20 },
-      { title: "Candle Set", description: "Scented, Set of 3", quantity: 8 },
+      {
+        title: "Wine Bottle",
+        description: "Bordeaux Red",
+        quantity: 12,
+        currentLocation: "JP Display",
+      },
+      {
+        title: "Gift Card",
+        description: "$50 Restaurant",
+        quantity: 20,
+        currentLocation: "Nancy",
+      },
+      {
+        title: "Candle Set",
+        description: "Scented, Set of 3",
+        quantity: 8,
+        currentLocation: "Muse Storage Unit",
+      },
     ];
 
     for (const g of giftData) {
@@ -93,6 +114,7 @@ export async function POST(request: Request) {
           description: g.description,
           imageUrl: DEMO_IMAGE_URL,
           quantity: g.quantity,
+          currentLocation: g.currentLocation,
           status: "ACTIVE",
           createdById: admin.id,
           updatedById: admin.id,

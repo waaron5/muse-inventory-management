@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 const DEMO_IMAGE_URL = "/demo/images/demo-image.jpg";
+const storageLocations = ["JP Display", "Nancy", "Muse Storage Unit"] as const;
 
 // ---------- data ----------
 
@@ -34,11 +35,36 @@ const inventoryItems = [
 ];
 
 const giftItems = [
-  { title: "Wine Bottle", description: "Bordeaux Red", quantity: 12 },
-  { title: "Gift Card", description: "$50 Restaurant", quantity: 20 },
-  { title: "Candle Set", description: "Scented, Set of 3", quantity: 8 },
-  { title: "Tote Bag", description: "Canvas, branded", quantity: 50 },
-  { title: "Chocolate Box", description: "Assorted truffles, 12pc", quantity: 30 },
+  {
+    title: "Wine Bottle",
+    description: "Bordeaux Red",
+    quantity: 12,
+    currentLocation: "JP Display",
+  },
+  {
+    title: "Gift Card",
+    description: "$50 Restaurant",
+    quantity: 20,
+    currentLocation: "Nancy",
+  },
+  {
+    title: "Candle Set",
+    description: "Scented, Set of 3",
+    quantity: 8,
+    currentLocation: "Muse Storage Unit",
+  },
+  {
+    title: "Tote Bag",
+    description: "Canvas, branded",
+    quantity: 50,
+    currentLocation: "JP Display",
+  },
+  {
+    title: "Chocolate Box",
+    description: "Assorted truffles, 12pc",
+    quantity: 30,
+    currentLocation: "Nancy",
+  },
 ];
 
 const today = new Date();
@@ -99,6 +125,7 @@ async function truncateAll() {
   await prisma.event.deleteMany();
   await prisma.inventoryItem.deleteMany();
   await prisma.giftItem.deleteMany();
+  await prisma.storageLocation.deleteMany();
   await prisma.user.deleteMany();
 }
 
@@ -150,6 +177,11 @@ async function main() {
   });
   console.log(`  Users: ${admin.email}, ${user.email}`);
 
+  await prisma.storageLocation.createMany({
+    data: storageLocations.map((name) => ({ name })),
+  });
+  console.log(`  Storage locations: ${storageLocations.length}`);
+
   // --- Inventory ---
   const createdInventory = [];
   for (const item of inventoryItems) {
@@ -179,6 +211,7 @@ async function main() {
         description: g.description,
         imageUrl: DEMO_IMAGE_URL,
         quantity: g.quantity,
+        currentLocation: g.currentLocation,
         status: "ACTIVE",
         createdById: admin.id,
         updatedById: admin.id,

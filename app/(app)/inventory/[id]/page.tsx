@@ -6,6 +6,7 @@ import { InventoryReservationRowActions } from "@/components/InventoryReservatio
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
+import { getStorageLocationNames } from "@/lib/storage-locations";
 import Link from "next/link";
 import { InventoryDetailActions } from "./InventoryDetailActions";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -56,18 +57,21 @@ export default async function InventoryDetailPage({
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
   // Fetch current/future events for reservation dropdown
-  const availableEvents = await prisma.event.findMany({
-    where: { endDate: { gte: todayStart } },
-    orderBy: { startDate: "asc" },
-    select: {
-      id: true,
-      eventName: true,
-      companyName: true,
-      location: true,
-      startDate: true,
-      endDate: true,
-    },
-  });
+  const [availableEvents, returnLocationOptions] = await Promise.all([
+    prisma.event.findMany({
+      where: { endDate: { gte: todayStart } },
+      orderBy: { startDate: "asc" },
+      select: {
+        id: true,
+        eventName: true,
+        companyName: true,
+        location: true,
+        startDate: true,
+        endDate: true,
+      },
+    }),
+    getStorageLocationNames(),
+  ]);
 
   return (
     <>
@@ -226,6 +230,7 @@ export default async function InventoryDetailPage({
                           }}
                           isAdmin={isAdmin}
                           userId={userId}
+                          returnLocationOptions={returnLocationOptions}
                           fallbackHref={`/events/${reservation.eventId}`}
                           fallbackLabel="View Event"
                         />

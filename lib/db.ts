@@ -18,6 +18,20 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+function hasCurrentSchemaClient(
+  client: PrismaClient | undefined
+): client is PrismaClient {
+  return typeof (client as PrismaClient & {
+    storageLocation?: { findMany?: unknown };
+  } | undefined)?.storageLocation?.findMany === "function";
+}
+
+// In Next dev, globalThis can hold a Prisma client created before a schema change.
+// Recreate it when required delegates are missing so new models work without a manual restart.
+const existingPrisma = globalForPrisma.prisma;
+
+export const prisma: PrismaClient = hasCurrentSchemaClient(existingPrisma)
+  ? existingPrisma
+  : createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

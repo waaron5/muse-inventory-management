@@ -23,11 +23,12 @@ export default async function GiftingPage({
 
   const where = {
     ...(query
-      ? {
+        ? {
           OR: [
             { title: { contains: query, mode: "insensitive" as const } },
             { description: { contains: query, mode: "insensitive" as const } },
             { notes: { contains: query, mode: "insensitive" as const } },
+            { currentLocation: { contains: query, mode: "insensitive" as const } },
           ],
         }
       : {}),
@@ -90,7 +91,7 @@ export default async function GiftingPage({
       }
       controls={
         <div className="table-toolbar inventory-toolbar">
-          <SearchBar placeholder="Search items and descriptions..." />
+          <SearchBar placeholder="Search items, descriptions, and locations..." />
           <span className="item-count">{totalCount} items</span>
         </div>
       }
@@ -125,7 +126,13 @@ export default async function GiftingPage({
                 const approvedCount = item.reservations.filter(
                   (reservation) => reservation.status === "APPROVED"
                 ).length;
-                const detailText = [item.description?.trim(), item.notes?.trim() ? `Note: ${item.notes.trim()}` : null]
+                const detailText = [
+                  item.currentLocation?.trim()
+                    ? `Location: ${item.currentLocation.trim()}`
+                    : null,
+                  item.description?.trim(),
+                  item.notes?.trim() ? `Note: ${item.notes.trim()}` : null,
+                ]
                   .filter(Boolean)
                   .join(" • ");
                 const updatedDate = item.updatedAt.toLocaleDateString("en-US", {

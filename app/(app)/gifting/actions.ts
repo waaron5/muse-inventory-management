@@ -8,6 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { getGiftAvailableQty } from "@/lib/availability";
 import { prisma } from "@/lib/db";
 import { deleteManagedInventoryImage } from "@/lib/inventory-image-storage";
+import { requireStorageLocationName } from "@/lib/storage-locations";
 
 function revalidateGiftViews(giftItemIds: string[], eventId?: string) {
   revalidatePath("/gifting");
@@ -56,13 +57,18 @@ export async function createGiftItem(formData: {
   description?: string;
   imageUrl?: string | null;
   quantity: number;
+  currentLocation: string;
   notes?: string;
 }) {
   const session = await requireAdmin();
+  const currentLocation = await requireStorageLocationName(
+    formData.currentLocation
+  );
 
   const item = await prisma.giftItem.create({
     data: {
       ...formData,
+      currentLocation,
       createdById: session.user.id,
       updatedById: session.user.id,
     },
@@ -87,10 +93,14 @@ export async function updateGiftItem(
     description?: string;
     imageUrl?: string | null;
     quantity?: number;
+    currentLocation: string;
     notes?: string;
   }
 ) {
   const session = await requireAdmin();
+  const currentLocation = await requireStorageLocationName(
+    formData.currentLocation
+  );
   const existingItem = await prisma.giftItem.findUnique({
     where: { id },
     select: { imageUrl: true },
@@ -104,6 +114,7 @@ export async function updateGiftItem(
     where: { id },
     data: {
       ...formData,
+      currentLocation,
       updatedById: session.user.id,
     },
   });

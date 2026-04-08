@@ -28,6 +28,7 @@ interface InventoryReservationRowActionsProps {
   reservation: InventoryReservationActionRow;
   isAdmin: boolean;
   userId: string;
+  returnLocationOptions: string[];
   fallbackHref?: string;
   fallbackLabel?: string;
   allowRemoveTerminal?: boolean;
@@ -38,6 +39,7 @@ export function InventoryReservationRowActions({
   reservation,
   isAdmin,
   userId,
+  returnLocationOptions,
   fallbackHref,
   fallbackLabel = "View Item",
   allowRemoveTerminal = false,
@@ -308,14 +310,19 @@ export function InventoryReservationRowActions({
 
           <div className="form-field">
             <label className="form-label">Return Location *</label>
-            <input
-              type="text"
+            <select
               className="form-input"
-              placeholder="e.g. JP Display warehouse"
               value={returnLocation}
               onChange={(event) => setReturnLocation(event.target.value)}
               required
-            />
+            >
+              <option value="">Select a location</option>
+              {returnLocationOptions.map((location) => (
+                <option key={location} value={location}>
+                  {location}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-field">

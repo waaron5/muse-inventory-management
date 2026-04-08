@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
+const storageLocations = ["JP Display", "Nancy", "Muse Storage Unit"] as const;
 
 const inventoryItems = [
   {
@@ -193,6 +194,12 @@ async function main() {
 
   console.log(`  Users: ${admin.email}, ${userAccount.email}`);
 
+  await prisma.storageLocation.createMany({
+    data: storageLocations.map((name) => ({ name })),
+    skipDuplicates: true,
+  });
+  console.log(`  Storage locations: ${storageLocations.length}`);
+
   // Inventory Items
   for (const item of inventoryItems) {
     await prisma.inventoryItem.create({
@@ -212,9 +219,24 @@ async function main() {
 
   // Gift Items
   const gifts = [
-    { title: "Wine Bottle", description: "Bordeaux Red", quantity: 12 },
-    { title: "Gift Card", description: "$50 Restaurant", quantity: 20 },
-    { title: "Candle Set", description: "Scented, Set of 3", quantity: 8 },
+    {
+      title: "Wine Bottle",
+      description: "Bordeaux Red",
+      quantity: 12,
+      currentLocation: "JP Display",
+    },
+    {
+      title: "Gift Card",
+      description: "$50 Restaurant",
+      quantity: 20,
+      currentLocation: "Nancy",
+    },
+    {
+      title: "Candle Set",
+      description: "Scented, Set of 3",
+      quantity: 8,
+      currentLocation: "Muse Storage Unit",
+    },
   ];
 
   for (const g of gifts) {
@@ -223,6 +245,7 @@ async function main() {
         title: g.title,
         description: g.description,
         quantity: g.quantity,
+        currentLocation: g.currentLocation,
         status: "ACTIVE",
         createdById: admin.id,
         updatedById: admin.id,

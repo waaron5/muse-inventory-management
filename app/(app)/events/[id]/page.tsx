@@ -12,6 +12,7 @@ import {
   getGiftReservationStatusVariant,
 } from "@/lib/gift-reservation-ui";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
+import { getStorageLocationNames } from "@/lib/storage-locations";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ReserveInventoryForEventButton } from "../ReserveInventoryForEventButton";
@@ -25,6 +26,7 @@ export default async function EventDetailPage({
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user.role === "ADMIN";
   const userId = session?.user.id ?? "";
+  const returnLocationOptions = await getStorageLocationNames();
 
   const event = await prisma.event.findUnique({
     where: { id },
@@ -194,6 +196,7 @@ export default async function EventDetailPage({
                         }}
                         isAdmin={isAdmin}
                         userId={userId}
+                        returnLocationOptions={returnLocationOptions}
                       />
                     </td>
                   </tr>

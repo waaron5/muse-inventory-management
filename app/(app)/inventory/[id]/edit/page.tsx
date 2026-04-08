@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getStorageLocationNames } from "@/lib/storage-locations";
 import { notFound, redirect } from "next/navigation";
 import { InventoryForm } from "../../InventoryForm";
 
@@ -13,11 +14,15 @@ export default async function EditInventoryPage({
   const session = await getServerSession(authOptions);
   if (session?.user.role !== "ADMIN") redirect("/inventory");
 
-  const item = await prisma.inventoryItem.findUnique({ where: { id } });
+  const [item, locationOptions] = await Promise.all([
+    prisma.inventoryItem.findUnique({ where: { id } }),
+    getStorageLocationNames(),
+  ]);
   if (!item) notFound();
 
   return (
     <InventoryForm
+      locationOptions={locationOptions}
       mode="edit"
       item={{
         id: item.id,

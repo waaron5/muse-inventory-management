@@ -6,6 +6,8 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { getInventoryAvailableQty } from "@/lib/availability";
+import { isStorageLocationName } from "@/lib/storage-location-options";
+import { requireStorageLocationName } from "@/lib/storage-locations";
 
 function getTodayStart() {
   const now = new Date();
@@ -515,6 +517,9 @@ export async function returnInventoryReservation(
   notes?: string
 ) {
   const session = await requireSession();
+  const normalizedReturnLocation = await requireStorageLocationName(
+    returnLocation
+  );
 
   const reservation = await prisma.inventoryReservation.findUnique({
     where: { id },
@@ -534,16 +539,12 @@ export async function returnInventoryReservation(
     throw new Error("Only approved reservations can be returned");
   }
 
-  if (!returnLocation.trim()) {
-    throw new Error("Return location is required");
-  }
-
   await prisma.$transaction([
     prisma.inventoryReservation.update({
       where: { id },
       data: {
         status: "COMPLETED",
-        returnLocation: returnLocation.trim(),
+        returnLocation: normalizedReturnLocation,
         notes: notes ?? reservation.notes,
         lastModifiedById: session.user.id,
       },
@@ -551,7 +552,7 @@ export async function returnInventoryReservation(
     prisma.inventoryItem.update({
       where: { id: reservation.inventoryItemId },
       data: {
-        currentLocation: returnLocation.trim(),
+        currentLocation: normalizedReturnLocation,
         updatedById: session.user.id,
       },
     }),
@@ -562,8 +563,8 @@ export async function returnInventoryReservation(
     entityId: id,
     actionType: "RETURNED",
     performedById: session.user.id,
-    summary: `Returned "${reservation.inventoryItem.title}" to "${returnLocation}"`,
-    metadata: { returnLocation, notes },
+    summary: `Returned "${reservation.inventoryItem.title}" to "${normalizedReturnLocation}"`,
+    metadata: { returnLocation: normalizedReturnLocation, notes },
   });
 
   revalidateInventoryReservationViews([reservation.inventoryItemId], reservation.eventId);
@@ -599,15 +600,18 @@ export async function removeInventoryReservationHistory(id: string) {
   }
 
   await prisma.$transaction(async (tx) => {
+    const completedReturnLocation = reservation.returnLocation?.trim() ?? null;
+
     if (
       reservation.status === "COMPLETED" &&
-      reservation.returnLocation?.trim() &&
-      reservation.inventoryItem.currentLocation !== reservation.returnLocation.trim()
+      completedReturnLocation &&
+      isStorageLocationName(completedReturnLocation) &&
+      reservation.inventoryItem.currentLocation !== completedReturnLocation
     ) {
       await tx.inventoryItem.update({
         where: { id: reservation.inventoryItemId },
         data: {
-          currentLocation: reservation.returnLocation.trim(),
+          currentLocation: completedReturnLocation,
           updatedById: session.user.id,
         },
       });
@@ -773,10 +777,11 @@ export async function bulkReturnInventoryReservations(
 ) {
   const session = await requireSession();
   const uniqueIds = [...new Set(ids)];
-  const trimmedReturnLocation = returnLocation.trim();
+  const normalizedReturnLocation = await requireStorageLocationName(
+    returnLocation
+  );
 
   if (uniqueIds.length === 0) throw new Error("No reservations selected");
-  if (!trimmedReturnLocation) throw new Error("Return location is required");
 
   const reservations = await prisma.inventoryReservation.findMany({
     where: {
@@ -847,7 +852,7 @@ export async function bulkReturnInventoryReservations(
         where: { id: reservation.id },
         data: {
           status: "COMPLETED",
-          returnLocation: trimmedReturnLocation,
+          returnLocation: normalizedReturnLocation,
           notes: notes ?? reservation.notes,
           lastModifiedById: session.user.id,
         },
@@ -855,7 +860,7 @@ export async function bulkReturnInventoryReservations(
       prisma.inventoryItem.update({
         where: { id: reservation.inventoryItemId },
         data: {
-          currentLocation: trimmedReturnLocation,
+          currentLocation: normalizedReturnLocation,
           updatedById: session.user.id,
         },
       }),
@@ -866,8 +871,8 @@ export async function bulkReturnInventoryReservations(
       entityId: reservation.id,
       actionType: "RETURNED",
       performedById: session.user.id,
-      summary: `Returned "${reservation.inventoryItem.title}" to "${trimmedReturnLocation}" (bulk)`,
-      metadata: { returnLocation: trimmedReturnLocation, notes },
+      summary: `Returned "${reservation.inventoryItem.title}" to "${normalizedReturnLocation}" (bulk)`,
+      metadata: { returnLocation: normalizedReturnLocation, notes },
     });
 
     processedItemIds.add(reservation.inventoryItemId);

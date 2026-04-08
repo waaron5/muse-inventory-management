@@ -126,6 +126,10 @@ export default async function GiftDetailPage({
                 <span className="detail-label">Total Quantity</span>
                 <span>{item.quantity}</span>
               </div>
+              <div className="detail-row">
+                <span className="detail-label">Location</span>
+                <span>{item.currentLocation ?? "—"}</span>
+              </div>
               <div className="detail-row detail-row-block">
                 <span className="detail-label">Availability</span>
                 <p className="detail-notes">

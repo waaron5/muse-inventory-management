@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/PageHeader";
 import { SearchBar } from "@/components/SearchBar";
 import { InventoryPageShell } from "@/app/(app)/inventory/InventoryPageShell";
+import { getStorageLocationNames } from "@/lib/storage-locations";
 import { NewReservationButton } from "./NewReservationButton";
 import { PendingReservationsTable } from "./PendingReservationsTable";
 
@@ -68,7 +69,7 @@ export default async function ReservationsPage({
       : {}),
   };
 
-  const [reservations, availableEvents] = await Promise.all([
+  const [reservations, availableEvents, returnLocationOptions] = await Promise.all([
     prisma.inventoryReservation.findMany({
       where,
       include: {
@@ -114,6 +115,7 @@ export default async function ReservationsPage({
       },
       orderBy: { startDate: "asc" },
     }),
+    getStorageLocationNames(),
   ]);
   const sortedReservations = [...reservations].sort((a, b) => {
     const statusDiff =
@@ -183,6 +185,7 @@ export default async function ReservationsPage({
           isAdmin={isAdmin}
           userId={userId}
           emptyMessage={emptyMessage}
+          returnLocationOptions={returnLocationOptions}
         />
       }
     />

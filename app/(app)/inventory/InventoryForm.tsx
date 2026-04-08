@@ -14,6 +14,7 @@ import { createInventoryItem, updateInventoryItem } from "./actions";
 import Link from "next/link";
 
 interface InventoryFormProps {
+  locationOptions: string[];
   mode: "create" | "edit";
   item?: {
     id: string;
@@ -26,7 +27,11 @@ interface InventoryFormProps {
   };
 }
 
-export function InventoryForm({ mode, item }: InventoryFormProps) {
+export function InventoryForm({
+  locationOptions,
+  mode,
+  item,
+}: InventoryFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -37,7 +42,11 @@ export function InventoryForm({ mode, item }: InventoryFormProps) {
   const [title, setTitle] = useState(item?.title ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [quantity, setQuantity] = useState(item?.quantity ?? 0);
-  const [currentLocation, setCurrentLocation] = useState(item?.currentLocation ?? "");
+  const initialLocation =
+    item?.currentLocation && locationOptions.includes(item.currentLocation)
+      ? item.currentLocation
+      : "";
+  const [currentLocation, setCurrentLocation] = useState(initialLocation);
   const [notes, setNotes] = useState(item?.notes ?? "");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [selectedImagePreviewUrl, setSelectedImagePreviewUrl] = useState<string | null>(null);
@@ -118,7 +127,7 @@ export function InventoryForm({ mode, item }: InventoryFormProps) {
         description: description || undefined,
         imageUrl: uploadedImageUrl,
         quantity,
-        currentLocation: currentLocation || undefined,
+        currentLocation,
         notes: notes || undefined,
       };
 
@@ -262,15 +271,28 @@ export function InventoryForm({ mode, item }: InventoryFormProps) {
             </div>
 
             <div className="form-field">
-              <label className="form-label">Current Location</label>
-              <input
-                type="text"
+              <label className="form-label">Current Location *</label>
+              <select
                 className="form-input"
                 value={currentLocation}
                 onChange={(e) => setCurrentLocation(e.target.value)}
-                maxLength={200}
-                placeholder="e.g. JP Display"
-              />
+                required
+              >
+                <option value="">Select a location</option>
+                {locationOptions.map((location) => (
+                  <option key={location} value={location}>
+                    {location}
+                  </option>
+                ))}
+              </select>
+              {mode === "edit" &&
+                item?.currentLocation &&
+                !locationOptions.includes(item.currentLocation) && (
+                  <p className="form-hint">
+                    This item has a legacy location. Choose one of the approved
+                    storage locations before saving.
+                  </p>
+                )}
             </div>
 
             <div className="form-field form-field-wide">

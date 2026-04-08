@@ -15,6 +15,7 @@ import { uploadManagedItemImage } from "@/lib/item-image-client";
 import { createGiftItem, updateGiftItem } from "./actions";
 
 interface GiftFormProps {
+  locationOptions: string[];
   mode: "create" | "edit";
   item?: {
     id: string;
@@ -22,11 +23,12 @@ interface GiftFormProps {
     description: string;
     imageUrl: string;
     quantity: number;
+    currentLocation: string;
     notes: string;
   };
 }
 
-export function GiftForm({ mode, item }: GiftFormProps) {
+export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -37,6 +39,11 @@ export function GiftForm({ mode, item }: GiftFormProps) {
   const [title, setTitle] = useState(item?.title ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [quantity, setQuantity] = useState(item?.quantity ?? 0);
+  const initialLocation =
+    item?.currentLocation && locationOptions.includes(item.currentLocation)
+      ? item.currentLocation
+      : "";
+  const [currentLocation, setCurrentLocation] = useState(initialLocation);
   const [notes, setNotes] = useState(item?.notes ?? "");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [selectedImagePreviewUrl, setSelectedImagePreviewUrl] = useState<string | null>(null);
@@ -117,6 +124,7 @@ export function GiftForm({ mode, item }: GiftFormProps) {
         description: description || undefined,
         imageUrl: uploadedImageUrl,
         quantity,
+        currentLocation,
         notes: notes || undefined,
       };
 
@@ -265,6 +273,31 @@ export function GiftForm({ mode, item }: GiftFormProps) {
                 onChange={(event) => setQuantity(Number(event.target.value))}
                 required
               />
+            </div>
+
+            <div className="form-field">
+              <label className="form-label">Current Location *</label>
+              <select
+                className="form-input"
+                value={currentLocation}
+                onChange={(event) => setCurrentLocation(event.target.value)}
+                required
+              >
+                <option value="">Select a location</option>
+                {locationOptions.map((location) => (
+                  <option key={location} value={location}>
+                    {location}
+                  </option>
+                ))}
+              </select>
+              {mode === "edit" &&
+                item?.currentLocation &&
+                !locationOptions.includes(item.currentLocation) && (
+                  <p className="form-hint">
+                    This item has a legacy location. Choose one of the approved
+                    storage locations before saving.
+                  </p>
+                )}
             </div>
 
             <div className="form-field form-field-wide">
