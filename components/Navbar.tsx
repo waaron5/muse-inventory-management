@@ -17,7 +17,7 @@ const NAV_ITEMS = [
 ] as const;
 
 const THEME_STORAGE_KEY = "muse-theme";
-const RESERVATIONS_SEEN_STORAGE_KEY_PREFIX = "muse-reservations-seen";
+const NOTIFICATIONS_SEEN_STORAGE_KEY_PREFIX = "muse-notifications-seen";
 
 interface NavbarProps {
   user: {
@@ -26,28 +26,28 @@ interface NavbarProps {
     email: string;
     role: string;
   };
-  reservationsHasAttention?: boolean;
-  reservationNotificationAt?: string | null;
+  notificationsHasAttention?: boolean;
+  notificationAt?: string | null;
 }
 
 export function Navbar({
   user,
-  reservationsHasAttention = false,
-  reservationNotificationAt = null,
+  notificationsHasAttention = false,
+  notificationAt = null,
 }: NavbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
-  const [reservationsSeenAt, setReservationsSeenAt] = useState<string | null>(null);
+  const [notificationSeenAt, setNotificationSeenAt] = useState<string | null>(null);
   const accountRef = useRef<HTMLDivElement>(null);
   const displayName = user.name.trim() || user.email;
   const initials = getInitials(displayName);
   const nextTheme: Theme = theme === "dark" ? "light" : "dark";
-  const reservationsSeenStorageKey = `${RESERVATIONS_SEEN_STORAGE_KEY_PREFIX}:${user.id}`;
-  const hasUnseenReservationUpdate =
-    parseTimestamp(reservationNotificationAt) > parseTimestamp(reservationsSeenAt);
-  const showReservationsIndicator =
-    reservationsHasAttention || hasUnseenReservationUpdate;
+  const notificationSeenStorageKey = `${NOTIFICATIONS_SEEN_STORAGE_KEY_PREFIX}:${user.id}`;
+  const hasUnseenNotification =
+    parseTimestamp(notificationAt) > parseTimestamp(notificationSeenAt);
+  const showNotificationsIndicator =
+    notificationsHasAttention || hasUnseenNotification;
 
   useEffect(() => {
     setMenuOpen(false);
@@ -73,27 +73,27 @@ export function Navbar({
 
   useEffect(() => {
     try {
-      setReservationsSeenAt(
-        window.localStorage.getItem(reservationsSeenStorageKey)
+      setNotificationSeenAt(
+        window.localStorage.getItem(notificationSeenStorageKey)
       );
     } catch {
-      setReservationsSeenAt(null);
+      setNotificationSeenAt(null);
     }
-  }, [reservationsSeenStorageKey]);
+  }, [notificationSeenStorageKey]);
 
   useEffect(() => {
-    if (!pathname.startsWith("/reservations")) return;
-    if (!reservationNotificationAt) return;
+    if (!pathname.startsWith("/dashboard")) return;
+    if (!notificationAt) return;
 
     try {
       window.localStorage.setItem(
-        reservationsSeenStorageKey,
-        reservationNotificationAt
+        notificationSeenStorageKey,
+        notificationAt
       );
     } catch {}
 
-    setReservationsSeenAt(reservationNotificationAt);
-  }, [pathname, reservationNotificationAt, reservationsSeenStorageKey]);
+    setNotificationSeenAt(notificationAt);
+  }, [pathname, notificationAt, notificationSeenStorageKey]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -135,7 +135,7 @@ export function Navbar({
   return (
     <header className={styles.navbar}>
       <div className={styles.navbarLeft}>
-        <Link href="/dashboard" className={styles.navbarLogo} aria-label="Go to dashboard">
+        <Link href="/dashboard" className={styles.navbarLogo} aria-label="Go to notifications">
           <Image
             src="/muse-logo.png"
             alt="Muse"
@@ -153,8 +153,6 @@ export function Navbar({
             const isInventoryIcon = iconClass === "inventoryIcon";
             const isReservationsIcon = iconClass === "reservationsIcon";
             const isGiftingIcon = iconClass === "giftingIcon";
-            const showIndicator =
-              isReservationsIcon && showReservationsIndicator;
 
             return (
               <Link
@@ -176,9 +174,6 @@ export function Navbar({
                 )}
                 <span className={styles.navLinkLabelWrap}>
                   <span className={styles.navLinkLabel}>{label}</span>
-                  {showIndicator && (
-                    <span className={styles.navIndicatorDot} aria-hidden="true" />
-                  )}
                 </span>
               </Link>
             );
@@ -197,10 +192,25 @@ export function Navbar({
           onClick={() => setMenuOpen((open) => !open)}
         >
           <span className={styles.accountAvatar}>{initials}</span>
+          {showNotificationsIndicator && (
+            <span
+              className={styles.accountAvatarIndicator}
+              aria-label="Unread notifications"
+            />
+          )}
         </button>
 
         {menuOpen && (
           <div className={styles.accountMenu} aria-label="Account menu">
+            <Link href="/dashboard" className={styles.accountMenuItem}>
+              <BellIcon className={styles.accountMenuIcon} />
+              <span className={styles.accountMenuLabelWrap}>
+                <span>Notifications</span>
+                {showNotificationsIndicator && (
+                  <span className={styles.accountMenuIndicatorDot} aria-hidden="true" />
+                )}
+              </span>
+            </Link>
             <button
               type="button"
               className={styles.accountMenuItem}
@@ -285,6 +295,15 @@ function LogoutIcon({ className }: { className?: string }) {
       <path d="M10 17.5H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h4" />
       <path d="M14 16.5 19 12l-5-4.5" />
       <path d="M9 12h10" />
+    </svg>
+  );
+}
+
+function BellIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path d="M6.5 9.5a5.5 5.5 0 1 1 11 0v3.1c0 .9.3 1.8.9 2.5l.9 1.1H4.7l.9-1.1c.6-.7.9-1.6.9-2.5V9.5Z" />
+      <path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" />
     </svg>
   );
 }
