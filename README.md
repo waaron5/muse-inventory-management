@@ -1,70 +1,73 @@
-# Muse Event Management
+# Muse Inventory Management System
+
+A production inventory and reservation system built for Muse Event Management to replace error-prone spreadsheet workflows.
+
+---
+
+## Overview
+
+This application was built to solve a real operational problem: the team was managing inventory, events, and reservations across messy spreadsheets that led to lost inventory and constant manual overhead.
+
+This system replaces that with a structured, reliable workflow:
+- Track inventory and quantities  
+- Reserve items across events without conflicts  
+- Enforce approvals  
+- Maintain a clear audit trail of all actions  
+
+---
+
+## Impact
+
+- Eliminated spreadsheet-based errors  
+- Prevented overbooking with enforced constraints  
+- Reduced manual coordination between team members  
+- Saved time and removed operational friction for daily use  
+
+---
+
+## Product Development Process
+
+This was built directly with the end users, not in isolation:
+
+**1. Problem Discovery**
+- Met with Muse Event Management to understand existing workflows  
+- Identified core issues: lack of structure, no conflict prevention, no accountability  
+
+**2. System Design**
+- Modeled real-world constraints (inventory quantities, event date overlaps, approvals)  
+- Designed for speed and simplicity to match spreadsheet workflows without the risk  
+
+**3. Iterative Development**
+- Built and shipped early versions quickly  
+- Gathered feedback from real users after each iteration  
+- Refined UX and system logic based on actual usage  
+
+**4. Outcome**
+- Delivered a system the team actively uses  
+- Reduced errors, saved time, and improved operational clarity  
+
+---
+
+## Core Features
+
+- Inventory tracking with quantity management  
+- Event-based reservations with date conflict prevention  
+- Admin approval workflows  
+- Consumable vs reusable inventory handling  
+- Action-level audit tracking (who did what, when)  
+
+---
+
+## Tech Stack
+
+- Next.js (React, TypeScript)  
+- PostgreSQL  
+- Prisma ORM  
+- Vercel  
+
+---
 
 ## Local Development
 
-Start the app:
-
 ```bash
 npm run dev
-```
-
-## Deployments
-
-This repo is meant to power two separate Vercel projects:
-
-- Production
-- Demo
-
-Both projects can use the same GitHub repo and the same codebase, but they must use different environment variables, especially different `DATABASE_URL` values.
-
-### Important change
-
-Vercel builds no longer run Prisma migrations automatically.
-
-The build script now does this:
-
-```bash
-npm run build
-# prisma generate && next build
-```
-
-That avoids multiple Vercel deployments fighting over Prisma's advisory lock during `prisma migrate deploy`.
-
-## Database Commands
-
-Run these manually against the database for the environment you intend to change:
-
-```bash
-npm run db:migrate:deploy
-npm run db:migrate:status
-```
-
-These commands use the current `DATABASE_URL`.
-
-## Recommended Workflow
-
-### Code-only change
-
-1. Push to GitHub.
-2. Let Vercel auto-deploy both projects.
-
-### Schema change
-
-1. Create the Prisma migration locally.
-2. Run `npm run db:migrate:deploy` against the production database.
-3. Run `npm run db:migrate:deploy` against the demo database.
-4. If demo fixture data changed, run `npm run demo:reset` against the demo database.
-5. Push to GitHub.
-6. Let Vercel redeploy the app code.
-
-### Why this is safer
-
-- Production and demo no longer compete for migration locks during build.
-- Each database is migrated intentionally and separately.
-- Vercel deployments become code deploys, not schema-mutation jobs.
-
-## Notes
-
-- If you use Vercel's Git integration, pushes will still trigger automatic redeploys.
-- Those redeploys will not apply migrations anymore.
-- If a change requires new schema, migrate the target database first or deploy only after both databases are ready.
