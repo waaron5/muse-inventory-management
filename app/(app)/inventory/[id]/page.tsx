@@ -9,6 +9,7 @@ import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-
 import { getStorageLocationNames } from "@/lib/storage-locations";
 import Link from "next/link";
 import { InventoryDetailActions } from "./InventoryDetailActions";
+import { InventoryHeaderActions } from "./InventoryHeaderActions";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export default async function InventoryDetailPage({
@@ -85,11 +86,10 @@ export default async function InventoryDetailPage({
         subtitle={item.description ?? undefined}
         action={
           isAdmin ? (
-            <div style={{ display: "flex", gap: 8 }}>
-              <Link href={`/inventory/${id}/edit`} className="btn btn-outline">
-                Edit
-              </Link>
-            </div>
+            <InventoryHeaderActions
+              itemId={id}
+              itemTitle={item.title}
+            />
           ) : undefined
         }
       />

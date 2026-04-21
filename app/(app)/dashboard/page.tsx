@@ -28,13 +28,6 @@ export default async function DashboardPage() {
     isAdmin,
   });
 
-  const attentionNotifications = notifications.filter(
-    (notification) => notification.section === "attention"
-  );
-  const updateNotifications = notifications.filter(
-    (notification) => notification.section === "updates"
-  );
-
   return (
     <div className="notifications-page">
       <PageHeader
@@ -46,21 +39,6 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="notifications-summary">
-        <span className="notifications-count">
-          {notifications.length === 0
-            ? "No notifications right now"
-            : `${notifications.length} notification${
-                notifications.length === 1 ? "" : "s"
-              }`}
-        </span>
-        {attentionNotifications.length > 0 && (
-          <span className="notifications-summary-pill">
-            {attentionNotifications.length} need attention
-          </span>
-        )}
-      </div>
-
       {notifications.length === 0 ? (
         <section className="notifications-empty">
           <h2 className="notifications-empty-title">You&apos;re all caught up.</h2>
@@ -71,41 +49,19 @@ export default async function DashboardPage() {
           </p>
         </section>
       ) : (
-        <div className="notifications-sections">
-          {attentionNotifications.length > 0 && (
-            <NotificationSection
-              title="Needs Attention"
-              notifications={attentionNotifications}
-            />
-          )}
-          {updateNotifications.length > 0 && (
-            <NotificationSection
-              title="Recent Updates"
-              notifications={updateNotifications}
-            />
-          )}
-        </div>
+        <NotificationSection notifications={notifications} />
       )}
     </div>
   );
 }
 
 function NotificationSection({
-  title,
   notifications,
 }: {
-  title: string;
   notifications: DashboardNotification[];
 }) {
   return (
     <section className="notifications-section">
-      <div className="notifications-section-header">
-        <h2 className="notifications-section-title">{title}</h2>
-        <span className="notifications-section-count">
-          {notifications.length}
-        </span>
-      </div>
-
       <div className="notifications-list">
         {notifications.map((notification) => (
           <Link

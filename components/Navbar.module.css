@@ -54,7 +54,7 @@
 }
 
 .navLinkActive {
-  background: var(--gray-200, #eee);
+  background: var(--gray-200);
   color: var(--gray-900);
 }
 

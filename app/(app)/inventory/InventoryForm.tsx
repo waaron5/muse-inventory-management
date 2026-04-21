@@ -55,6 +55,7 @@ export function InventoryForm({
   const existingImageUrl = item?.imageUrl?.trim() || null;
   const displayedImageUrl =
     selectedImagePreviewUrl ?? (removeExistingImage ? null : existingImageUrl);
+  const inventoryReturnHref = "/inventory";
 
   useEffect(() => {
     if (!selectedImageFile) {
@@ -138,7 +139,7 @@ export function InventoryForm({
       } else {
         await updateInventoryItem(item!.id, formData);
         toast("Item updated");
-        router.push(`/inventory/${item!.id}`);
+        router.push(inventoryReturnHref);
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -312,7 +313,7 @@ export function InventoryForm({
 
           <div className="form-footer page-form-footer">
             <Link
-              href={mode === "edit" ? `/inventory/${item?.id}` : "/inventory"}
+              href={inventoryReturnHref}
               className="btn btn-outline"
             >
               Cancel

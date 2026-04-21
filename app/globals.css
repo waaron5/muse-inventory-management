@@ -164,6 +164,8 @@ select {
 .btn-primary:hover:not(:disabled) { background: var(--gray-700); }
 .btn-outline { border: 1px solid var(--gray-300); background: var(--color-bg); color: var(--gray-700); }
 .btn-outline:hover:not(:disabled) { background: var(--gray-100); }
+.btn-outline-danger { border: 1px solid #fca5a5; background: var(--color-bg); color: var(--status-rejected-text); }
+.btn-outline-danger:hover:not(:disabled) { background: var(--status-rejected-bg); }
 .btn-approve { background: var(--status-approved-bg); color: var(--status-approved-text); }
 .btn-approve:hover:not(:disabled) { background: #bbf7d0; }
 .btn-reject { background: var(--status-rejected-bg); color: var(--status-rejected-text); }
@@ -1502,69 +1504,10 @@ select {
   gap: 18px;
 }
 
-.notifications-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.notifications-count {
-  font-size: 13px;
-  color: var(--gray-500);
-}
-
-.notifications-summary-pill {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 6px 10px;
-  background: rgba(2, 181, 225, 0.1);
-  color: var(--muse-cyan-dark);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.notifications-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
 .notifications-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.notifications-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.notifications-section-title {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--gray-500);
-}
-
-.notifications-section-count {
-  min-width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: var(--gray-100);
-  color: var(--gray-600);
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .notifications-list {
@@ -2233,8 +2176,33 @@ select {
 .toast-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
 .toast-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
 .toast-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+.toast-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
 .toast-icon { font-size: 16px; font-weight: 700; flex-shrink: 0; width: 20px; text-align: center; }
 .toast-message { flex: 1; line-height: 1.4; }
+.toast-action {
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.toast-action:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.45);
+}
+.toast-action:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
 .toast-dismiss {
   background: none;
   border: none;
@@ -2350,9 +2318,6 @@ select {
 @media (max-width: 640px) {
   .app-main { padding: 16px 12px; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
-  .notifications-summary {
-    align-items: flex-start;
-  }
   .notification-card-top {
     flex-direction: column;
     align-items: flex-start;

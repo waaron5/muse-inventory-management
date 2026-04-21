@@ -52,6 +52,7 @@ export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
   const existingImageUrl = item?.imageUrl?.trim() || null;
   const displayedImageUrl =
     selectedImagePreviewUrl ?? (removeExistingImage ? null : existingImageUrl);
+  const giftingReturnHref = "/gifting";
 
   useEffect(() => {
     if (!selectedImageFile) {
@@ -135,7 +136,7 @@ export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
       } else {
         await updateGiftItem(item!.id, formData);
         toast("Item updated");
-        router.push(`/gifting/${item!.id}`);
+        router.push(giftingReturnHref);
       }
     } catch (submissionError: unknown) {
       setError(
@@ -317,7 +318,7 @@ export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
 
           <div className="form-footer page-form-footer">
             <Link
-              href={mode === "edit" ? `/gifting/${item?.id}` : "/gifting"}
+              href={giftingReturnHref}
               className="btn btn-outline"
             >
               Cancel

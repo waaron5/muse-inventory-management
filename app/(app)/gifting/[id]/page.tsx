@@ -12,6 +12,7 @@ import {
   getGiftReservationStatusVariant,
 } from "@/lib/gift-reservation-ui";
 import { GiftDetailActions } from "./GiftDetailActions";
+import { GiftHeaderActions } from "./GiftHeaderActions";
 
 export default async function GiftDetailPage({
   params,
@@ -91,11 +92,10 @@ export default async function GiftDetailPage({
         subtitle={item.description ?? undefined}
         action={
           isAdmin ? (
-            <div style={{ display: "flex", gap: 8 }}>
-              <Link href={`/gifting/${id}/edit`} className="btn btn-outline">
-                Edit
-              </Link>
-            </div>
+            <GiftHeaderActions
+              itemId={id}
+              itemTitle={item.title}
+            />
           ) : undefined
         }
       />
