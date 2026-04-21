@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
-:root,
-:root[data-theme="light"] {
+:root {
   /* Brand */
   --muse-cyan: #02B5E1;
   --muse-cyan-light: #e0f7fc;
@@ -2450,140 +2449,13 @@ select {
   }
 }
 
-/* ===========================
-   Dark Mode
-   =========================== */
-:root[data-theme="dark"] {
-  --color-bg: #1a1a2e;
-  --color-page-bg: #12121f;
-  --color-surface: #12121f;
-  --color-border: #2d2d44;
-  --color-input-border: #4b4b68;
-  --color-text: #e4e4e7;
-  --color-text-muted: #9ca3af;
-  --color-primary: #22d3ee;
-  --color-primary-hover: #06b6d4;
-
-  --gray-50: #1e1e32;
-  --gray-100: #252540;
-  --gray-200: #2d2d44;
-  --gray-300: #3f3f5c;
-  --gray-400: #71719a;
-  --gray-500: #9ca3af;
-  --gray-600: #b0b0c0;
-  --gray-700: #d1d1dc;
-  --gray-800: #e4e4e7;
-  --gray-900: #f4f4f5;
-
-  --status-active-bg: #064e3b;
-  --status-active-text: #6ee7b7;
-  --status-retired-bg: #252540;
-  --status-retired-text: #9ca3af;
-  --status-pending-bg: #78350f;
-  --status-pending-text: #fde68a;
-  --status-approved-bg: #064e3b;
-  --status-approved-text: #6ee7b7;
-  --status-rejected-bg: #7f1d1d;
-  --status-rejected-text: #fca5a5;
-  --status-canceled-bg: #252540;
-  --status-canceled-text: #9ca3af;
-  --status-completed-bg: #1e3a5f;
-  --status-completed-text: #93c5fd;
-  --status-consumed-bg: #252540;
-  --status-consumed-text: #9ca3af;
-  --status-past-bg: #252540;
-  --status-past-text: #9ca3af;
-  --status-current-bg: #064e3b;
-  --status-current-text: #6ee7b7;
-  --status-future-bg: #1e3a5f;
-  --status-future-text: #93c5fd;
-  color-scheme: dark;
-}
-
-html[data-theme="dark"] body {
-  -webkit-font-smoothing: auto;
-}
-
-html[data-theme="light"] body {
+body {
   -webkit-font-smoothing: antialiased;
 }
 
-html[data-theme="dark"] .table-container {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-html[data-theme="light"] .table-container {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-html[data-theme="dark"] .login-card {
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
-}
-
-html[data-theme="light"] .login-card {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-}
-
-html[data-theme="dark"] .form-input:focus {
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
-}
-
-html[data-theme="light"] .form-input:focus {
-  box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #1a1a2e;
-    --color-page-bg: #12121f;
-    --color-surface: #12121f;
-    --color-border: #2d2d44;
-    --color-text: #e4e4e7;
-    --color-text-muted: #9ca3af;
-    --color-primary: #22d3ee;
-    --color-primary-hover: #06b6d4;
-
-    --gray-50: #1e1e32;
-    --gray-100: #252540;
-    --gray-200: #2d2d44;
-    --gray-300: #3f3f5c;
-    --gray-400: #71719a;
-    --gray-500: #9ca3af;
-    --gray-600: #b0b0c0;
-    --gray-700: #d1d1dc;
-    --gray-800: #e4e4e7;
-    --gray-900: #f4f4f5;
-
-    --status-active-bg: #064e3b;
-    --status-active-text: #6ee7b7;
-    --status-retired-bg: #252540;
-    --status-retired-text: #9ca3af;
-    --status-pending-bg: #78350f;
-    --status-pending-text: #fde68a;
-    --status-approved-bg: #064e3b;
-    --status-approved-text: #6ee7b7;
-    --status-rejected-bg: #7f1d1d;
-    --status-rejected-text: #fca5a5;
-    --status-canceled-bg: #252540;
-    --status-canceled-text: #9ca3af;
-    --status-completed-bg: #1e3a5f;
-    --status-completed-text: #93c5fd;
-    --status-consumed-bg: #252540;
-    --status-consumed-text: #9ca3af;
-    --status-past-bg: #252540;
-    --status-past-text: #9ca3af;
-    --status-current-bg: #064e3b;
-    --status-current-text: #6ee7b7;
-    --status-future-bg: #1e3a5f;
-    --status-future-text: #93c5fd;
-  }
-
-  body { -webkit-font-smoothing: auto; }
-
-  .table-container { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
-  .login-card { box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3); }
-  .form-input:focus { box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15); }
-}
+.table-container { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+.login-card { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); }
+.form-input:focus { box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1); }
 
 /* --- Reserved column --- */
 .reserved-count { font-weight: 600; color: var(--gray-700); font-size: 14px; }

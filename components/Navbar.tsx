@@ -7,8 +7,6 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import styles from "./Navbar.module.css";
 
-type Theme = "light" | "dark";
-
 const NAV_ITEMS = [
   { label: "Events", href: "/events", iconClass: "eventsIcon" },
   { label: "Inventory", href: "/inventory", iconClass: "inventoryIcon" },
@@ -16,7 +14,6 @@ const NAV_ITEMS = [
   { label: "Reservations", href: "/reservations", iconClass: "reservationsIcon" },
 ] as const;
 
-const THEME_STORAGE_KEY = "muse-theme";
 const NOTIFICATIONS_SEEN_STORAGE_KEY_PREFIX = "muse-notifications-seen";
 
 interface NavbarProps {
@@ -37,12 +34,10 @@ export function Navbar({
 }: NavbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<Theme>("light");
   const [notificationSeenAt, setNotificationSeenAt] = useState<string | null>(null);
   const accountRef = useRef<HTMLDivElement>(null);
   const displayName = user.name.trim() || user.email;
   const initials = getInitials(displayName);
-  const nextTheme: Theme = theme === "dark" ? "light" : "dark";
   const notificationSeenStorageKey = `${NOTIFICATIONS_SEEN_STORAGE_KEY_PREFIX}:${user.id}`;
   const hasUnseenNotification =
     parseTimestamp(notificationAt) > parseTimestamp(notificationSeenAt);
@@ -52,24 +47,6 @@ export function Navbar({
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
-
-  useEffect(() => {
-    const initialTheme = readTheme();
-    applyTheme(initialTheme);
-    setTheme(initialTheme);
-
-    function handleStorage(event: StorageEvent) {
-      if (event.key !== THEME_STORAGE_KEY) return;
-      const storedTheme = event.newValue;
-      if (storedTheme !== "light" && storedTheme !== "dark") return;
-
-      applyTheme(storedTheme);
-      setTheme(storedTheme);
-    }
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
 
   useEffect(() => {
     try {
@@ -121,15 +98,6 @@ export function Navbar({
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + "/");
-  }
-
-  function handleThemeToggle() {
-    applyTheme(nextTheme);
-    setTheme(nextTheme);
-
-    try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    } catch {}
   }
 
   return (
@@ -238,55 +206,10 @@ function getInitials(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function readTheme(): Theme {
-  if (typeof document !== "undefined") {
-    const documentTheme = document.documentElement.dataset.theme;
-    if (documentTheme === "light" || documentTheme === "dark") {
-      return documentTheme;
-    }
-  }
-
-  if (typeof window !== "undefined") {
-    try {
-      const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-      if (storedTheme === "light" || storedTheme === "dark") {
-        return storedTheme;
-      }
-    } catch {}
-
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      return "dark";
-    }
-  }
-
-  return "light";
-}
-
-function applyTheme(theme: Theme) {
-  document.documentElement.dataset.theme = theme;
-}
-
 function parseTimestamp(value: string | null | undefined) {
   if (!value) return 0;
   const parsed = Date.parse(value);
   return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-function ThemeIcon({ className, theme }: { className?: string; theme: Theme }) {
-  if (theme === "dark") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 1 0 9.8 9.8Z" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <circle cx="12" cy="12" r="4.2" />
-      <path d="M12 2.5v2.4M12 19.1v2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7" />
-    </svg>
-  );
 }
 
 function LogoutIcon({ className }: { className?: string }) {
