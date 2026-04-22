@@ -97,10 +97,10 @@ export default async function InventoryPage({
       header={
         <PageHeader
           title="Inventory"
-          subtitle="View and manage inventory, reserve items for events"
+          actionPlacement="below"
           action={
             isAdmin ? (
-              <Link href="/inventory/new" className="btn btn-dark">
+              <Link href="/inventory/new" className="btn btn-primary">
                 + Add Item
               </Link>
             ) : undefined

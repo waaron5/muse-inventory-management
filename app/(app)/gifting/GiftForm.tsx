@@ -164,11 +164,6 @@ export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
 
       <PageHeader
         title={mode === "create" ? "Add Gift Item" : `Edit "${item?.title}"`}
-        subtitle={
-          mode === "create"
-            ? "Add a new item to the gifting inventory"
-            : "Update gift item details"
-        }
       />
 
       <div className="form-container">

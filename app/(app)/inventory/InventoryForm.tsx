@@ -159,11 +159,6 @@ export function InventoryForm({
 
       <PageHeader
         title={mode === "create" ? "Add Inventory Item" : `Edit "${item?.title}"`}
-        subtitle={
-          mode === "create"
-            ? "Add a new item to the inventory"
-            : "Update inventory item details"
-        }
       />
 
       <div className="form-container">

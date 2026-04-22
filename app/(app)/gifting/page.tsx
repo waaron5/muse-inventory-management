@@ -79,10 +79,10 @@ export default async function GiftingPage({
       header={
         <PageHeader
           title="Gifting"
-          subtitle="View and manage gift inventory, request items for events"
+          actionPlacement="below"
           action={
             isAdmin ? (
-              <Link href="/gifting/new" className="btn btn-dark">
+              <Link href="/gifting/new" className="btn btn-primary">
                 + Add Item
               </Link>
             ) : undefined

@@ -70,7 +70,6 @@ export function LoginPageClient({
           />
         </div>
         <h1 className="login-title">Sign in</h1>
-        <p className="login-subtitle">Access Muse Inventory</p>
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-field">

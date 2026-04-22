@@ -20,7 +20,7 @@ export function NewReservationButton({
     <>
       <button
         type="button"
-        className="btn btn-dark"
+        className="btn btn-primary"
         onClick={() => setOpen(true)}
         disabled={!hasAvailableEvents}
         title={

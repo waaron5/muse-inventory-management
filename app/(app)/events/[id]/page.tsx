@@ -99,7 +99,6 @@ export default async function EventDetailPage({
 
       <PageHeader
         title={<span className="event-name-inline">{event.eventName}</span>}
-        subtitle={event.companyName}
         action={headerActions}
       />
 

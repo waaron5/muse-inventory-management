@@ -1,8 +1,8 @@
 .navbar {
   height: 56px;
   padding: 0 20px;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg);
+  border-bottom: 1px solid var(--gray-300);
+  background: var(--gray-100);
   display: flex;
   align-items: center;
   gap: 24px;
@@ -33,15 +33,18 @@
 
 .navLink {
   display: inline-flex;
+  position: relative;
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
   border-radius: 9px;
   color: var(--gray-600, #4b5563);
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--type-emphasis-size);
+  line-height: var(--type-emphasis-line-height);
+  font-weight: var(--type-emphasis-weight);
   white-space: nowrap;
+  transition: color 0.14s ease;
 }
 
 .navLink:hover {
@@ -54,8 +57,18 @@
 }
 
 .navLinkActive {
-  background: var(--gray-200);
   color: var(--gray-900);
+}
+
+.navLinkActive::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 999px;
+  background: #111111;
 }
 
 .navIcon {
@@ -90,7 +103,7 @@
   height: 8px;
   border-radius: 999px;
   background: #ef4444;
-  box-shadow: 0 0 0 2px var(--color-bg);
+  box-shadow: 0 0 0 2px var(--gray-100);
   flex-shrink: 0;
   margin-top: 1px;
 }
@@ -105,8 +118,9 @@
 }
 
 .navbarUserName {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--type-emphasis-size);
+  line-height: var(--type-emphasis-line-height);
+  font-weight: var(--type-emphasis-weight);
   color: var(--gray-900);
   white-space: nowrap;
 }
@@ -135,7 +149,7 @@
   height: 11px;
   border-radius: 999px;
   background: #ef4444;
-  box-shadow: 0 0 0 2px var(--color-bg);
+  box-shadow: 0 0 0 2px var(--gray-100);
 }
 
 .accountAvatar {
@@ -148,8 +162,9 @@
   background: linear-gradient(180deg, #f7f7f7 0%, #ececec 100%);
   border: 1px solid #d4d4d8;
   color: #111111;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  line-height: 1;
+  font-weight: var(--type-overline-weight);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   transition:
@@ -191,11 +206,17 @@
   background: transparent;
   color: var(--gray-800, #1f2937);
   padding: 10px 12px;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--type-emphasis-size);
+  line-height: var(--type-emphasis-line-height);
+  font-weight: var(--type-emphasis-weight);
   text-align: left;
   transition: background 0.14s ease, color 0.14s ease;
   cursor: pointer;
+}
+
+.accountMenuItemActive {
+  background: var(--gray-100);
+  color: var(--gray-900);
 }
 
 .accountMenuLabelWrap {

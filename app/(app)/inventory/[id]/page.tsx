@@ -83,7 +83,6 @@ export default async function InventoryDetailPage({
 
       <PageHeader
         title={item.title}
-        subtitle={item.description ?? undefined}
         action={
           isAdmin ? (
             <InventoryHeaderActions

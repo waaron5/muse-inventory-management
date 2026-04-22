@@ -4,19 +4,35 @@ import { type ReactNode } from "react";
 
 interface PageHeaderProps {
   title: ReactNode;
-  subtitle?: ReactNode;
   action?: ReactNode;
+  actionPlacement?: "inline" | "below";
 }
 
-export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  action,
+  actionPlacement = "inline",
+}: PageHeaderProps) {
+  const showActionBelowTitle = action && actionPlacement === "below";
+
   return (
     <>
-      <div className="page-header">
+      <div
+        className={`page-header${
+          showActionBelowTitle ? " page-header-action-below-title" : ""
+        }`}
+      >
         <div className="page-header-text">
           <h1 className="page-title">{title}</h1>
-          {subtitle && <p className="page-subtitle">{subtitle}</p>}
+          {showActionBelowTitle ? (
+            <div className="page-header-action page-header-action-under-title">
+              {action}
+            </div>
+          ) : null}
         </div>
-        {action && <div className="page-header-action">{action}</div>}
+        {!showActionBelowTitle && action ? (
+          <div className="page-header-action">{action}</div>
+        ) : null}
       </div>
     </>
   );

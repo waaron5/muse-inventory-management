@@ -170,7 +170,12 @@ export function Navbar({
 
         {menuOpen && (
           <div className={styles.accountMenu} aria-label="Account menu">
-            <Link href="/dashboard" className={styles.accountMenuItem}>
+            <Link
+              href="/dashboard"
+              className={`${styles.accountMenuItem} ${
+                isActive("/dashboard") ? styles.accountMenuItemActive : ""
+              }`}
+            >
               <BellIcon className={styles.accountMenuIcon} />
               <span className={styles.accountMenuLabelWrap}>
                 <span>Notifications</span>
@@ -178,6 +183,15 @@ export function Navbar({
                   <span className={styles.accountMenuIndicatorDot} aria-hidden="true" />
                 )}
               </span>
+            </Link>
+            <Link
+              href="/settings"
+              className={`${styles.accountMenuItem} ${
+                isActive("/settings") ? styles.accountMenuItemActive : ""
+              }`}
+            >
+              <SettingsIcon className={styles.accountMenuIcon} />
+              <span>Settings</span>
             </Link>
             <button
               type="button"
@@ -227,6 +241,15 @@ function BellIcon({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
       <path d="M6.5 9.5a5.5 5.5 0 1 1 11 0v3.1c0 .9.3 1.8.9 2.5l.9 1.1H4.7l.9-1.1c.6-.7.9-1.6.9-2.5V9.5Z" />
       <path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" />
+    </svg>
+  );
+}
+
+function SettingsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
+      <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.2 1.2 0 0 1 0 1.7l-1.2 1.2a1.2 1.2 0 0 1-1.7 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1.2 1.2 0 0 1-1.2 1.2h-1.7A1.2 1.2 0 0 1 10 20v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1.2 1.2 0 0 1-1.7 0l-1.2-1.2a1.2 1.2 0 0 1 0-1.7l.1-.1A1 1 0 0 0 5.6 15a1 1 0 0 0-.9-.6H4.5A1.2 1.2 0 0 1 3.3 13v-2A1.2 1.2 0 0 1 4.5 9.8h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1.2 1.2 0 0 1 0-1.7l1.2-1.2a1.2 1.2 0 0 1 1.7 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4A1.2 1.2 0 0 1 11.2 2.8h1.7A1.2 1.2 0 0 1 14.1 4v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1.2 1.2 0 0 1 1.7 0l1.2 1.2a1.2 1.2 0 0 1 0 1.7l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2A1.2 1.2 0 0 1 20.8 11v2a1.2 1.2 0 0 1-1.2 1.2h-.2a1 1 0 0 0-.9.8Z" />
     </svg>
   );
 }

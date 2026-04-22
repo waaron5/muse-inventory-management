@@ -76,11 +76,6 @@ export function EventForm({ mode, event }: EventFormProps) {
             </>
           )
         }
-        subtitle={
-          mode === "create"
-            ? "Add a new event to the system"
-            : "Update event details"
-        }
       />
 
       <div className="form-container">

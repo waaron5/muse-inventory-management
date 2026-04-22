@@ -12,6 +12,7 @@ import Link from "next/link";
 import { EventRowActions } from "./EventRowActions";
 import { ReserveInventoryForEventButton } from "./ReserveInventoryForEventButton";
 import { RequestGiftsForEventButton } from "./RequestGiftsForEventButton";
+import { InventoryPageShell } from "@/app/(app)/inventory/InventoryPageShell";
 
 const PAGE_SIZE = 20;
 const ACTIVE_RESERVATION_STATUSES = ["PENDING", "APPROVED"] as const;
@@ -118,237 +119,243 @@ export default async function EventsPage({
   const enriched = allEnriched.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
-    <>
-      <PageHeader
-        title="Events"
-        subtitle="Manage and reserve inventory for events"
-        action={
-          isAdmin ? (
-            <Link href="/events/new" className="btn btn-dark">
-              + Create Event
-            </Link>
-          ) : undefined
-        }
-      />
-
-      <div className="table-toolbar">
-        <SearchBar placeholder="Search events, companies, locations..." />
-        <span className="item-count">{totalCount} events</span>
-      </div>
-
-      <div className="table-container">
-        <table className="data-table events-table">
-          <thead>
-            <tr>
-              <th>Event</th>
-              <th>Location &amp; Date</th>
-              <th>Inventory</th>
-              <th>Gifts</th>
-              {showActions && (
-                <th className="event-actions-header">
-                  <span className="sr-only">Actions</span>
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {enriched.length === 0 && (
+    <InventoryPageShell
+      header={
+        <PageHeader
+          title="Events"
+          actionPlacement="below"
+          action={
+            isAdmin ? (
+              <Link href="/events/new" className="btn btn-primary">
+                + Create Event
+              </Link>
+            ) : undefined
+          }
+        />
+      }
+      controls={
+        <div className="table-toolbar">
+          <SearchBar placeholder="Search events, companies, locations..." />
+          <span className="item-count">{totalCount} events</span>
+        </div>
+      }
+      table={
+        <div className="table-container">
+          <table className="data-table events-table">
+            <thead>
               <tr>
-                <td colSpan={showActions ? 5 : 4} className="empty-row">
-                  No events found.
-                </td>
+                <th>Event</th>
+                <th>Location &amp; Date</th>
+                <th>Inventory</th>
+                <th>Gifts</th>
+                {showActions && (
+                  <th className="event-actions-header">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                )}
               </tr>
-            )}
-            {enriched.map((event) => (
-              (() => {
-                const sortedReservations = event.inventoryReservations
-                  .slice()
-                  .sort((a, b) => {
-                    const statusDiff =
-                      RESERVATION_STATUS_ORDER[a.status as keyof typeof RESERVATION_STATUS_ORDER] -
-                      RESERVATION_STATUS_ORDER[b.status as keyof typeof RESERVATION_STATUS_ORDER];
-                    if (statusDiff !== 0) return statusDiff;
-                    return b.createdAt.getTime() - a.createdAt.getTime();
-                  });
-                const sortedGiftReservations = event.giftReservations
-                  .slice()
-                  .sort((a, b) => {
-                    const statusDiff =
-                      RESERVATION_STATUS_ORDER[a.status as keyof typeof RESERVATION_STATUS_ORDER] -
-                      RESERVATION_STATUS_ORDER[b.status as keyof typeof RESERVATION_STATUS_ORDER];
-                    if (statusDiff !== 0) return statusDiff;
-                    return b.createdAt.getTime() - a.createdAt.getTime();
-                  });
-                const myPendingCount = sortedReservations.filter(
-                  (reservation) =>
-                    reservation.requestedById === userId && reservation.status === "PENDING"
-                ).length;
-                const myApprovedCount = sortedReservations.filter(
-                  (reservation) =>
-                    reservation.requestedById === userId && reservation.status === "APPROVED"
-                ).length;
+            </thead>
+            <tbody>
+              {enriched.length === 0 && (
+                <tr>
+                  <td colSpan={showActions ? 5 : 4} className="empty-row">
+                    No events found.
+                  </td>
+                </tr>
+              )}
+              {enriched.map((event) => (
+                (() => {
+                  const sortedReservations = event.inventoryReservations
+                    .slice()
+                    .sort((a, b) => {
+                      const statusDiff =
+                        RESERVATION_STATUS_ORDER[a.status as keyof typeof RESERVATION_STATUS_ORDER] -
+                        RESERVATION_STATUS_ORDER[b.status as keyof typeof RESERVATION_STATUS_ORDER];
+                      if (statusDiff !== 0) return statusDiff;
+                      return b.createdAt.getTime() - a.createdAt.getTime();
+                    });
+                  const sortedGiftReservations = event.giftReservations
+                    .slice()
+                    .sort((a, b) => {
+                      const statusDiff =
+                        RESERVATION_STATUS_ORDER[a.status as keyof typeof RESERVATION_STATUS_ORDER] -
+                        RESERVATION_STATUS_ORDER[b.status as keyof typeof RESERVATION_STATUS_ORDER];
+                      if (statusDiff !== 0) return statusDiff;
+                      return b.createdAt.getTime() - a.createdAt.getTime();
+                    });
+                  const myPendingCount = sortedReservations.filter(
+                    (reservation) =>
+                      reservation.requestedById === userId && reservation.status === "PENDING"
+                  ).length;
+                  const myApprovedCount = sortedReservations.filter(
+                    (reservation) =>
+                      reservation.requestedById === userId && reservation.status === "APPROVED"
+                  ).length;
 
-                return (
-                  <tr
-                    key={event.id}
-                    className={`table-row event-row ${event.computedStatus === "past" ? "row-past" : ""}`}
-                  >
-                    <td>
-                      <div className="event-primary-cell">
-                        <Link href={`/events/${event.id}`} className="event-title-link">
-                          {event.eventName}
-                        </Link>
-                        <span className="event-meta-text">{event.companyName}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="event-detail-stack">
-                        <div className="table-meta-inline event-detail-line">
-                          <LocationPinIcon className="table-meta-icon" />
-                          <span className="event-meta-text">{event.location}</span>
+                  return (
+                    <tr
+                      key={event.id}
+                      className={`table-row event-row ${event.computedStatus === "past" ? "row-past" : ""}`}
+                    >
+                      <td>
+                        <div className="event-primary-cell">
+                          <Link href={`/events/${event.id}`} className="event-title-link">
+                            {event.eventName}
+                          </Link>
+                          <span className="event-meta-text">{event.companyName}</span>
                         </div>
-                        <div className="table-meta-inline event-detail-line">
-                          <CalendarIcon className="table-meta-icon" />
-                          <span className="event-meta-text event-date-range">
-                            {event.startDate.toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                            {" – "}
-                            {event.endDate.toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="event-reservation-cell">
-                        {sortedReservations.length === 0 ? (
-                          <></>
-                        ) : (
-                          <div className="event-reservation-list">
-                            {sortedReservations.slice(0, 3).map((reservation) => (
-                              <div key={reservation.id} className="event-reservation-item">
-                                <div className="event-reservation-copy">
-                                  <Link
-                                    href={`/inventory/${reservation.inventoryItemId}`}
-                                    className="event-reservation-link"
-                                  >
-                                    {reservation.inventoryItem.title}
-                                  </Link>
-                                  <span className="event-reservation-qty">x{reservation.quantity}</span>
-                                </div>
-                                <span
-                                  className={`event-reservation-status event-reservation-status-${reservation.status.toLowerCase()}`}
-                                >
-                                  {getInventoryReservationStatusLabel(reservation.status)}
-                                </span>
-                              </div>
-                            ))}
-
-                            {sortedReservations.length > 3 && (
-                              <span className="event-reservation-more">
-                                +{sortedReservations.length - 3} more request
-                                {sortedReservations.length - 3 === 1 ? "" : "s"}
-                              </span>
-                            )}
+                      </td>
+                      <td>
+                        <div className="event-detail-stack">
+                          <div className="table-meta-inline event-detail-line">
+                            <LocationPinIcon className="table-meta-icon" />
+                            <span className="event-meta-text">{event.location}</span>
                           </div>
-                        )}
-
-                        {event.computedStatus !== "past" && (
-                          <ReserveInventoryForEventButton
-                            event={{
-                              id: event.id,
-                              eventName: event.eventName,
-                              companyName: event.companyName,
-                              location: event.location,
-                              startDate: event.startDate.toISOString(),
-                              endDate: event.endDate.toISOString(),
-                            }}
-                            reservationState={{
-                              pendingCount: myPendingCount,
-                              approvedCount: myApprovedCount,
-                            }}
-                            variant="text"
-                          />
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="event-reservation-cell event-gift-cell">
-                        {sortedGiftReservations.length === 0 ? (
-                          <></>
-                        ) : (
-                          <div className="event-reservation-list">
-                            {sortedGiftReservations.slice(0, 3).map((reservation) => (
-                              <div key={reservation.id} className="event-reservation-item">
-                                <div className="event-reservation-copy">
-                                  <Link
-                                    href={`/gifting/${reservation.giftItemId}`}
-                                    className="event-reservation-link"
+                          <div className="table-meta-inline event-detail-line">
+                            <CalendarIcon className="table-meta-icon" />
+                            <span className="event-meta-text event-date-range">
+                              {event.startDate.toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                              {" – "}
+                              {event.endDate.toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="event-reservation-cell">
+                          {sortedReservations.length === 0 ? (
+                            <></>
+                          ) : (
+                            <div className="event-reservation-list">
+                              {sortedReservations.slice(0, 3).map((reservation) => (
+                                <div key={reservation.id} className="event-reservation-item">
+                                  <div className="event-reservation-copy">
+                                    <Link
+                                      href={`/inventory/${reservation.inventoryItemId}`}
+                                      className="event-reservation-link"
+                                    >
+                                      {reservation.inventoryItem.title}
+                                    </Link>
+                                    <span className="event-reservation-qty">x{reservation.quantity}</span>
+                                  </div>
+                                  <span
+                                    className={`event-reservation-status event-reservation-status-${reservation.status.toLowerCase()}`}
                                   >
-                                    {reservation.giftItem.title}
-                                  </Link>
-                                  <span className="event-reservation-qty">
-                                    x{reservation.quantity}
+                                    {getInventoryReservationStatusLabel(reservation.status)}
                                   </span>
                                 </div>
-                                <span
-                                  className={`event-reservation-status event-reservation-status-${reservation.status.toLowerCase()}`}
-                                >
-                                  {getGiftReservationStatusLabel(reservation.status)}
+                              ))}
+
+                              {sortedReservations.length > 3 && (
+                                <span className="event-reservation-more">
+                                  +{sortedReservations.length - 3} more request
+                                  {sortedReservations.length - 3 === 1 ? "" : "s"}
                                 </span>
-                              </div>
-                            ))}
+                              )}
+                            </div>
+                          )}
 
-                            {sortedGiftReservations.length > 3 && (
-                              <span className="event-reservation-more">
-                                +{sortedGiftReservations.length - 3} more request
-                                {sortedGiftReservations.length - 3 === 1 ? "" : "s"}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {event.computedStatus !== "past" && (
-                          <RequestGiftsForEventButton
-                            event={{
-                              id: event.id,
-                              eventName: event.eventName,
-                              companyName: event.companyName,
-                              location: event.location,
-                              startDate: event.startDate.toISOString(),
-                              endDate: event.endDate.toISOString(),
-                            }}
-                            availableGifts={availableGifts.map((gift) => ({
-                              id: gift.id,
-                              title: gift.title,
-                              totalQuantity: gift.quantity,
-                            }))}
-                          />
-                        )}
-                      </div>
-                    </td>
-                    {showActions && (
-                      <td className="event-action-cell">
-                        <EventRowActions
-                          event={{ id: event.id, eventName: event.eventName }}
-                          isAdmin={isAdmin}
-                        />
+                          {event.computedStatus !== "past" && (
+                            <ReserveInventoryForEventButton
+                              event={{
+                                id: event.id,
+                                eventName: event.eventName,
+                                companyName: event.companyName,
+                                location: event.location,
+                                startDate: event.startDate.toISOString(),
+                                endDate: event.endDate.toISOString(),
+                              }}
+                              reservationState={{
+                                pendingCount: myPendingCount,
+                                approvedCount: myApprovedCount,
+                              }}
+                              variant="text"
+                            />
+                          )}
+                        </div>
                       </td>
-                    )}
-                  </tr>
-                );
-              })()
-            ))}
-          </tbody>
-        </table>
-      </div>
+                      <td>
+                        <div className="event-reservation-cell event-gift-cell">
+                          {sortedGiftReservations.length === 0 ? (
+                            <></>
+                          ) : (
+                            <div className="event-reservation-list">
+                              {sortedGiftReservations.slice(0, 3).map((reservation) => (
+                                <div key={reservation.id} className="event-reservation-item">
+                                  <div className="event-reservation-copy">
+                                    <Link
+                                      href={`/gifting/${reservation.giftItemId}`}
+                                      className="event-reservation-link"
+                                    >
+                                      {reservation.giftItem.title}
+                                    </Link>
+                                    <span className="event-reservation-qty">
+                                      x{reservation.quantity}
+                                    </span>
+                                  </div>
+                                  <span
+                                    className={`event-reservation-status event-reservation-status-${reservation.status.toLowerCase()}`}
+                                  >
+                                    {getGiftReservationStatusLabel(reservation.status)}
+                                  </span>
+                                </div>
+                              ))}
 
-      <Pagination total={totalCount} pageSize={PAGE_SIZE} currentPage={currentPage} />
-    </>
+                              {sortedGiftReservations.length > 3 && (
+                                <span className="event-reservation-more">
+                                  +{sortedGiftReservations.length - 3} more request
+                                  {sortedGiftReservations.length - 3 === 1 ? "" : "s"}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {event.computedStatus !== "past" && (
+                            <RequestGiftsForEventButton
+                              event={{
+                                id: event.id,
+                                eventName: event.eventName,
+                                companyName: event.companyName,
+                                location: event.location,
+                                startDate: event.startDate.toISOString(),
+                                endDate: event.endDate.toISOString(),
+                              }}
+                              availableGifts={availableGifts.map((gift) => ({
+                                id: gift.id,
+                                title: gift.title,
+                                totalQuantity: gift.quantity,
+                              }))}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      {showActions && (
+                        <td className="event-action-cell">
+                          <EventRowActions
+                            event={{ id: event.id, eventName: event.eventName }}
+                            isAdmin={isAdmin}
+                          />
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })()
+              ))}
+            </tbody>
+          </table>
+        </div>
+      }
+      showPagination
+      pagination={
+        <Pagination total={totalCount} pageSize={PAGE_SIZE} currentPage={currentPage} />
+      }
+    />
   );
 }

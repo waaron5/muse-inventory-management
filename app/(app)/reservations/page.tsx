@@ -144,7 +144,7 @@ export default async function ReservationsPage({
       header={
         <PageHeader
           title="Reservations"
-          subtitle="Create and track inventory reservations. Pending requests do not hold inventory until approved."
+          actionPlacement="below"
           action={<NewReservationButton availableEvents={serializedEvents} />}
         />
       }

@@ -30,14 +30,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="notifications-page">
-      <PageHeader
-        title={`Welcome back, ${firstName}`}
-        subtitle={
-          isAdmin
-            ? "New requests and return reminders show up here."
-            : "Approvals, changes, and return reminders show up here."
-        }
-      />
+      <PageHeader title={`Welcome back, ${firstName}`} />
 
       {notifications.length === 0 ? (
         <section className="notifications-empty">

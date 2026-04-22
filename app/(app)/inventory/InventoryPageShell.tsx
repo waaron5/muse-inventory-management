@@ -184,28 +184,34 @@ export function InventoryPageShell({
       }`}
       ref={shellRef}
     >
-      <div className="inventory-page-header" ref={headerRef}>
-        {header}
-      </div>
-      <div className="inventory-page-controls" ref={controlsRef}>
-        <div className="inventory-page-controls-row">
-          <div className="inventory-page-controls-main">{controls}</div>
-          <div
-            id={INVENTORY_BULK_DOCK_SLOT_ID}
-            className="inventory-page-bulk-dock-slot"
-          />
+      <div className="inventory-page-header-band">
+        <div className="inventory-page-header" ref={headerRef}>
+          {header}
         </div>
       </div>
-      <div className="inventory-page-table-area">
-        <div className="inventory-page-table-shell" ref={tableShellRef}>
-          {table}
+      <div className="inventory-page-content-band">
+        <div className="inventory-page-content">
+          <div className="inventory-page-controls" ref={controlsRef}>
+            <div className="inventory-page-controls-row">
+              <div className="inventory-page-controls-main">{controls}</div>
+              <div
+                id={INVENTORY_BULK_DOCK_SLOT_ID}
+                className="inventory-page-bulk-dock-slot"
+              />
+            </div>
+          </div>
+          <div className="inventory-page-table-area">
+            <div className="inventory-page-table-shell" ref={tableShellRef}>
+              {table}
+            </div>
+          </div>
+          {showPagination ? (
+            <div className="inventory-page-pagination" ref={paginationRef}>
+              {pagination}
+            </div>
+          ) : null}
         </div>
       </div>
-      {showPagination ? (
-        <div className="inventory-page-pagination" ref={paginationRef}>
-          {pagination}
-        </div>
-      ) : null}
     </div>
   );
 }

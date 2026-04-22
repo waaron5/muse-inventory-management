@@ -89,7 +89,6 @@ export default async function GiftDetailPage({
 
       <PageHeader
         title={item.title}
-        subtitle={item.description ?? undefined}
         action={
           isAdmin ? (
             <GiftHeaderActions
