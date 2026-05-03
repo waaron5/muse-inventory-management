@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { PageHeader } from "@/components/PageHeader";
 import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { CalendarIcon, LocationPinIcon } from "@/components/MetadataIcons";
@@ -120,22 +119,17 @@ export default async function EventsPage({
 
   return (
     <InventoryPageShell
-      header={
-        <PageHeader
-          title="Events"
-          action={
-            isAdmin ? (
-              <Link href="/events/new" className="btn btn-primary">
-                + Create Event
-              </Link>
-            ) : undefined
-          }
-        />
+      title="Events"
+      action={
+        isAdmin ? (
+          <Link href="/events/new" className="btn btn-primary">
+            + Create Event
+          </Link>
+        ) : undefined
       }
       controls={
         <div className="table-toolbar">
           <SearchBar placeholder="Search events, companies, locations..." />
-          <span className="item-count">{totalCount} events</span>
         </div>
       }
       table={

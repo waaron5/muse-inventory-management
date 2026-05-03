@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { PageHeader } from "@/components/PageHeader";
 import { SearchBar } from "@/components/SearchBar";
 import { InventoryPageShell } from "@/app/(app)/inventory/InventoryPageShell";
 import { getStorageLocationNames } from "@/lib/storage-locations";
@@ -141,19 +140,11 @@ export default async function ReservationsPage({
   return (
     <InventoryPageShell
       stripLegacyPaginationParams
-      header={
-        <PageHeader
-          title="Reservations"
-          action={<NewReservationButton availableEvents={serializedEvents} />}
-        />
-      }
+      title="Reservations"
+      action={<NewReservationButton availableEvents={serializedEvents} />}
       controls={
         <div className="table-toolbar inventory-toolbar">
           <SearchBar placeholder="Search items, events, requesters..." />
-          <span className="item-count">
-            {sortedReservations.length}{" "}
-            {sortedReservations.length === 1 ? "reservation" : "reservations"}
-          </span>
         </div>
       }
       table={

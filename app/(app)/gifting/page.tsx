@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { PageHeader } from "@/components/PageHeader";
 import { SearchBar } from "@/components/SearchBar";
 import { InventoryImagePreview } from "@/app/(app)/inventory/InventoryImagePreview";
 import { InventoryPageShell } from "@/app/(app)/inventory/InventoryPageShell";
@@ -76,22 +75,17 @@ export default async function GiftingPage({
   return (
     <InventoryPageShell
       stripLegacyPaginationParams
-      header={
-        <PageHeader
-          title="Gifting"
-          action={
-            isAdmin ? (
-              <Link href="/gifting/new" className="btn btn-primary">
-                + Add Item
-              </Link>
-            ) : undefined
-          }
-        />
+      title="Gifting"
+      action={
+        isAdmin ? (
+          <Link href="/gifting/new" className="btn btn-primary">
+            + Add Item
+          </Link>
+        ) : undefined
       }
       controls={
         <div className="table-toolbar inventory-toolbar">
           <SearchBar placeholder="Search items, descriptions, and locations..." />
-          <span className="item-count">{totalCount} items</span>
         </div>
       }
       table={

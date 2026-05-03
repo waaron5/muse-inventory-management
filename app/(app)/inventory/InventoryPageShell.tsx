@@ -1,13 +1,15 @@
 "use client";
 
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSetTopBar } from "@/components/TopBarContext";
 
 export const INVENTORY_BULK_DOCK_SLOT_ID = "inventory-bulk-dock-slot";
 
 interface InventoryPageShellProps {
   showPagination?: boolean;
-  header: ReactNode;
+  title: ReactNode;
+  action?: ReactNode;
   controls: ReactNode;
   table: ReactNode;
   pagination?: ReactNode;
@@ -16,7 +18,8 @@ interface InventoryPageShellProps {
 
 export function InventoryPageShell({
   showPagination = false,
-  header,
+  title,
+  action,
   controls,
   table,
   pagination,
@@ -25,6 +28,13 @@ export function InventoryPageShell({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const actionsContent = useMemo(
+    () => <>{controls}{action}</>,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [controls, action]
+  );
+  useSetTopBar(title, actionsContent);
 
   useEffect(() => {
     if (!stripLegacyPaginationParams) {
@@ -47,16 +57,7 @@ export function InventoryPageShell({
 
   return (
     <div className="inventory-page-shell">
-      <div className="inventory-page-topbar">{header}</div>
-      <div className="inventory-page-controls">
-        <div className="inventory-page-controls-row">
-          <div className="inventory-page-controls-main">{controls}</div>
-          <div
-            id={INVENTORY_BULK_DOCK_SLOT_ID}
-            className="inventory-page-bulk-dock-slot"
-          />
-        </div>
-      </div>
+      <div id={INVENTORY_BULK_DOCK_SLOT_ID} className="inventory-page-bulk-dock-slot" />
       <div className="inventory-page-table-area">
         <div className="inventory-page-table-shell">{table}</div>
       </div>

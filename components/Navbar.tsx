@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import styles from "./Navbar.module.css";
+import { useTopBarTitle, useTopBarActions } from "@/components/TopBarContext";
 
 const NAV_ITEMS = [
   { label: "Events", href: "/events", iconClass: "eventsIcon" },
@@ -47,6 +48,8 @@ export function Navbar({
     parseTimestamp(notificationAt) > parseTimestamp(notificationSeenAt);
   const showNotificationsIndicator =
     notificationsHasAttention || hasUnseenNotification;
+  const titleSlot = useTopBarTitle();
+  const actionsSlot = useTopBarActions();
 
   useEffect(() => {
     setMenuOpen(false);
@@ -107,43 +110,31 @@ export function Navbar({
   return (
     <>
       <header className={styles.topbar}>
-        <div
-          className={`${styles.topbarBrand} ${
-            sidebarCollapsed ? styles.topbarBrandCollapsed : ""
-          }`}
-        >
-          {!sidebarCollapsed && (
-            <Link
-              href="/dashboard"
-              className={styles.topbarLogo}
-              aria-label="Go to dashboard"
-            >
-              <Image
-                src="/muse-logo.png"
-                alt="Muse"
-                width={124}
-                height={30}
-                style={{ width: "auto", height: 21, objectFit: "contain" }}
-                priority
-              />
-            </Link>
-          )}
+        {sidebarCollapsed && (
           <button
             type="button"
             className={styles.sidebarToggle}
-            aria-label={
-              sidebarCollapsed ? "Show sidebar navigation" : "Hide sidebar navigation"
-            }
+            aria-label="Show sidebar navigation"
             aria-controls="primary-sidebar"
-            aria-expanded={!sidebarCollapsed}
+            aria-expanded={false}
             onClick={onToggleSidebar}
           >
             <SidebarToggleIcon
-              collapsed={sidebarCollapsed}
+              collapsed={true}
               className={styles.sidebarToggleIcon}
             />
           </button>
+        )}
+
+        <div className={`${styles.topbarTitle} topbar-page-slot`}>
+          {titleSlot}
         </div>
+
+        {actionsSlot && (
+          <div className={`${styles.topbarActions} topbar-actions-slot`}>
+            {actionsSlot}
+          </div>
+        )}
 
         <div className={styles.navbarRight} ref={accountRef}>
           <span className={styles.navbarUserName}>{displayName}</span>
@@ -208,6 +199,36 @@ export function Navbar({
         aria-label="Primary navigation"
         hidden={sidebarCollapsed}
       >
+        <div className={styles.sidebarBrand}>
+          <Link
+            href="/dashboard"
+            className={styles.sidebarBrandLogo}
+            aria-label="Go to dashboard"
+          >
+            <Image
+              src="/muse-logo.png"
+              alt="Muse"
+              width={124}
+              height={30}
+              style={{ width: "auto", height: 21, objectFit: "contain" }}
+              priority
+            />
+          </Link>
+          <button
+            type="button"
+            className={styles.sidebarToggle}
+            aria-label="Hide sidebar navigation"
+            aria-controls="primary-sidebar"
+            aria-expanded={true}
+            onClick={onToggleSidebar}
+          >
+            <SidebarToggleIcon
+              collapsed={false}
+              className={styles.sidebarToggleIcon}
+            />
+          </button>
+        </div>
+
         <nav className={styles.sidebarNav}>
           {NAV_ITEMS.map(({ href, label, iconClass }) => {
             const active = isActive(href);
