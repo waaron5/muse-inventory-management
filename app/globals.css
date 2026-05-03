@@ -4,7 +4,7 @@
   /* Brand */
   --muse-cyan: #02B5E1;
   --muse-cyan-light: #e0f7fc;
-  --muse-cyan-dark: #039fc6;
+  --muse-cyan-hover: #14c7f3;
 
   /* Neutrals */
   --white: #ffffff;
@@ -28,7 +28,7 @@
   --color-text: var(--gray-900);
   --color-text-muted: var(--gray-500);
   --color-primary: var(--muse-cyan);
-  --color-primary-hover: var(--muse-cyan-dark);
+  --color-primary-hover: var(--muse-cyan-hover);
 
   /* Typography */
   --type-page-title-size: 34px;
@@ -454,60 +454,25 @@ select {
 .inventory-page-shell {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  min-height: calc(100dvh - 56px);
-  margin-top: calc(var(--app-main-pad-y) * -1);
-  margin-right: calc(50% - 50vw);
-  margin-bottom: calc(var(--app-main-pad-y) * -1);
-  margin-left: calc(50% - 50vw);
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
 }
 
-.inventory-page-shell-paginated {
-  min-height: calc(100dvh - 56px);
-}
-
-.inventory-page-header,
+.inventory-page-topbar,
 .inventory-page-controls,
 .inventory-page-pagination {
   flex-shrink: 0;
 }
 
-.inventory-page-header-band {
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+.inventory-page-topbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.inventory-page-header {
-  width: min(calc(100% - (var(--app-main-pad-x) * 2)), 1320px);
-  margin: 0 auto;
-  padding: 28px 0 22px;
-}
-
-.inventory-page-header .page-header {
+.inventory-page-topbar .page-header {
   margin-bottom: 0;
-}
-
-.inventory-page-content-band {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  background: var(--gray-100);
-  min-height: 0;
-}
-
-.inventory-page-content {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 16px;
-  width: min(calc(100% - (var(--app-main-pad-x) * 2)), 1320px);
-  margin: 0 auto;
-  padding: 24px 0 32px;
-  min-height: 0;
-}
-
-.inventory-page-shell-paginated .inventory-page-content {
-  flex: 1;
 }
 
 .inventory-page-controls-row {
@@ -546,13 +511,7 @@ select {
 }
 
 .inventory-page-table-area {
-  min-height: 0;
   width: 100%;
-}
-
-.inventory-page-shell-paginated .inventory-page-table-area,
-.inventory-page-shell-paginated .inventory-page-table-shell {
-  flex: 1;
 }
 
 .inventory-page-table-shell {
@@ -560,12 +519,8 @@ select {
 }
 
 .inventory-page-pagination {
-  min-height: 56px;
   display: flex;
-  align-items: flex-end;
   justify-content: center;
-  margin-top: auto;
-  padding-top: 0;
 }
 
 .inventory-page-pagination .pagination {
@@ -1498,19 +1453,27 @@ select {
 /* --- Layout --- */
 .app-shell {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-rows: 64px minmax(0, 1fr);
+  grid-template-areas:
+    "topbar topbar"
+    "sidebar main";
   background: var(--color-page-bg);
   overflow-x: clip;
 }
+
+.app-shell-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
 .app-main {
   --app-main-pad-x: 40px;
   --app-main-pad-y: 32px;
-  flex: 1;
+  grid-area: main;
+  min-width: 0;
   padding: var(--app-main-pad-y) var(--app-main-pad-x);
-  max-width: 1400px;
   width: 100%;
-  margin: 0 auto;
 }
 
 /* --- Dashboard --- */
@@ -2260,14 +2223,10 @@ select {
 /* --- Page Header --- */
 .page-header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
-}
-.page-header-action-below-title {
-  align-items: flex-start;
-  justify-content: flex-start;
+  margin-bottom: 0;
 }
 .page-header-text {
   display: flex;
@@ -2283,10 +2242,6 @@ select {
 }
 .page-header-action {
   flex-shrink: 0;
-  margin-top: 0;
-}
-.page-header-action-under-title {
-  margin-top: 12px;
 }
 
 /* --- Search Bar --- */
@@ -2667,6 +2622,14 @@ select {
 
 /* --- Responsive --- */
 @media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 60px auto minmax(0, 1fr);
+    grid-template-areas:
+      "topbar"
+      "sidebar"
+      "main";
+  }
   .app-main {
     --app-main-pad-x: 20px;
     --app-main-pad-y: 24px;
@@ -2690,15 +2653,6 @@ select {
   }
   .reservations-toolbar {
     align-items: flex-start;
-  }
-  .inventory-page-shell.inventory-page-shell-paginated {
-    min-height: calc(100dvh - 56px);
-  }
-  .inventory-page-header {
-    padding: 22px var(--app-main-pad-x) 18px;
-  }
-  .inventory-page-content {
-    padding: 18px var(--app-main-pad-x) 24px;
   }
   .inventory-table .table-row td {
     padding-top: 11px;
@@ -2758,6 +2712,18 @@ select {
     --app-main-pad-y: 16px;
     padding: var(--app-main-pad-y) var(--app-main-pad-x);
   }
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-header-action {
+    width: 100%;
+  }
+  .page-header-action .btn,
+  .page-header-action .inventory-reserve-button {
+    width: 100%;
+    justify-content: center;
+  }
   .stat-grid { grid-template-columns: 1fr 1fr; }
   .notification-card-top {
     flex-direction: column;
@@ -2792,14 +2758,7 @@ select {
   .reservations-count {
     margin-left: 2px;
   }
-  .inventory-page-shell.inventory-page-shell-paginated {
-    min-height: calc(100dvh - 56px);
-  }
-  .inventory-page-header {
-    padding: 18px var(--app-main-pad-x) 16px;
-  }
-  .inventory-page-content {
-    padding: 14px var(--app-main-pad-x) 18px;
+  .inventory-page-shell {
     gap: 12px;
   }
   .table-toolbar {

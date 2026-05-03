@@ -1,111 +1,150 @@
-.navbar {
-  height: 56px;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--gray-300);
-  background: var(--gray-100);
+.topbar {
+  grid-area: topbar;
+  height: 64px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--gray-200);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 24px;
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 60;
 }
 
-.navbarLeft {
+.topbarBrand {
   display: flex;
   align-items: center;
-  gap: 24px;
+  align-self: stretch;
+  gap: 14px;
   min-width: 0;
+  padding-right: 18px;
+  border-right: 1px solid var(--gray-200);
+  flex-shrink: 0;
 }
 
-.navbarLogo {
-  display: flex;
+.topbarBrandCollapsed {
+  gap: 0;
+  padding-right: 14px;
+}
+
+.topbarLogo {
+  display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
 }
 
-.navbarNav {
-  display: flex;
+.sidebarToggle {
+  width: 36px;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gray-500);
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.sidebarToggle:hover {
+  color: var(--gray-900);
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(209, 213, 219, 0.9);
+}
+
+.sidebarToggle:focus-visible {
+  outline: 2px solid rgba(2, 181, 225, 0.22);
+  outline-offset: 2px;
+}
+
+.sidebarToggleIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.sidebar {
+  grid-area: sidebar;
+  position: sticky;
+  top: 64px;
+  align-self: start;
+  height: calc(100dvh - 64px);
+  padding: 22px 16px 24px;
+  border-right: 1px solid var(--gray-200);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 253, 0.98) 100%);
+  overflow-y: auto;
+}
+
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  min-width: 0;
 }
 
 .navLink {
-  display: inline-flex;
   position: relative;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 9px;
-  color: var(--gray-600, #4b5563);
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: var(--gray-600);
   text-decoration: none;
   font-size: var(--type-emphasis-size);
   line-height: var(--type-emphasis-line-height);
   font-weight: var(--type-emphasis-weight);
-  white-space: nowrap;
-  transition: color 0.14s ease;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
 .navLink:hover {
   color: var(--gray-900);
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(209, 213, 219, 0.85);
 }
 
 .navLink:focus-visible {
-  outline: 2px solid rgba(17, 17, 17, 0.15);
+  outline: 2px solid rgba(2, 181, 225, 0.22);
   outline-offset: 2px;
 }
 
 .navLinkActive {
   color: var(--gray-900);
-}
-
-.navLinkActive::after {
-  content: "";
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 4px;
-  height: 2px;
-  border-radius: 999px;
-  background: #111111;
+  background: #ffffff;
+  border-color: rgba(209, 213, 219, 0.92);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
 .navIcon {
   width: 18px;
   height: 18px;
-  display: inline-block;
-  position: relative;
   flex-shrink: 0;
   color: currentColor;
-  box-sizing: border-box;
-}
-
-.navIcon::before,
-.navIcon::after {
-  content: "";
-  position: absolute;
-  box-sizing: border-box;
-}
-
-.navLinkLabel {
-  line-height: 1;
 }
 
 .navLinkLabelWrap {
   display: inline-flex;
-  align-items: flex-start;
-  gap: 6px;
+  align-items: center;
+  min-width: 0;
 }
 
-.navIndicatorDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #ef4444;
-  box-shadow: 0 0 0 2px var(--gray-100);
-  flex-shrink: 0;
-  margin-top: 1px;
+.navLinkLabel {
+  line-height: 1.15;
 }
 
 .navbarRight {
@@ -149,7 +188,7 @@
   height: 11px;
   border-radius: 999px;
   background: #ef4444;
-  box-shadow: 0 0 0 2px var(--gray-100);
+  box-shadow: 0 0 0 2px #ffffff;
 }
 
 .accountAvatar {
@@ -204,7 +243,7 @@
   border: none;
   border-radius: 10px;
   background: transparent;
-  color: var(--gray-800, #1f2937);
+  color: var(--gray-800);
   padding: 10px 12px;
   font-size: var(--type-emphasis-size);
   line-height: var(--type-emphasis-line-height);
@@ -250,21 +289,55 @@
 }
 
 @media (max-width: 900px) {
-  .navbar {
+  .topbar {
+    height: 60px;
     padding: 0 18px;
   }
 
-  .navbarLeft {
-    gap: 18px;
+  .topbarBrand {
+    gap: 12px;
+    padding-right: 14px;
+  }
+
+  .topbarBrandCollapsed {
+    gap: 0;
+    padding-right: 12px;
+  }
+
+  .sidebar {
+    position: static;
+    top: auto;
+    height: auto;
+    padding: 12px 18px 14px;
+    border-right: none;
+    border-bottom: 1px solid var(--gray-200);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .sidebarNav {
+    flex-direction: row;
+    gap: 8px;
+    min-width: max-content;
+  }
+
+  .navLink {
+    min-height: 42px;
+    padding: 10px 13px;
+    border-radius: 999px;
   }
 }
 
 @media (max-width: 640px) {
-  .navbar {
+  .topbar {
     padding: 0 14px;
   }
 
   .navbarUserName {
     display: none;
+  }
+
+  .sidebar {
+    padding: 10px 12px 12px;
   }
 }

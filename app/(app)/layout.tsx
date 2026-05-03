@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { SessionProvider } from "@/components/SessionProvider";
-import { Navbar } from "@/components/Navbar";
+import { AppShell } from "@/components/AppShell";
 import { ToastProvider } from "@/components/Toast";
 import { DemoBanner } from "@/components/DemoBanner";
 import { getNotificationIndicator } from "@/lib/notifications";
@@ -29,16 +29,15 @@ export default async function AppLayout({
     <SessionProvider>
       <ToastProvider>
         <DemoBanner />
-        <div className="app-shell">
-          <Navbar
-            user={session.user}
-            notificationsHasAttention={
-              notificationIndicator.notificationsHasAttention
-            }
-            notificationAt={notificationIndicator.latestNotificationAt}
-          />
-          <main className="app-main">{children}</main>
-        </div>
+        <AppShell
+          user={session.user}
+          notificationsHasAttention={
+            notificationIndicator.notificationsHasAttention
+          }
+          notificationAt={notificationIndicator.latestNotificationAt}
+        >
+          {children}
+        </AppShell>
       </ToastProvider>
     </SessionProvider>
   );

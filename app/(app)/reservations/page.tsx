@@ -144,7 +144,6 @@ export default async function ReservationsPage({
       header={
         <PageHeader
           title="Reservations"
-          actionPlacement="below"
           action={<NewReservationButton availableEvents={serializedEvents} />}
         />
       }

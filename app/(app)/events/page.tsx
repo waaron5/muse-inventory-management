@@ -123,7 +123,6 @@ export default async function EventsPage({
       header={
         <PageHeader
           title="Events"
-          actionPlacement="below"
           action={
             isAdmin ? (
               <Link href="/events/new" className="btn btn-primary">

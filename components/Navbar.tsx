@@ -25,12 +25,16 @@ interface NavbarProps {
   };
   notificationsHasAttention?: boolean;
   notificationAt?: string | null;
+  sidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
 }
 
 export function Navbar({
   user,
   notificationsHasAttention = false,
   notificationAt = null,
+  sidebarCollapsed,
+  onToggleSidebar,
 }: NavbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -101,20 +105,110 @@ export function Navbar({
   }
 
   return (
-    <header className={styles.navbar}>
-      <div className={styles.navbarLeft}>
-        <Link href="/dashboard" className={styles.navbarLogo} aria-label="Go to notifications">
-          <Image
-            src="/muse-logo.png"
-            alt="Muse"
-            width={124}
-            height={30}
-            style={{ width: "auto", height: 21, objectFit: "contain" }}
-            priority
-          />
-        </Link>
+    <>
+      <header className={styles.topbar}>
+        <div
+          className={`${styles.topbarBrand} ${
+            sidebarCollapsed ? styles.topbarBrandCollapsed : ""
+          }`}
+        >
+          {!sidebarCollapsed && (
+            <Link
+              href="/dashboard"
+              className={styles.topbarLogo}
+              aria-label="Go to dashboard"
+            >
+              <Image
+                src="/muse-logo.png"
+                alt="Muse"
+                width={124}
+                height={30}
+                style={{ width: "auto", height: 21, objectFit: "contain" }}
+                priority
+              />
+            </Link>
+          )}
+          <button
+            type="button"
+            className={styles.sidebarToggle}
+            aria-label={
+              sidebarCollapsed ? "Show sidebar navigation" : "Hide sidebar navigation"
+            }
+            aria-controls="primary-sidebar"
+            aria-expanded={!sidebarCollapsed}
+            onClick={onToggleSidebar}
+          >
+            <SidebarToggleIcon
+              collapsed={sidebarCollapsed}
+              className={styles.sidebarToggleIcon}
+            />
+          </button>
+        </div>
 
-        <nav className={styles.navbarNav} aria-label="Primary navigation">
+        <div className={styles.navbarRight} ref={accountRef}>
+          <span className={styles.navbarUserName}>{displayName}</span>
+          <button
+            type="button"
+            className={`${styles.accountTrigger} ${menuOpen ? styles.accountTriggerOpen : ""}`}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label={`Open account menu for ${displayName}`}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <span className={styles.accountAvatar}>{initials}</span>
+            {showNotificationsIndicator && (
+              <span
+                className={styles.accountAvatarIndicator}
+                aria-label="Unread notifications"
+              />
+            )}
+          </button>
+
+          {menuOpen && (
+            <div className={styles.accountMenu} aria-label="Account menu">
+              <Link
+                href="/dashboard"
+                className={`${styles.accountMenuItem} ${
+                  isActive("/dashboard") ? styles.accountMenuItemActive : ""
+                }`}
+              >
+                <BellIcon className={styles.accountMenuIcon} />
+                <span className={styles.accountMenuLabelWrap}>
+                  <span>Notifications</span>
+                  {showNotificationsIndicator && (
+                    <span className={styles.accountMenuIndicatorDot} aria-hidden="true" />
+                  )}
+                </span>
+              </Link>
+              <Link
+                href="/settings"
+                className={`${styles.accountMenuItem} ${
+                  isActive("/settings") ? styles.accountMenuItemActive : ""
+                }`}
+              >
+                <SettingsIcon className={styles.accountMenuIcon} />
+                <span>Settings</span>
+              </Link>
+              <button
+                type="button"
+                className={styles.accountMenuItem}
+                onClick={() => signOut({ callbackUrl: "/login" })}
+              >
+                <LogoutIcon className={styles.accountMenuIcon} />
+                <span>Log out</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <aside
+        id="primary-sidebar"
+        className={styles.sidebar}
+        aria-label="Primary navigation"
+        hidden={sidebarCollapsed}
+      >
+        <nav className={styles.sidebarNav}>
           {NAV_ITEMS.map(({ href, label, iconClass }) => {
             const active = isActive(href);
             const isEventsIcon = iconClass === "eventsIcon";
@@ -137,9 +231,7 @@ export function Navbar({
                   <ReservationsIcon className={styles.navIcon} />
                 ) : isGiftingIcon ? (
                   <GiftingIcon className={styles.navIcon} />
-                ) : (
-                  <span className={`${styles.navIcon} ${styles[iconClass]}`} aria-hidden="true" />
-                )}
+                ) : null}
                 <span className={styles.navLinkLabelWrap}>
                   <span className={styles.navLinkLabel}>{label}</span>
                 </span>
@@ -147,64 +239,8 @@ export function Navbar({
             );
           })}
         </nav>
-      </div>
-
-      <div className={styles.navbarRight} ref={accountRef}>
-        <span className={styles.navbarUserName}>{displayName}</span>
-        <button
-          type="button"
-          className={`${styles.accountTrigger} ${menuOpen ? styles.accountTriggerOpen : ""}`}
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          aria-label={`Open account menu for ${displayName}`}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          <span className={styles.accountAvatar}>{initials}</span>
-          {showNotificationsIndicator && (
-            <span
-              className={styles.accountAvatarIndicator}
-              aria-label="Unread notifications"
-            />
-          )}
-        </button>
-
-        {menuOpen && (
-          <div className={styles.accountMenu} aria-label="Account menu">
-            <Link
-              href="/dashboard"
-              className={`${styles.accountMenuItem} ${
-                isActive("/dashboard") ? styles.accountMenuItemActive : ""
-              }`}
-            >
-              <BellIcon className={styles.accountMenuIcon} />
-              <span className={styles.accountMenuLabelWrap}>
-                <span>Notifications</span>
-                {showNotificationsIndicator && (
-                  <span className={styles.accountMenuIndicatorDot} aria-hidden="true" />
-                )}
-              </span>
-            </Link>
-            <Link
-              href="/settings"
-              className={`${styles.accountMenuItem} ${
-                isActive("/settings") ? styles.accountMenuItemActive : ""
-              }`}
-            >
-              <SettingsIcon className={styles.accountMenuIcon} />
-              <span>Settings</span>
-            </Link>
-            <button
-              type="button"
-              className={styles.accountMenuItem}
-              onClick={() => signOut({ callbackUrl: "/login" })}
-            >
-              <LogoutIcon className={styles.accountMenuIcon} />
-              <span>Log out</span>
-            </button>
-          </div>
-        )}
-      </div>
-    </header>
+      </aside>
+    </>
   );
 }
 
@@ -224,6 +260,39 @@ function parseTimestamp(value: string | null | undefined) {
   if (!value) return 0;
   const parsed = Date.parse(value);
   return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function SidebarToggleIcon({
+  collapsed,
+  className,
+}: {
+  collapsed: boolean;
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      {collapsed ? (
+        <>
+          <path d="m6.5 7.5 4.5 4.5-4.5 4.5" />
+          <path d="m13 7.5 4.5 4.5-4.5 4.5" />
+        </>
+      ) : (
+        <>
+          <path d="m10.5 7.5-4.5 4.5 4.5 4.5" />
+          <path d="m17 7.5-4.5 4.5 4.5 4.5" />
+        </>
+      )}
+    </svg>
+  );
 }
 
 function LogoutIcon({ className }: { className?: string }) {

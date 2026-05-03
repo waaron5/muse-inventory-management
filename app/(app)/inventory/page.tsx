@@ -97,7 +97,6 @@ export default async function InventoryPage({
       header={
         <PageHeader
           title="Inventory"
-          actionPlacement="below"
           action={
             isAdmin ? (
               <Link href="/inventory/new" className="btn btn-primary">

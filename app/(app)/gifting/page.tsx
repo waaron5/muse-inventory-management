@@ -79,7 +79,6 @@ export default async function GiftingPage({
       header={
         <PageHeader
           title="Gifting"
-          actionPlacement="below"
           action={
             isAdmin ? (
               <Link href="/gifting/new" className="btn btn-primary">
