@@ -2,9 +2,8 @@ import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { DetailTopBar } from "@/components/DetailTopBar";
 import { GiftReservationRowActions } from "@/components/GiftReservationRowActions";
-import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { prisma } from "@/lib/db";
 import {
@@ -80,23 +79,12 @@ export default async function GiftDetailPage({
 
   return (
     <>
-      <Breadcrumbs
-        items={[
+      <DetailTopBar
+        crumbs={[
           { label: "Gifting", href: "/gifting" },
           { label: item.title },
         ]}
-      />
-
-      <PageHeader
-        title={item.title}
-        action={
-          isAdmin ? (
-            <GiftHeaderActions
-              itemId={id}
-              itemTitle={item.title}
-            />
-          ) : undefined
-        }
+        actions={isAdmin ? <GiftHeaderActions itemId={id} itemTitle={item.title} /> : undefined}
       />
 
       <div className="detail-grid">

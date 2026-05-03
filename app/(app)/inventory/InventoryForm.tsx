@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PageHeader } from "@/components/PageHeader";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { useToast } from "@/components/Toast";
+import { useSetTopBar } from "@/components/TopBarContext";
 import {
   INVENTORY_IMAGE_ACCEPT_ATTRIBUTE,
   INVENTORY_IMAGE_REQUIREMENTS_TEXT,
@@ -56,6 +55,53 @@ export function InventoryForm({
   const displayedImageUrl =
     selectedImagePreviewUrl ?? (removeExistingImage ? null : existingImageUrl);
   const inventoryReturnHref = "/inventory";
+
+  const titleNode = useMemo(
+    () => (
+      <ol className="bc-list" aria-label="Breadcrumb">
+        <li className="bc-item">
+          <a href="/inventory" className="bc-link">Inventory</a>
+        </li>
+        {mode === "edit" && item && (
+          <li className="bc-item">
+            <span className="bc-sep" aria-hidden="true">/</span>
+            <a href={`/inventory/${item.id}`} className="bc-link">{item.title}</a>
+          </li>
+        )}
+        <li className="bc-item">
+          <span className="bc-sep" aria-hidden="true">/</span>
+          <span className="bc-current">{mode === "create" ? "New Item" : "Edit"}</span>
+        </li>
+      </ol>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mode, item?.id]
+  );
+
+  const actionsNode = useMemo(
+    () => (
+      <>
+        <Link href={inventoryReturnHref} className="btn btn-outline">
+          Cancel
+        </Link>
+        <button type="submit" form="inventory-item-form" className="btn btn-dark" disabled={loading}>
+          {loading
+            ? uploadingImage
+              ? "Uploading…"
+              : mode === "create"
+                ? "Adding…"
+                : "Saving…"
+            : mode === "create"
+              ? "Add Item"
+              : "Save Changes"}
+        </button>
+      </>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [loading, uploadingImage, mode]
+  );
+
+  useSetTopBar(titleNode, actionsNode);
 
   useEffect(() => {
     if (!selectedImageFile) {
@@ -150,19 +196,8 @@ export function InventoryForm({
   }
 
   return (
-    <>
-      <Breadcrumbs items={[
-        { label: "Inventory", href: "/inventory" },
-        ...(mode === "edit" && item ? [{ label: item.title, href: `/inventory/${item.id}` }] : []),
-        { label: mode === "create" ? "New Item" : "Edit" },
-      ]} />
-
-      <PageHeader
-        title={mode === "create" ? "Add Inventory Item" : `Edit "${item?.title}"`}
-      />
-
-      <div className="form-container">
-        <form onSubmit={handleSubmit} className="inv-form">
+    <div className="form-container">
+      <form id="inventory-item-form" onSubmit={handleSubmit} className="inv-form">
           <div className="form-grid">
             <div className="form-field form-field-wide">
               <label className="form-label">Item Image</label>
@@ -305,29 +340,8 @@ export function InventoryForm({
           </div>
 
           {error && <p className="form-error">{error}</p>}
-
-          <div className="form-footer page-form-footer">
-            <Link
-              href={inventoryReturnHref}
-              className="btn btn-outline"
-            >
-              Cancel
-            </Link>
-            <button type="submit" className="btn btn-dark" disabled={loading}>
-              {loading
-                ? uploadingImage
-                  ? "Uploading…"
-                  : mode === "create"
-                    ? "Adding…"
-                    : "Saving…"
-                : mode === "create"
-                  ? "Add Item"
-                  : "Save Changes"}
-            </button>
-          </div>
         </form>
-      </div>
-    </>
+    </div>
   );
 }
 

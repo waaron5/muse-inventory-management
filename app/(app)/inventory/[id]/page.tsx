@@ -3,14 +3,13 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { InventoryReservationRowActions } from "@/components/InventoryReservationRowActions";
-import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import { getStorageLocationNames } from "@/lib/storage-locations";
 import Link from "next/link";
 import { InventoryDetailActions } from "./InventoryDetailActions";
 import { InventoryHeaderActions } from "./InventoryHeaderActions";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { DetailTopBar } from "@/components/DetailTopBar";
 
 export default async function InventoryDetailPage({
   params,
@@ -76,21 +75,12 @@ export default async function InventoryDetailPage({
 
   return (
     <>
-      <Breadcrumbs items={[
-        { label: "Inventory", href: "/inventory" },
-        { label: item.title },
-      ]} />
-
-      <PageHeader
-        title={item.title}
-        action={
-          isAdmin ? (
-            <InventoryHeaderActions
-              itemId={id}
-              itemTitle={item.title}
-            />
-          ) : undefined
-        }
+      <DetailTopBar
+        crumbs={[
+          { label: "Inventory", href: "/inventory" },
+          { label: item.title },
+        ]}
+        actions={isAdmin ? <InventoryHeaderActions itemId={id} itemTitle={item.title} /> : undefined}
       />
 
       <div className="detail-grid">

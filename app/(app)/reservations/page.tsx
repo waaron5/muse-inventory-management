@@ -140,7 +140,7 @@ export default async function ReservationsPage({
   return (
     <InventoryPageShell
       stripLegacyPaginationParams
-      title="Reservations"
+      title="My Reservations"
       action={<NewReservationButton availableEvents={serializedEvents} />}
       controls={
         <div className="table-toolbar inventory-toolbar">

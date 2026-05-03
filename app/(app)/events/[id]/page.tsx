@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { InventoryReservationRowActions } from "@/components/InventoryReservationRowActions";
 import { GiftReservationRowActions } from "@/components/GiftReservationRowActions";
-import { PageHeader } from "@/components/PageHeader";
+import { DetailTopBar } from "@/components/DetailTopBar";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getEventStatus } from "@/lib/availability";
 import {
@@ -14,7 +14,6 @@ import {
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import { getStorageLocationNames } from "@/lib/storage-locations";
 import Link from "next/link";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ReserveInventoryForEventButton } from "../ReserveInventoryForEventButton";
 
 export default async function EventDetailPage({
@@ -92,14 +91,12 @@ export default async function EventDetailPage({
 
   return (
     <>
-      <Breadcrumbs items={[
-        { label: "Events", href: "/events" },
-        { label: event.eventName },
-      ]} />
-
-      <PageHeader
-        title={<span className="event-name-inline">{event.eventName}</span>}
-        action={headerActions}
+      <DetailTopBar
+        crumbs={[
+          { label: "Events", href: "/events" },
+          { label: event.eventName },
+        ]}
+        actions={headerActions}
       />
 
       <div className="detail-grid-stacked">

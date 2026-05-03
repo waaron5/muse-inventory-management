@@ -104,6 +104,12 @@
   gap: 8px;
 }
 
+.sidebarDivider {
+  border: none;
+  border-top: 1px solid var(--gray-200);
+  margin: 4px 0;
+}
+
 .navLink {
   position: relative;
   display: flex;

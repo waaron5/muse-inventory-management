@@ -1,6 +1,9 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/PageHeader";
+import Link from "next/link";
+import { NotificationPreferencesClient } from "./NotificationPreferencesClient";
 
 function getRoleLabel(role: string) {
   if (role === "ADMIN") return "Administrator";
@@ -10,6 +13,13 @@ function getRoleLabel(role: string) {
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   if (!session) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { emailNotificationsEnabled: true },
+  });
+
+  const emailEnabled = user?.emailNotificationsEnabled ?? true;
 
   return (
     <div className="settings-page">
@@ -33,6 +43,7 @@ export default async function SettingsPage() {
                 id="settings-name"
                 className="form-input settings-readonly-input"
                 defaultValue={session.user.name}
+                readOnly
               />
             </div>
 
@@ -44,6 +55,7 @@ export default async function SettingsPage() {
                 id="settings-email"
                 className="form-input settings-readonly-input"
                 defaultValue={session.user.email}
+                readOnly
               />
             </div>
 
@@ -81,46 +93,22 @@ export default async function SettingsPage() {
             </p>
           </div>
 
-          <div className="settings-toggle-list">
-            <label className="settings-toggle-row">
-              <span className="settings-toggle-copy">
-                <span className="settings-toggle-title">Reservation approvals</span>
-                <span className="settings-toggle-description">
-                  Show updates when requests are approved, rejected, or canceled.
-                </span>
-              </span>
-              <input
-                type="checkbox"
-                className="settings-checkbox"
-                defaultChecked
-              />
-            </label>
-
-            <label className="settings-toggle-row">
-              <span className="settings-toggle-copy">
-                <span className="settings-toggle-title">Overdue return reminders</span>
-                <span className="settings-toggle-description">
-                  Highlight items and events that need follow-up attention.
-                </span>
-              </span>
-              <input
-                type="checkbox"
-                className="settings-checkbox"
-                defaultChecked
-              />
-            </label>
-
-            <label className="settings-toggle-row">
-              <span className="settings-toggle-copy">
-                <span className="settings-toggle-title">Upcoming event reminders</span>
-                <span className="settings-toggle-description">
-                  Surface reminders a few days before events start.
-                </span>
-              </span>
-              <input type="checkbox" className="settings-checkbox" />
-            </label>
-          </div>
+          <NotificationPreferencesClient initialEmailEnabled={emailEnabled} />
         </section>
+
+        {session.user.role === "ADMIN" && (
+          <section className="detail-card settings-card">
+            <div className="settings-card-head">
+              <h2 className="section-title">Team</h2>
+              <p className="settings-card-copy">
+                Manage who has access to Muse.
+              </p>
+            </div>
+            <Link href="/settings/users" className="btn btn-outline" style={{ alignSelf: "flex-start" }}>
+              Manage Team Members
+            </Link>
+          </section>
+        )}
 
         <section className="detail-card settings-card">
           <div className="settings-card-head">
@@ -179,11 +167,8 @@ export default async function SettingsPage() {
 
         <div className="settings-page-footer">
           <p className="settings-note">
-            These settings are placeholder UI for now and are not yet saved.
+            Workspace default settings are placeholder UI and are not yet saved.
           </p>
-          <button type="button" className="btn btn-primary" disabled>
-            Save Changes
-          </button>
         </div>
       </div>
     </div>

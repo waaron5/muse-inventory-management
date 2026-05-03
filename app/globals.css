@@ -2436,6 +2436,8 @@ select {
 }
 .bc-link:hover { color: var(--gray-900); }
 .bc-current { color: var(--gray-900); font-weight: 400; }
+.topbar-page-slot .bc-item { font-size: inherit; }
+.topbar-page-slot .bc-current { font-weight: 700; }
 
 /* --- Toast --- */
 .toast-container {

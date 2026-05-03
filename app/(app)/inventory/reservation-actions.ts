@@ -8,6 +8,15 @@ import { revalidatePath } from "next/cache";
 import { getInventoryAvailableQty } from "@/lib/availability";
 import { isStorageLocationName } from "@/lib/storage-location-options";
 import { requireStorageLocationName } from "@/lib/storage-locations";
+import {
+  sendEmail,
+  getAdminEmailRecipients,
+  buildNewInventoryRequestEmail,
+  buildInventoryApprovedEmail,
+  buildInventoryRejectedEmail,
+  buildInventoryReturnedEmail,
+  buildBulkReturnSummaryEmail,
+} from "@/lib/email";
 
 function getTodayStart() {
   const now = new Date();
@@ -111,7 +120,7 @@ export async function createInventoryReservationsBatch(formData: {
 
   const event = await prisma.event.findUnique({
     where: { id: formData.eventId },
-    select: { startDate: true, endDate: true, eventName: true },
+    select: { startDate: true, endDate: true, eventName: true, companyName: true },
   });
 
   if (!event) throw new Error("Event not found");
@@ -349,6 +358,27 @@ export async function createInventoryReservationsBatch(formData: {
   ).length;
 
   revalidateInventoryReservationViews(itemIds, formData.eventId);
+
+  if (!autoApproved) {
+    void (async () => {
+      const adminEmails = await getAdminEmailRecipients();
+      if (adminEmails.length > 0) {
+        await Promise.all(
+          reservations.map((r) => {
+            const { subject, html } = buildNewInventoryRequestEmail({
+              requesterName: session.user.name,
+              itemTitle: r.inventoryItem.title,
+              quantity: r.quantity,
+              eventName: r.event.eventName,
+              eventCompany: event.companyName,
+            });
+            return sendEmail({ to: adminEmails, subject, html });
+          })
+        );
+      }
+    })();
+  }
+
   return {
     success: true,
     count: reservations.length,
@@ -389,7 +419,11 @@ export async function approveInventoryReservation(id: string, notes?: string) {
 
   const reservation = await prisma.inventoryReservation.findUnique({
     where: { id },
-    include: { event: true, inventoryItem: true },
+    include: {
+      event: true,
+      inventoryItem: true,
+      requestedBy: { select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true } },
+    },
   });
 
   if (!reservation) throw new Error("Reservation not found");
@@ -435,6 +469,18 @@ export async function approveInventoryReservation(id: string, notes?: string) {
   });
 
   revalidateInventoryReservationViews([reservation.inventoryItemId], reservation.eventId);
+
+  if (reservation.requestedBy.emailNotificationsEnabled) {
+    const firstName = reservation.requestedBy.firstName ?? reservation.requestedBy.name.split(" ")[0];
+    const { subject, html } = buildInventoryApprovedEmail({
+      requesterFirstName: firstName,
+      itemTitle: reservation.inventoryItem.title,
+      quantity: reservation.quantity,
+      eventName: reservation.event.eventName,
+    });
+    void sendEmail({ to: reservation.requestedBy.email, subject, html });
+  }
+
   return { success: true };
 }
 
@@ -443,7 +489,11 @@ export async function rejectInventoryReservation(id: string, notes?: string) {
 
   const reservation = await prisma.inventoryReservation.findUnique({
     where: { id },
-    include: { inventoryItem: true },
+    include: {
+      inventoryItem: true,
+      event: { select: { eventName: true } },
+      requestedBy: { select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true } },
+    },
   });
 
   if (!reservation) throw new Error("Reservation not found");
@@ -467,6 +517,18 @@ export async function rejectInventoryReservation(id: string, notes?: string) {
   });
 
   revalidateInventoryReservationViews([reservation.inventoryItemId], reservation.eventId);
+
+  if (reservation.requestedBy.emailNotificationsEnabled) {
+    const firstName = reservation.requestedBy.firstName ?? reservation.requestedBy.name.split(" ")[0];
+    const { subject, html } = buildInventoryRejectedEmail({
+      requesterFirstName: firstName,
+      itemTitle: reservation.inventoryItem.title,
+      quantity: reservation.quantity,
+      eventName: reservation.event.eventName,
+    });
+    void sendEmail({ to: reservation.requestedBy.email, subject, html });
+  }
+
   return { success: true };
 }
 
@@ -523,7 +585,10 @@ export async function returnInventoryReservation(
 
   const reservation = await prisma.inventoryReservation.findUnique({
     where: { id },
-    include: { inventoryItem: true },
+    include: {
+      inventoryItem: true,
+      event: { select: { eventName: true } },
+    },
   });
 
   if (!reservation) throw new Error("Reservation not found");
@@ -568,6 +633,21 @@ export async function returnInventoryReservation(
   });
 
   revalidateInventoryReservationViews([reservation.inventoryItemId], reservation.eventId);
+
+  void (async () => {
+    const adminEmails = await getAdminEmailRecipients();
+    if (adminEmails.length > 0) {
+      const { subject, html } = buildInventoryReturnedEmail({
+        requesterName: session.user.name,
+        itemTitle: reservation.inventoryItem.title,
+        quantity: reservation.quantity,
+        eventName: reservation.event.eventName,
+        returnLocation: normalizedReturnLocation,
+      });
+      void sendEmail({ to: adminEmails, subject, html });
+    }
+  })();
+
   return { success: true };
 }
 
@@ -705,6 +785,7 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
     include: {
       event: { select: { startDate: true, endDate: true, eventName: true } },
       inventoryItem: { select: { title: true } },
+      requestedBy: { select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true } },
     },
   });
 
@@ -716,6 +797,7 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
     approved: 0,
     failed: [],
   };
+  const approvedReservations: typeof reservations = [];
 
   // Process sequentially so availability checks account for prior approvals in this batch
   for (const reservation of reservations) {
@@ -758,6 +840,7 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
       summary: `Approved reservation for ${reservation.quantity}x "${reservation.inventoryItem.title}" (bulk)`,
     });
 
+    approvedReservations.push(reservation);
     results.approved++;
   }
 
@@ -765,6 +848,34 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
   const allEventIds = [...new Set(reservations.map((r) => r.eventId))];
   for (const eventId of allEventIds) {
     revalidateInventoryReservationViews(allItemIds, eventId);
+  }
+
+  // Email each unique requester for their approved items
+  if (approvedReservations.length > 0) {
+    void (async () => {
+      const byRequester = new Map<string, typeof approvedReservations>();
+      for (const r of approvedReservations) {
+        const existing = byRequester.get(r.requestedById) ?? [];
+        existing.push(r);
+        byRequester.set(r.requestedById, existing);
+      }
+      for (const [, userReservations] of byRequester) {
+        const requester = userReservations[0].requestedBy;
+        if (!requester.emailNotificationsEnabled) continue;
+        const firstName = requester.firstName ?? requester.name.split(" ")[0];
+        await Promise.all(
+          userReservations.map((r) => {
+            const { subject, html } = buildInventoryApprovedEmail({
+              requesterFirstName: firstName,
+              itemTitle: r.inventoryItem.title,
+              quantity: r.quantity,
+              eventName: r.event.eventName,
+            });
+            return sendEmail({ to: requester.email, subject, html });
+          })
+        );
+      }
+    })();
   }
 
   return results;
@@ -813,6 +924,7 @@ export async function bulkReturnInventoryReservations(
   };
   const processedItemIds = new Set<string>();
   const processedEventIds = new Set<string>();
+  const returnedItems: { itemTitle: string; quantity: number; eventName: string }[] = [];
 
   for (const id of uniqueIds) {
     const reservation = reservationsById.get(id);
@@ -877,11 +989,30 @@ export async function bulkReturnInventoryReservations(
 
     processedItemIds.add(reservation.inventoryItemId);
     processedEventIds.add(reservation.eventId);
+    returnedItems.push({
+      itemTitle: reservation.inventoryItem.title,
+      quantity: reservation.quantity,
+      eventName: reservation.event.eventName,
+    });
     results.returned++;
   }
 
   for (const eventId of processedEventIds) {
     revalidateInventoryReservationViews([...processedItemIds], eventId);
+  }
+
+  if (returnedItems.length > 0) {
+    void (async () => {
+      const adminEmails = await getAdminEmailRecipients();
+      if (adminEmails.length > 0) {
+        const { subject, html } = buildBulkReturnSummaryEmail({
+          items: returnedItems,
+          returnLocation: normalizedReturnLocation,
+          returnedByName: session.user.name,
+        });
+        void sendEmail({ to: adminEmails, subject, html });
+      }
+    })();
   }
 
   return results;

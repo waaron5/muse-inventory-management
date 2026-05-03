@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { label: "Events", href: "/events", iconClass: "eventsIcon" },
   { label: "Inventory", href: "/inventory", iconClass: "inventoryIcon" },
   { label: "Gifting", href: "/gifting", iconClass: "giftingIcon" },
-  { label: "Reservations", href: "/reservations", iconClass: "reservationsIcon" },
+  { label: "My Reservations", href: "/reservations", iconClass: "reservationsIcon" },
 ] as const;
 
 const NOTIFICATIONS_SEEN_STORAGE_KEY_PREFIX = "muse-notifications-seen";
@@ -238,25 +238,27 @@ export function Navbar({
             const isGiftingIcon = iconClass === "giftingIcon";
 
             return (
-              <Link
-                key={href}
-                href={href}
-                aria-current={active ? "page" : undefined}
-                className={`${styles.navLink} ${active ? styles.navLinkActive : ""}`}
-              >
-                {isEventsIcon ? (
-                  <EventsIcon className={styles.navIcon} />
-                ) : isInventoryIcon ? (
-                  <InventoryIcon className={styles.navIcon} />
-                ) : isReservationsIcon ? (
-                  <ReservationsIcon className={styles.navIcon} />
-                ) : isGiftingIcon ? (
-                  <GiftingIcon className={styles.navIcon} />
-                ) : null}
-                <span className={styles.navLinkLabelWrap}>
-                  <span className={styles.navLinkLabel}>{label}</span>
-                </span>
-              </Link>
+              <React.Fragment key={href}>
+                {isReservationsIcon && <hr className={styles.sidebarDivider} />}
+                <Link
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`${styles.navLink} ${active ? styles.navLinkActive : ""}`}
+                >
+                  {isEventsIcon ? (
+                    <EventsIcon className={styles.navIcon} />
+                  ) : isInventoryIcon ? (
+                    <InventoryIcon className={styles.navIcon} />
+                  ) : isReservationsIcon ? (
+                    <ReservationsIcon className={styles.navIcon} />
+                  ) : isGiftingIcon ? (
+                    <GiftingIcon className={styles.navIcon} />
+                  ) : null}
+                  <span className={styles.navLinkLabelWrap}>
+                    <span className={styles.navLinkLabel}>{label}</span>
+                  </span>
+                </Link>
+              </React.Fragment>
             );
           })}
         </nav>

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PageHeader } from "@/components/PageHeader";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { useToast } from "@/components/Toast";
+import { useSetTopBar } from "@/components/TopBarContext";
 import { createEvent, updateEvent } from "./actions";
 import Link from "next/link";
 
@@ -34,6 +33,54 @@ export function EventForm({ mode, event }: EventFormProps) {
   const [endDate, setEndDate] = useState(event?.endDate ?? "");
   const [notes, setNotes] = useState(event?.notes ?? "");
 
+  const titleNode = useMemo(
+    () => (
+      <ol className="bc-list" aria-label="Breadcrumb">
+        <li className="bc-item">
+          <a href="/events" className="bc-link">Events</a>
+        </li>
+        {mode === "edit" && event && (
+          <li className="bc-item">
+            <span className="bc-sep" aria-hidden="true">/</span>
+            <a href={`/events/${event.id}`} className="bc-link">{event.eventName}</a>
+          </li>
+        )}
+        <li className="bc-item">
+          <span className="bc-sep" aria-hidden="true">/</span>
+          <span className="bc-current">{mode === "create" ? "New Event" : "Edit"}</span>
+        </li>
+      </ol>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mode, event?.id]
+  );
+
+  const actionsNode = useMemo(
+    () => (
+      <>
+        <Link
+          href={mode === "edit" ? `/events/${event?.id}` : "/events"}
+          className="btn btn-outline"
+        >
+          Cancel
+        </Link>
+        <button type="submit" form="event-form" className="btn btn-dark" disabled={loading}>
+          {loading
+            ? mode === "create"
+              ? "Creating…"
+              : "Saving…"
+            : mode === "create"
+              ? "Create Event"
+              : "Save Changes"}
+        </button>
+      </>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [loading, mode, event?.id]
+  );
+
+  useSetTopBar(titleNode, actionsNode);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -59,27 +106,8 @@ export function EventForm({ mode, event }: EventFormProps) {
   }
 
   return (
-    <>
-      <Breadcrumbs items={[
-        { label: "Events", href: "/events" },
-        ...(mode === "edit" && event ? [{ label: event.eventName, href: `/events/${event.id}` }] : []),
-        { label: mode === "create" ? "New Event" : "Edit" },
-      ]} />
-
-      <PageHeader
-        title={
-          mode === "create" ? (
-            "Create Event"
-          ) : (
-            <>
-              Edit "<span className="event-name-inline">{event?.eventName}</span>"
-            </>
-          )
-        }
-      />
-
-      <div className="form-container">
-        <form onSubmit={handleSubmit} className="ev-form">
+    <div className="form-container">
+      <form id="event-form" onSubmit={handleSubmit} className="ev-form">
           <div className="form-grid">
             <div className="form-field">
               <label className="form-label">Company Name *</label>
@@ -152,26 +180,7 @@ export function EventForm({ mode, event }: EventFormProps) {
           </div>
 
           {error && <p className="form-error">{error}</p>}
-
-          <div className="form-footer page-form-footer">
-            <Link
-              href={mode === "edit" ? `/events/${event?.id}` : "/events"}
-              className="btn btn-outline"
-            >
-              Cancel
-            </Link>
-            <button type="submit" className="btn btn-dark" disabled={loading}>
-              {loading
-                ? mode === "create"
-                  ? "Creating…"
-                  : "Saving…"
-                : mode === "create"
-                  ? "Create Event"
-                  : "Save Changes"}
-            </button>
-          </div>
         </form>
-      </div>
-    </>
+    </div>
   );
 }

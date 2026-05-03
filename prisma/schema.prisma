@@ -67,13 +67,16 @@ enum AuditActionType {
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         UserRole @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                        String   @id @default(cuid())
+  name                      String
+  firstName                 String?
+  lastName                  String?
+  email                     String   @unique
+  passwordHash              String
+  role                      UserRole @default(USER)
+  emailNotificationsEnabled Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
 
   inventoryReservationsRequested InventoryReservation[] @relation("RequestedByUser")
   inventoryReservationsApproved  InventoryReservation[] @relation("ApprovedByUser")

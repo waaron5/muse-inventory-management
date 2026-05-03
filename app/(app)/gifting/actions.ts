@@ -9,6 +9,13 @@ import { getGiftAvailableQty } from "@/lib/availability";
 import { prisma } from "@/lib/db";
 import { deleteManagedInventoryImage } from "@/lib/inventory-image-storage";
 import { requireStorageLocationName } from "@/lib/storage-locations";
+import {
+  sendEmail,
+  getAdminEmailRecipients,
+  buildNewGiftRequestEmail,
+  buildGiftApprovedEmail,
+  buildGiftRejectedEmail,
+} from "@/lib/email";
 
 function revalidateGiftViews(giftItemIds: string[], eventId?: string) {
   revalidatePath("/gifting");
@@ -190,7 +197,7 @@ export async function createGiftReservation(formData: {
 
   const event = await prisma.event.findUnique({
     where: { id: formData.eventId },
-    select: { eventName: true },
+    select: { eventName: true, companyName: true },
   });
 
   if (!event) throw new Error("Event not found");
@@ -242,6 +249,23 @@ export async function createGiftReservation(formData: {
   });
 
   revalidateGiftViews([formData.giftItemId], formData.eventId);
+
+  if (!autoApproved) {
+    void (async () => {
+      const adminEmails = await getAdminEmailRecipients();
+      if (adminEmails.length > 0) {
+        const { subject, html } = buildNewGiftRequestEmail({
+          requesterName: session.user.name,
+          itemTitle: reservation.giftItem.title,
+          quantity: reservation.quantity,
+          eventName: reservation.event.eventName,
+          eventCompany: event.companyName,
+        });
+        void sendEmail({ to: adminEmails, subject, html });
+      }
+    })();
+  }
+
   return { success: true, id: reservation.id, autoApproved };
 }
 
@@ -253,6 +277,7 @@ export async function approveGiftReservation(id: string) {
     include: {
       event: { select: { id: true, eventName: true } },
       giftItem: true,
+      requestedBy: { select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true } },
     },
   });
 
@@ -288,6 +313,18 @@ export async function approveGiftReservation(id: string) {
   });
 
   revalidateGiftViews([reservation.giftItemId], reservation.event.id);
+
+  if (reservation.requestedBy.emailNotificationsEnabled) {
+    const firstName = reservation.requestedBy.firstName ?? reservation.requestedBy.name.split(" ")[0];
+    const { subject, html } = buildGiftApprovedEmail({
+      requesterFirstName: firstName,
+      itemTitle: reservation.giftItem.title,
+      quantity: reservation.quantity,
+      eventName: reservation.event.eventName,
+    });
+    void sendEmail({ to: reservation.requestedBy.email, subject, html });
+  }
+
   return { success: true };
 }
 
@@ -297,8 +334,9 @@ export async function rejectGiftReservation(id: string) {
   const reservation = await prisma.giftReservation.findUnique({
     where: { id },
     include: {
-      event: { select: { id: true } },
+      event: { select: { id: true, eventName: true } },
       giftItem: true,
+      requestedBy: { select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true } },
     },
   });
 
@@ -323,6 +361,18 @@ export async function rejectGiftReservation(id: string) {
   });
 
   revalidateGiftViews([reservation.giftItemId], reservation.event.id);
+
+  if (reservation.requestedBy.emailNotificationsEnabled) {
+    const firstName = reservation.requestedBy.firstName ?? reservation.requestedBy.name.split(" ")[0];
+    const { subject, html } = buildGiftRejectedEmail({
+      requesterFirstName: firstName,
+      itemTitle: reservation.giftItem.title,
+      quantity: reservation.quantity,
+      eventName: reservation.event.eventName,
+    });
+    void sendEmail({ to: reservation.requestedBy.email, subject, html });
+  }
+
   return { success: true };
 }
 
