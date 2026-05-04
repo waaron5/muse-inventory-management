@@ -111,6 +111,10 @@ export default async function EventDetailPage({
               <span>{event.companyName}</span>
             </div>
             <div className="detail-row">
+              <span className="detail-label">P &amp; L</span>
+              <span>{event.plCode ?? "—"}</span>
+            </div>
+            <div className="detail-row">
               <span className="detail-label">Date Range</span>
               <span>
                 {event.startDate.toLocaleDateString("en-US", {

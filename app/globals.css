@@ -29,6 +29,8 @@
   --color-text-muted: var(--gray-500);
   --color-primary: var(--muse-cyan);
   --color-primary-hover: var(--muse-cyan-hover);
+  --surface-shadow-subtle: 0 6px 16px rgba(15, 23, 42, 0.04);
+  --surface-shadow-subtle-side: 6px 0 16px rgba(15, 23, 42, 0.04);
 
   /* Typography */
   --type-page-title-size: 34px;
@@ -448,7 +450,7 @@ select {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  box-shadow: none;
+  box-shadow: var(--surface-shadow-subtle);
 }
 .data-table { width: 100%; border-collapse: collapse; }
 .inventory-page-shell {
@@ -515,25 +517,113 @@ select {
 .inventory-page-pagination .pagination {
   margin-top: 0;
 }
+.events-company-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.events-company-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.events-company-banner-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.events-company-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--company-accent);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.events-company-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.events-company-name {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.events-company-table-container {
+  position: relative;
+  overflow: visible;
+}
+
+.events-company-table-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--color-bg);
+}
+
 .events-table {
   width: 100%;
-  min-width: 1120px;
+  min-width: 0;
+  table-layout: fixed;
 }
 .events-table .table-row td {
-  padding-top: 24px;
-  padding-bottom: 24px;
+  padding-top: 20px;
+  padding-bottom: 20px;
   border-bottom-color: var(--gray-200);
 }
 .events-table th,
 .events-table td {
   vertical-align: top;
 }
+.events-table th,
+.events-table td {
+  padding-left: 12px;
+  padding-right: 12px;
+  overflow-wrap: anywhere;
+}
+.events-table .events-col-event { width: 15%; }
+.events-table .events-col-location { width: 16%; }
+.events-table .events-col-pl { width: 8%; }
+.events-table .events-col-assignments { width: 28%; }
+.events-table .event-actions-header,
+.events-table .event-action-cell {
+  width: 64px;
+}
+
 .events-table .event-action-cell {
   vertical-align: middle;
+  text-align: center;
+  padding-top: 0;
+  padding-bottom: 0;
 }
-.events-table .event-reservation-cell {
-  width: 100%;
-  min-width: 0;
+
+.events-table .event-actions-header {
+  vertical-align: top;
+}
+
+.events-table .event-action-cell .row-actions-menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .event-meta-text {
   display: block;
@@ -569,6 +659,120 @@ select {
   flex-shrink: 0;
   color: var(--gray-400);
   margin-top: 2px;
+}
+
+.event-pl-code {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-100);
+  color: var(--gray-700);
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.event-pl-code-empty {
+  border-style: dashed;
+  background: transparent;
+  color: var(--gray-400);
+}
+
+.event-assignment-panel {
+  width: 100%;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.96) 100%);
+  overflow: hidden;
+}
+
+.event-assignment-panel[open] {
+  border-color: var(--gray-300);
+  background: #ffffff;
+}
+
+.event-assignment-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex-direction: row;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.event-assignment-summary::-webkit-details-marker {
+  display: none;
+}
+
+.event-assignment-summary:hover {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.event-assignment-panel[open] .event-assignment-summary {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.event-assignment-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--gray-900);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.event-assignment-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--company-accent);
+}
+
+.event-assignment-chevron {
+  width: 14px;
+  height: 14px;
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--gray-400);
+  transition: transform 0.16s ease;
+}
+
+.event-assignment-panel[open] .event-assignment-chevron {
+  transform: rotate(180deg);
+}
+
+.event-assignment-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+}
+
+.event-assignment-empty {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--gray-500);
+}
+
+.events-empty-state {
+  padding: 56px 24px;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 14px;
 }
 
 .inventory-table-frame {
@@ -931,8 +1135,9 @@ select {
 
 .event-reservation-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-direction: column;
   gap: 10px;
 }
 
@@ -949,6 +1154,7 @@ select {
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
+  overflow-wrap: anywhere;
 }
 
 .event-reservation-link:hover { color: var(--color-primary); }
@@ -2517,6 +2723,7 @@ select {
   border: 1px solid var(--gray-300);
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: var(--surface-shadow-subtle);
 }
 .skeleton-header {
   display: flex;
@@ -2735,6 +2942,10 @@ select {
   .reservations-toolbar {
     align-items: flex-start;
   }
+  .events-company-table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
   .inventory-table .table-row td {
     padding-top: 11px;
     padding-bottom: 11px;
@@ -2749,8 +2960,8 @@ select {
   .inventory-row-actions {
     gap: 6px;
   }
-  .event-reservation-cell {
-    min-width: 240px;
+  .event-assignment-summary {
+    padding: 11px 12px;
   }
   .reserve-selected-item {
     flex-direction: column;
@@ -2872,8 +3083,17 @@ select {
     padding: 5px 10px;
     font-size: 12px;
   }
-  .event-reservation-cell {
-    min-width: 220px;
+  .events-company-table-header {
+    padding: 16px;
+  }
+  .events-company-name {
+    font-size: 18px;
+  }
+  .events-company-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 15px;
   }
   .inventory-row-actions {
     gap: 6px;
@@ -2909,7 +3129,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.table-container { box-shadow: none; }
 .login-card { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); }
 .form-input:focus { box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1); }
 

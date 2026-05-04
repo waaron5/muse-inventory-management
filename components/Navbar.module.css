@@ -4,6 +4,7 @@
   padding: 0 24px;
   border-bottom: 1px solid var(--gray-200);
   background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--surface-shadow-subtle);
   backdrop-filter: blur(18px);
   display: flex;
   align-items: center;
@@ -70,9 +71,11 @@
   position: sticky;
   top: 0;
   align-self: start;
+  z-index: 50;
   height: 100dvh;
   padding: 0 16px 24px;
   border-right: 1px solid var(--gray-200);
+  box-shadow: var(--surface-shadow-subtle-side);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 253, 0.98) 100%);
   overflow-y: auto;
@@ -326,6 +329,7 @@
     padding: 12px 18px 14px;
     border-right: none;
     border-bottom: 1px solid var(--gray-200);
+    box-shadow: var(--surface-shadow-subtle);
     overflow-x: auto;
     overflow-y: hidden;
     display: block;

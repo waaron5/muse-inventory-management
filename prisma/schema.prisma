@@ -151,6 +151,7 @@ model Event {
   id          String   @id @default(cuid())
   companyName String
   eventName   String
+  plCode      String?
   location    String
   startDate   DateTime
   endDate     DateTime

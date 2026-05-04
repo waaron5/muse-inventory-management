@@ -76,6 +76,7 @@ const events = [
   {
     companyName: "Acme Corp",
     eventName: "Annual Awards Gala",
+    plCode: "ACME-1001",
     startDate: daysFromNow(-30),
     endDate: daysFromNow(-28),
     location: "Grand Ballroom, NYC",
@@ -84,6 +85,7 @@ const events = [
   {
     companyName: "Horizon Tech",
     eventName: "Product Launch Summit",
+    plCode: "HZN-2048",
     startDate: daysFromNow(-1),
     endDate: daysFromNow(2),
     location: "Moscone Center, SF",
@@ -92,14 +94,34 @@ const events = [
   {
     companyName: "Stellar Brands",
     eventName: "Holiday Party",
+    plCode: "STL-7810",
     startDate: daysFromNow(30),
     endDate: daysFromNow(30),
     location: "Rooftop Venue, Chicago",
     notes: "Evening event, capacity 200",
   },
   {
+    companyName: "Acme Corp",
+    eventName: "Leadership Offsite",
+    plCode: "ACME-1088",
+    startDate: daysFromNow(12),
+    endDate: daysFromNow(14),
+    location: "Terranea Resort, CA",
+    notes: "Needs breakout-room signage",
+  },
+  {
+    companyName: "Horizon Tech",
+    eventName: "Partner Roadshow",
+    plCode: "HZN-2112",
+    startDate: daysFromNow(26),
+    endDate: daysFromNow(27),
+    location: "Bellagio, Las Vegas",
+    notes: "Ship gifts to concierge desk",
+  },
+  {
     companyName: "Pinnacle Media",
     eventName: "Spring Showcase",
+    plCode: "PNC-3320",
     startDate: daysFromNow(14),
     endDate: daysFromNow(16),
     location: "Convention Center, Austin",
@@ -108,6 +130,7 @@ const events = [
   {
     companyName: "NovaChem Labs",
     eventName: "Board Retreat",
+    plCode: "NCL-4502",
     startDate: daysFromNow(45),
     endDate: daysFromNow(47),
     location: "Mountain Lodge, Aspen",

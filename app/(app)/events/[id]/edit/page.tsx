@@ -23,6 +23,7 @@ export default async function EditEventPage({
         id: event.id,
         companyName: event.companyName,
         eventName: event.eventName,
+        plCode: event.plCode ?? "",
         location: event.location,
         startDate: event.startDate.toISOString().split("T")[0],
         endDate: event.endDate.toISOString().split("T")[0],

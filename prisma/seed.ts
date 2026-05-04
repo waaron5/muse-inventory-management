@@ -260,6 +260,7 @@ async function main() {
     {
       companyName: "Acme Corp",
       eventName: "Annual Awards Gala",
+      plCode: "ACME-1001",
       startDate: new Date(today.getFullYear(), today.getMonth() - 1, 10),
       endDate: new Date(today.getFullYear(), today.getMonth() - 1, 12),
       location: "Grand Ballroom, NYC",
@@ -268,6 +269,7 @@ async function main() {
     {
       companyName: "Horizon Tech",
       eventName: "Product Launch Summit",
+      plCode: "HZN-2048",
       startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1),
       endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2),
       location: "Moscone Center, SF",
@@ -276,10 +278,29 @@ async function main() {
     {
       companyName: "Stellar Brands",
       eventName: "Holiday Party",
+      plCode: "STL-7810",
       startDate: new Date(today.getFullYear(), today.getMonth() + 1, 15),
       endDate: new Date(today.getFullYear(), today.getMonth() + 1, 15),
       location: "Rooftop Venue, Chicago",
       notes: "Evening event, capacity 200",
+    },
+    {
+      companyName: "Acme Corp",
+      eventName: "Leadership Offsite",
+      plCode: "ACME-1088",
+      startDate: new Date(today.getFullYear(), today.getMonth() + 1, 6),
+      endDate: new Date(today.getFullYear(), today.getMonth() + 1, 8),
+      location: "Terranea Resort, CA",
+      notes: "Needs breakout-room signage",
+    },
+    {
+      companyName: "Horizon Tech",
+      eventName: "Partner Roadshow",
+      plCode: "HZN-2112",
+      startDate: new Date(today.getFullYear(), today.getMonth() + 2, 3),
+      endDate: new Date(today.getFullYear(), today.getMonth() + 2, 4),
+      location: "Bellagio, Las Vegas",
+      notes: "Ship gifts to concierge desk",
     },
   ];
 

@@ -21,6 +21,7 @@ async function requireAdmin() {
 export async function createEvent(formData: {
   companyName: string;
   eventName: string;
+  plCode?: string;
   location: string;
   startDate: string;
   endDate: string;
@@ -32,6 +33,7 @@ export async function createEvent(formData: {
     data: {
       companyName: formData.companyName,
       eventName: formData.eventName,
+      plCode: formData.plCode?.trim() || null,
       location: formData.location,
       startDate: new Date(formData.startDate),
       endDate: new Date(formData.endDate),
@@ -59,6 +61,7 @@ export async function updateEvent(
   formData: {
     companyName?: string;
     eventName?: string;
+    plCode?: string;
     location?: string;
     startDate?: string;
     endDate?: string;
@@ -70,9 +73,10 @@ export async function updateEvent(
   const event = await prisma.event.update({
     where: { id },
     data: {
-      ...(formData.companyName ? { companyName: formData.companyName } : {}),
-      ...(formData.eventName ? { eventName: formData.eventName } : {}),
-      ...(formData.location ? { location: formData.location } : {}),
+      ...(formData.companyName !== undefined ? { companyName: formData.companyName } : {}),
+      ...(formData.eventName !== undefined ? { eventName: formData.eventName } : {}),
+      ...(formData.plCode !== undefined ? { plCode: formData.plCode.trim() || null } : {}),
+      ...(formData.location !== undefined ? { location: formData.location } : {}),
       ...(formData.startDate ? { startDate: new Date(formData.startDate) } : {}),
       ...(formData.endDate ? { endDate: new Date(formData.endDate) } : {}),
       ...(formData.notes !== undefined ? { notes: formData.notes } : {}),

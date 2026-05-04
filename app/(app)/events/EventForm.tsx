@@ -13,6 +13,7 @@ interface EventFormProps {
     id: string;
     companyName: string;
     eventName: string;
+    plCode: string;
     location: string;
     startDate: string;
     endDate: string;
@@ -28,6 +29,7 @@ export function EventForm({ mode, event }: EventFormProps) {
 
   const [companyName, setCompanyName] = useState(event?.companyName ?? "");
   const [eventName, setEventName] = useState(event?.eventName ?? "");
+  const [plCode, setPlCode] = useState(event?.plCode ?? "");
   const [location, setLocation] = useState(event?.location ?? "");
   const [startDate, setStartDate] = useState(event?.startDate ?? "");
   const [endDate, setEndDate] = useState(event?.endDate ?? "");
@@ -87,12 +89,12 @@ export function EventForm({ mode, event }: EventFormProps) {
     setLoading(true);
 
     try {
-      const formData = { companyName, eventName, location, startDate, endDate, notes };
+      const formData = { companyName, eventName, plCode, location, startDate, endDate, notes };
 
       if (mode === "create") {
-        const res = await createEvent(formData);
+        await createEvent(formData);
         toast("Event created");
-        router.push(`/events/${res.id}`);
+        router.push("/events");
       } else {
         await updateEvent(event!.id, formData);
         toast("Event updated");
@@ -131,6 +133,17 @@ export function EventForm({ mode, event }: EventFormProps) {
                 required
                 maxLength={200}
                 placeholder="e.g. Annual Sales Kickoff"
+              />
+            </div>
+            <div className="form-field">
+              <label className="form-label">P &amp; L</label>
+              <input
+                type="text"
+                className="form-input"
+                value={plCode}
+                onChange={(e) => setPlCode(e.target.value)}
+                maxLength={80}
+                placeholder="e.g. PL-24017"
               />
             </div>
             <div className="form-field form-field-wide">

@@ -131,6 +131,7 @@ export async function POST(request: Request) {
       data: {
         companyName: "Horizon Tech",
         eventName: "Product Launch Summit",
+        plCode: "HZN-2048",
         startDate: daysFromNow(-1),
         endDate: daysFromNow(2),
         location: "Moscone Center, SF",
@@ -141,8 +142,22 @@ export async function POST(request: Request) {
 
     await prisma.event.create({
       data: {
+        companyName: "Horizon Tech",
+        eventName: "Partner Roadshow",
+        plCode: "HZN-2112",
+        startDate: daysFromNow(26),
+        endDate: daysFromNow(27),
+        location: "Bellagio, Las Vegas",
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    });
+
+    await prisma.event.create({
+      data: {
         companyName: "Stellar Brands",
         eventName: "Holiday Party",
+        plCode: "STL-7810",
         startDate: daysFromNow(30),
         endDate: daysFromNow(30),
         location: "Rooftop Venue, Chicago",
@@ -158,7 +173,7 @@ export async function POST(request: Request) {
         users: 2,
         inventoryItems: inventoryData.length,
         giftItems: giftData.length,
-        events: 2,
+        events: 3,
       },
     });
   } catch (error) {
