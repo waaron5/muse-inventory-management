@@ -1,8 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { PageHeader } from "@/components/PageHeader";
 import Link from "next/link";
+import { TopBarTitle } from "@/components/TopBarTitle";
 import { NotificationPreferencesClient } from "./NotificationPreferencesClient";
 
 function getRoleLabel(role: string) {
@@ -23,7 +23,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="settings-page">
-      <PageHeader title="Settings" />
+      <TopBarTitle title="Settings" />
 
       <div className="settings-stack">
         <section className="detail-card settings-card">

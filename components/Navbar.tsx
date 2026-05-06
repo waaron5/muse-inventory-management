@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import styles from "./Navbar.module.css";
 import { useTopBarTitle, useTopBarActions } from "@/components/TopBarContext";
 
 const NAV_ITEMS = [
@@ -109,11 +108,11 @@ export function Navbar({
 
   return (
     <>
-      <header className={styles.topbar}>
+      <header className="app-topbar">
         {sidebarCollapsed && (
           <button
             type="button"
-            className={styles.sidebarToggle}
+            className="app-sidebar-toggle"
             aria-label="Show sidebar navigation"
             aria-controls="primary-sidebar"
             aria-expanded={false}
@@ -121,71 +120,71 @@ export function Navbar({
           >
             <SidebarToggleIcon
               collapsed={true}
-              className={styles.sidebarToggleIcon}
+              className="app-sidebar-toggle-icon"
             />
           </button>
         )}
 
-        <div className={`${styles.topbarTitle} topbar-page-slot`}>
+        <div className="app-topbar-title topbar-page-slot">
           {titleSlot}
         </div>
 
         {actionsSlot && (
-          <div className={`${styles.topbarActions} topbar-actions-slot`}>
+          <div className="app-topbar-actions topbar-actions-slot">
             {actionsSlot}
           </div>
         )}
 
-        <div className={styles.navbarRight} ref={accountRef}>
-          <span className={styles.navbarUserName}>{displayName}</span>
+        <div className="app-navbar-right" ref={accountRef}>
+          <span className="app-navbar-user-name">{displayName}</span>
           <button
             type="button"
-            className={`${styles.accountTrigger} ${menuOpen ? styles.accountTriggerOpen : ""}`}
+            className={`app-account-trigger ${menuOpen ? "app-account-trigger-open" : ""}`}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-label={`Open account menu for ${displayName}`}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            <span className={styles.accountAvatar}>{initials}</span>
+            <span className="app-account-avatar">{initials}</span>
             {showNotificationsIndicator && (
               <span
-                className={styles.accountAvatarIndicator}
+                className="app-account-avatar-indicator"
                 aria-label="Unread notifications"
               />
             )}
           </button>
 
           {menuOpen && (
-            <div className={styles.accountMenu} aria-label="Account menu">
+            <div className="app-account-menu" aria-label="Account menu">
               <Link
                 href="/dashboard"
-                className={`${styles.accountMenuItem} ${
-                  isActive("/dashboard") ? styles.accountMenuItemActive : ""
+                className={`app-account-menu-item ${
+                  isActive("/dashboard") ? "app-account-menu-item-active" : ""
                 }`}
               >
-                <BellIcon className={styles.accountMenuIcon} />
-                <span className={styles.accountMenuLabelWrap}>
+                <BellIcon className="app-account-menu-icon" />
+                <span className="app-account-menu-label-wrap">
                   <span>Notifications</span>
                   {showNotificationsIndicator && (
-                    <span className={styles.accountMenuIndicatorDot} aria-hidden="true" />
+                    <span className="app-account-menu-indicator-dot" aria-hidden="true" />
                   )}
                 </span>
               </Link>
               <Link
                 href="/settings"
-                className={`${styles.accountMenuItem} ${
-                  isActive("/settings") ? styles.accountMenuItemActive : ""
+                className={`app-account-menu-item ${
+                  isActive("/settings") ? "app-account-menu-item-active" : ""
                 }`}
               >
-                <SettingsIcon className={styles.accountMenuIcon} />
+                <SettingsIcon className="app-account-menu-icon" />
                 <span>Settings</span>
               </Link>
               <button
                 type="button"
-                className={styles.accountMenuItem}
+                className="app-account-menu-item"
                 onClick={() => signOut({ callbackUrl: "/login" })}
               >
-                <LogoutIcon className={styles.accountMenuIcon} />
+                <LogoutIcon className="app-account-menu-icon" />
                 <span>Log out</span>
               </button>
             </div>
@@ -195,14 +194,14 @@ export function Navbar({
 
       <aside
         id="primary-sidebar"
-        className={styles.sidebar}
+        className="app-sidebar"
         aria-label="Primary navigation"
         hidden={sidebarCollapsed}
       >
-        <div className={styles.sidebarBrand}>
+        <div className="app-sidebar-brand">
           <Link
             href="/dashboard"
-            className={styles.sidebarBrandLogo}
+            className="app-sidebar-brand-logo"
             aria-label="Go to dashboard"
           >
             <Image
@@ -216,7 +215,7 @@ export function Navbar({
           </Link>
           <button
             type="button"
-            className={styles.sidebarToggle}
+            className="app-sidebar-toggle"
             aria-label="Hide sidebar navigation"
             aria-controls="primary-sidebar"
             aria-expanded={true}
@@ -224,12 +223,12 @@ export function Navbar({
           >
             <SidebarToggleIcon
               collapsed={false}
-              className={styles.sidebarToggleIcon}
+              className="app-sidebar-toggle-icon"
             />
           </button>
         </div>
 
-        <nav className={styles.sidebarNav}>
+        <nav className="app-sidebar-nav">
           {NAV_ITEMS.map(({ href, label, iconClass }) => {
             const active = isActive(href);
             const isEventsIcon = iconClass === "eventsIcon";
@@ -239,23 +238,23 @@ export function Navbar({
 
             return (
               <React.Fragment key={href}>
-                {isReservationsIcon && <hr className={styles.sidebarDivider} />}
+                {isReservationsIcon && <hr className="app-sidebar-divider" />}
                 <Link
                   href={href}
                   aria-current={active ? "page" : undefined}
-                  className={`${styles.navLink} ${active ? styles.navLinkActive : ""}`}
+                  className={`app-nav-link ${active ? "app-nav-link-active" : ""}`}
                 >
                   {isEventsIcon ? (
-                    <EventsIcon className={styles.navIcon} />
+                    <EventsIcon className="app-nav-icon" />
                   ) : isInventoryIcon ? (
-                    <InventoryIcon className={styles.navIcon} />
+                    <InventoryIcon className="app-nav-icon" />
                   ) : isReservationsIcon ? (
-                    <ReservationsIcon className={styles.navIcon} />
+                    <ReservationsIcon className="app-nav-icon" />
                   ) : isGiftingIcon ? (
-                    <GiftingIcon className={styles.navIcon} />
+                    <GiftingIcon className="app-nav-icon" />
                   ) : null}
-                  <span className={styles.navLinkLabelWrap}>
-                    <span className={styles.navLinkLabel}>{label}</span>
+                  <span className="app-nav-link-label-wrap">
+                    <span className="app-nav-link-label">{label}</span>
                   </span>
                 </Link>
               </React.Fragment>

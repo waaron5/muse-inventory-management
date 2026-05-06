@@ -20,9 +20,25 @@ export interface DashboardNotification {
   statusVariant: NotificationStatusVariant;
   statusLabel: string;
   title: string;
-  message: string;
+  description: string;
+  requesterName?: string;
   meta: string;
-  actionLabel: string;
+  primaryAction?:
+    | {
+        type: "approveInventory";
+        reservationId: string;
+        label: string;
+      }
+    | {
+        type: "approveGift";
+        reservationId: string;
+        label: string;
+      }
+    | {
+        type: "open";
+        href: string;
+        label: string;
+      };
 }
 
 export interface NotificationIndicator {
@@ -286,13 +302,18 @@ export async function getDashboardNotifications({
         category: "Inventory" as const,
         statusVariant: "pending" as const,
         statusLabel: "New Request",
-        title: "New inventory request",
-        message: `${getDisplayName(reservation.requestedBy.name)} requested ${reservation.quantity}x "${reservation.inventoryItem.title}" for "${reservation.event.eventName}".`,
+        title: "Request",
+        description: `${reservation.quantity}x "${reservation.inventoryItem.title}" for "${reservation.event.eventName}" is awaiting approval.`,
+        requesterName: getDisplayName(reservation.requestedBy.name),
         meta: `${reservation.event.companyName} • ${formatDateRange(
           reservation.event.startDate,
           reservation.event.endDate
         )}`,
-        actionLabel: "Review in reservations",
+        primaryAction: {
+          type: "approveInventory" as const,
+          reservationId: reservation.id,
+          label: "Approve",
+        },
       })),
       ...pendingGiftReservations.map((reservation) => ({
         id: `gift-pending-${reservation.id}`,
@@ -302,13 +323,18 @@ export async function getDashboardNotifications({
         category: "Gifting" as const,
         statusVariant: "pending" as const,
         statusLabel: "New Request",
-        title: "New gift request",
-        message: `${getDisplayName(reservation.requestedBy.name)} requested ${reservation.quantity}x "${reservation.giftItem.title}" for "${reservation.event.eventName}".`,
+        title: "Request",
+        description: `${reservation.quantity}x "${reservation.giftItem.title}" for "${reservation.event.eventName}" is awaiting approval.`,
+        requesterName: getDisplayName(reservation.requestedBy.name),
         meta: `${reservation.event.companyName} • ${formatDateRange(
           reservation.event.startDate,
           reservation.event.endDate
         )}`,
-        actionLabel: "Open gift item",
+        primaryAction: {
+          type: "approveGift" as const,
+          reservationId: reservation.id,
+          label: "Approve",
+        },
       })),
       ...awaitingReturns.map((reservation) => ({
         id: `inventory-return-${reservation.id}`,
@@ -318,12 +344,16 @@ export async function getDashboardNotifications({
         category: "Inventory" as const,
         statusVariant: "pending" as const,
         statusLabel: "Awaiting Return",
-        title: "Inventory awaiting return",
-        message: `"${reservation.inventoryItem.title}" from "${reservation.event.eventName}" has not been returned yet.`,
+        title: "Return",
+        description: `"${reservation.inventoryItem.title}" from "${reservation.event.eventName}" still needs to be checked back in.`,
         meta: `${getDisplayName(reservation.requestedBy.name)} • Event ended ${formatDate(
           reservation.event.endDate
         )}`,
-        actionLabel: "Open reservations",
+        primaryAction: {
+          type: "open" as const,
+          href: "/reservations",
+          label: "Open reservations",
+        },
       })),
     ];
 
@@ -417,12 +447,16 @@ export async function getDashboardNotifications({
       category: "Inventory" as const,
       statusVariant: "pending" as const,
       statusLabel: "Action Needed",
-      title: "Return reminder",
-      message: `Return "${reservation.inventoryItem.title}" from "${reservation.event.eventName}".`,
+      title: "Return",
+      description: `Return "${reservation.inventoryItem.title}" from "${reservation.event.eventName}".`,
       meta: `${reservation.event.companyName} • Event ended ${formatDate(
         reservation.event.endDate
       )}`,
-      actionLabel: "Open reservations",
+      primaryAction: {
+        type: "open" as const,
+        href: "/reservations",
+        label: "Open reservations",
+      },
     })),
     ...inventoryUpdates.map((reservation) => ({
       id: `inventory-update-${reservation.id}`,
@@ -432,16 +466,13 @@ export async function getDashboardNotifications({
       category: "Inventory" as const,
       statusVariant: getInventoryNotificationVariant(reservation.status),
       statusLabel: getInventoryReservationStatusLabel(reservation.status),
-      title: `Inventory request ${getInventoryReservationStatusLabel(
-        reservation.status
-      ).toLowerCase()}`,
-      message: `Your request for ${reservation.quantity}x "${reservation.inventoryItem.title}" for "${reservation.event.eventName}" was ${getInventoryReservationStatusLabel(
+      title: "Reservation",
+      description: `Your request for ${reservation.quantity}x "${reservation.inventoryItem.title}" for "${reservation.event.eventName}" was ${getInventoryReservationStatusLabel(
         reservation.status
       ).toLowerCase()}.`,
       meta: `${reservation.event.companyName} • Updated ${formatDate(
         reservation.updatedAt
       )}`,
-      actionLabel: "Open reservations",
     })),
     ...giftUpdates.map((reservation) => ({
       id: `gift-update-${reservation.id}`,
@@ -451,16 +482,13 @@ export async function getDashboardNotifications({
       category: "Gifting" as const,
       statusVariant: getGiftReservationStatusVariant(reservation.status),
       statusLabel: getGiftReservationStatusLabel(reservation.status),
-      title: `Gift request ${getGiftReservationStatusLabel(
-        reservation.status
-      ).toLowerCase()}`,
-      message: `Your request for ${reservation.quantity}x "${reservation.giftItem.title}" for "${reservation.event.eventName}" was ${getGiftReservationStatusLabel(
+      title: "Reservation",
+      description: `Your request for ${reservation.quantity}x "${reservation.giftItem.title}" for "${reservation.event.eventName}" was ${getGiftReservationStatusLabel(
         reservation.status
       ).toLowerCase()}.`,
       meta: `${reservation.event.companyName} • Updated ${formatDate(
         reservation.updatedAt
       )}`,
-      actionLabel: "Open gift item",
     })),
   ];
 
