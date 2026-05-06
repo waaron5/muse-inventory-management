@@ -1,10 +1,40 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSetTopBar } from "@/components/TopBarContext";
 
 export const INVENTORY_BULK_DOCK_SLOT_ID = "inventory-bulk-dock-slot";
+
+export function useInventoryBulkDockSlot() {
+  const [bulkDockSlot, setBulkDockSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    function updateBulkDockSlot() {
+      const nextSlot = document.getElementById(INVENTORY_BULK_DOCK_SLOT_ID);
+      setBulkDockSlot((currentSlot) =>
+        currentSlot === nextSlot ? currentSlot : nextSlot
+      );
+    }
+
+    updateBulkDockSlot();
+
+    const observer = new MutationObserver(() => {
+      updateBulkDockSlot();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  return bulkDockSlot;
+}
 
 interface InventoryPageShellProps {
   showPagination?: boolean;
@@ -30,7 +60,16 @@ export function InventoryPageShell({
   const searchParams = useSearchParams();
 
   const actionsContent = useMemo(
-    () => <>{controls}{action}</>,
+    () => (
+      <>
+        <div
+          id={INVENTORY_BULK_DOCK_SLOT_ID}
+          className="inventory-page-bulk-dock-slot"
+        />
+        {controls}
+        {action}
+      </>
+    ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [controls, action]
   );
@@ -57,7 +96,6 @@ export function InventoryPageShell({
 
   return (
     <div className="inventory-page-shell">
-      <div id={INVENTORY_BULK_DOCK_SLOT_ID} className="inventory-page-bulk-dock-slot" />
       <div className="inventory-page-table-area">
         <div className="inventory-page-table-shell">{table}</div>
       </div>

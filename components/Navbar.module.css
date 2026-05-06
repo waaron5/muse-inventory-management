@@ -3,14 +3,12 @@
   height: 64px;
   padding: 0 24px;
   border-bottom: 1px solid var(--gray-200);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-topbar-bg);
   box-shadow: var(--surface-shadow-subtle);
   backdrop-filter: blur(18px);
   display: flex;
   align-items: center;
   gap: 16px;
-  position: sticky;
-  top: 0;
   z-index: 60;
 }
 
@@ -38,7 +36,7 @@
   border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
-  color: var(--gray-500);
+  color: var(--color-sidebar-toggle-text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -50,13 +48,13 @@
 }
 
 .sidebarToggle:hover {
-  color: var(--gray-900);
-  background: rgba(255, 255, 255, 0.72);
-  border-color: rgba(209, 213, 219, 0.9);
+  color: var(--color-sidebar-link-hover-text);
+  background: var(--color-sidebar-toggle-hover-bg);
+  border-color: var(--color-sidebar-toggle-hover-border);
 }
 
 .sidebarToggle:focus-visible {
-  outline: 2px solid rgba(2, 181, 225, 0.22);
+  outline: 2px solid var(--color-focus-ring-brand);
   outline-offset: 2px;
 }
 
@@ -68,17 +66,14 @@
 
 .sidebar {
   grid-area: sidebar;
-  position: sticky;
-  top: 0;
-  align-self: start;
   z-index: 50;
   height: 100dvh;
   padding: 0 16px 24px;
-  border-right: 1px solid var(--gray-200);
+  border-right: 1px solid var(--color-sidebar-border);
   box-shadow: var(--surface-shadow-subtle-side);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 253, 0.98) 100%);
-  overflow-y: auto;
+    linear-gradient(180deg, var(--color-sidebar-bg-start) 0%, var(--color-sidebar-bg-end) 100%);
+  overflow-y: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -90,7 +85,7 @@
   flex-shrink: 0;
   height: 64px;
   padding: 0 2px;
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--color-sidebar-divider);
   margin-bottom: 16px;
 }
 
@@ -109,7 +104,7 @@
 
 .sidebarDivider {
   border: none;
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid var(--color-sidebar-divider);
   margin: 4px 0;
 }
 
@@ -123,7 +118,7 @@
   padding: 11px 14px;
   border: 1px solid transparent;
   border-radius: 14px;
-  color: var(--gray-600);
+  color: var(--color-sidebar-link-text);
   text-decoration: none;
   font-size: var(--type-emphasis-size);
   line-height: var(--type-emphasis-line-height);
@@ -137,21 +132,21 @@
 }
 
 .navLink:hover {
-  color: var(--gray-900);
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(209, 213, 219, 0.85);
+  color: var(--color-sidebar-link-hover-text);
+  background: var(--color-sidebar-link-hover-bg);
+  border-color: var(--color-sidebar-link-hover-border);
 }
 
 .navLink:focus-visible {
-  outline: 2px solid rgba(2, 181, 225, 0.22);
+  outline: 2px solid var(--color-focus-ring-brand);
   outline-offset: 2px;
 }
 
 .navLinkActive {
-  color: var(--gray-900);
-  background: #ffffff;
-  border-color: rgba(209, 213, 219, 0.92);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  color: var(--color-sidebar-link-hover-text);
+  background: var(--color-sidebar-link-active-bg);
+  border-color: var(--color-sidebar-link-active-border);
+  box-shadow: var(--color-sidebar-link-active-shadow);
 }
 
 .navIcon {
@@ -200,7 +195,7 @@
 }
 
 .accountTrigger:focus-visible {
-  outline: 2px solid rgba(17, 17, 17, 0.15);
+  outline: 2px solid var(--color-focus-ring-neutral);
   outline-offset: 3px;
 }
 
@@ -211,8 +206,8 @@
   width: 11px;
   height: 11px;
   border-radius: 999px;
-  background: #ef4444;
-  box-shadow: 0 0 0 2px #ffffff;
+  background: var(--color-avatar-indicator-bg);
+  box-shadow: 0 0 0 2px var(--color-avatar-indicator-ring);
 }
 
 .accountAvatar {
@@ -222,9 +217,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #f7f7f7 0%, #ececec 100%);
-  border: 1px solid #d4d4d8;
-  color: #111111;
+  background: linear-gradient(180deg, var(--color-avatar-bg-start) 0%, var(--color-avatar-bg-end) 100%);
+  border: 1px solid var(--color-avatar-border);
+  color: var(--color-avatar-text);
   font-size: var(--type-label-size);
   line-height: 1;
   font-weight: var(--type-overline-weight);
@@ -234,13 +229,17 @@
     transform 0.14s ease,
     box-shadow 0.16s ease,
     background 0.16s ease;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--color-avatar-shadow);
 }
 
 .accountTrigger:hover .accountAvatar,
 .accountTriggerOpen .accountAvatar {
-  background: linear-gradient(180deg, #f0f0f0 0%, #e6e6e6 100%);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  background: linear-gradient(
+    180deg,
+    var(--color-avatar-hover-bg-start) 0%,
+    var(--color-avatar-hover-bg-end) 100%
+  );
+  box-shadow: var(--color-avatar-hover-shadow);
 }
 
 .accountTrigger:active .accountAvatar {
@@ -256,7 +255,7 @@
   border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 8px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--color-account-menu-shadow);
 }
 
 .accountMenuItem {
@@ -292,7 +291,7 @@
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: #ef4444;
+  background: var(--color-avatar-indicator-bg);
   flex-shrink: 0;
 }
 
@@ -302,7 +301,7 @@
 }
 
 .accountMenuItem:focus-visible {
-  outline: 2px solid rgba(17, 17, 17, 0.12);
+  outline: 2px solid var(--color-focus-ring-neutral-subtle);
   outline-offset: 1px;
 }
 
@@ -328,7 +327,7 @@
     height: auto;
     padding: 12px 18px 14px;
     border-right: none;
-    border-bottom: 1px solid var(--gray-200);
+    border-bottom: 1px solid var(--color-sidebar-border);
     box-shadow: var(--surface-shadow-subtle);
     overflow-x: auto;
     overflow-y: hidden;

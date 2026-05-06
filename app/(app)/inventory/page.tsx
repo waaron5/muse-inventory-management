@@ -1,9 +1,9 @@
 import { getServerSession } from "next-auth";
-import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SearchBar } from "@/components/SearchBar";
 import { InventoryPageShell } from "./InventoryPageShell";
+import { AddInventoryItemButton } from "./AddInventoryItemButton";
 import { InventoryTable } from "./InventoryTable";
 
 export default async function InventoryPage({
@@ -95,11 +95,7 @@ export default async function InventoryPage({
       stripLegacyPaginationParams
       title="Inventory"
       action={
-        isAdmin ? (
-          <Link href="/inventory/new" className="btn btn-primary">
-            + Add Item
-          </Link>
-        ) : undefined
+        isAdmin ? <AddInventoryItemButton /> : undefined
       }
       controls={
         <div className="table-toolbar inventory-toolbar">

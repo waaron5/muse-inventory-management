@@ -33,6 +33,7 @@ interface InventoryReservationRowActionsProps {
   fallbackLabel?: string;
   allowRemoveTerminal?: boolean;
   actionAppearance?: "default" | "reservations-page";
+  bulkSelectionActive?: boolean;
 }
 
 export function InventoryReservationRowActions({
@@ -44,6 +45,7 @@ export function InventoryReservationRowActions({
   fallbackLabel = "View Item",
   allowRemoveTerminal = false,
   actionAppearance = "default",
+  bulkSelectionActive = false,
 }: InventoryReservationRowActionsProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -212,7 +214,7 @@ export function InventoryReservationRowActions({
             type="button"
             className="btn-action btn-action-primary"
             onClick={handleApprove}
-            disabled={loadingAction !== null}
+            disabled={loadingAction !== null || bulkSelectionActive}
           >
             {loadingAction === "approve" ? "Approving..." : "Approve"}
           </button>
@@ -265,7 +267,7 @@ export function InventoryReservationRowActions({
               setError("");
               setReturnOpen(true);
             }}
-            disabled={loadingAction !== null}
+            disabled={loadingAction !== null || bulkSelectionActive}
           >
             <ReturnIcon className="btn-action-inline-icon" />
             Return Item

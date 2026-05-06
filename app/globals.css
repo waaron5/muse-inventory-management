@@ -29,6 +29,36 @@
   --color-text-muted: var(--gray-500);
   --color-primary: var(--muse-cyan);
   --color-primary-hover: var(--muse-cyan-hover);
+  --color-app-main-bg: #e8ecf2;
+  --color-topbar-bg: rgba(255, 255, 255, 0.92);
+  --color-focus-ring-brand: rgba(2, 181, 225, 0.22);
+  --color-focus-ring-neutral: rgba(17, 17, 17, 0.15);
+  --color-focus-ring-neutral-subtle: rgba(17, 17, 17, 0.12);
+  --color-sidebar-bg-start: rgba(255, 255, 255, 0.98);
+  --color-sidebar-bg-end: rgba(248, 251, 253, 0.98);
+  --color-sidebar-border: var(--gray-200);
+  --color-sidebar-divider: var(--gray-200);
+  --color-sidebar-toggle-text: var(--gray-500);
+  --color-sidebar-toggle-hover-bg: rgba(255, 255, 255, 0.72);
+  --color-sidebar-toggle-hover-border: rgba(209, 213, 219, 0.9);
+  --color-sidebar-link-text: var(--gray-600);
+  --color-sidebar-link-hover-text: var(--gray-900);
+  --color-sidebar-link-hover-bg: rgba(255, 255, 255, 0.7);
+  --color-sidebar-link-hover-border: rgba(209, 213, 219, 0.85);
+  --color-sidebar-link-active-bg: #ffffff;
+  --color-sidebar-link-active-border: rgba(209, 213, 219, 0.92);
+  --color-sidebar-link-active-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  --color-avatar-indicator-bg: #ef4444;
+  --color-avatar-indicator-ring: #ffffff;
+  --color-avatar-bg-start: #f7f7f7;
+  --color-avatar-bg-end: #ececec;
+  --color-avatar-border: #d4d4d8;
+  --color-avatar-text: #111111;
+  --color-avatar-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --color-avatar-hover-bg-start: #f0f0f0;
+  --color-avatar-hover-bg-end: #e6e6e6;
+  --color-avatar-hover-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  --color-account-menu-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
   --surface-shadow-subtle: 0 6px 16px rgba(15, 23, 42, 0.04);
   --surface-shadow-subtle-side: 6px 0 16px rgba(15, 23, 42, 0.04);
 
@@ -487,10 +517,8 @@ select {
 
 .inventory-page-bulk-dock-slot {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .inventory-page-bulk-dock-slot:empty {
@@ -567,7 +595,9 @@ select {
 
 .events-company-table-container {
   position: relative;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .events-company-table-header {
@@ -602,8 +632,8 @@ select {
 }
 .events-table .events-col-event { width: 15%; }
 .events-table .events-col-location { width: 16%; }
-.events-table .events-col-pl { width: 8%; }
-.events-table .events-col-assignments { width: 28%; }
+.events-table .events-col-pl { width: 10%; }
+.events-table .events-col-assignments { width: 27%; }
 .events-table .event-actions-header,
 .events-table .event-action-cell {
   width: 64px;
@@ -1136,13 +1166,14 @@ select {
 .event-reservation-item {
   display: flex;
   align-items: flex-start;
-  justify-content: flex-start;
-  flex-direction: column;
+  flex-direction: row;
   gap: 10px;
+  min-width: 0;
 }
 
 .event-reservation-copy {
   display: flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
@@ -1166,6 +1197,8 @@ select {
 }
 
 .event-reservation-status {
+  flex-shrink: 0;
+  align-self: flex-start;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
@@ -1376,16 +1409,13 @@ select {
 }
 
 .row-actions-dropdown {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
-  min-width: 140px;
+  position: fixed;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 4px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-  z-index: 50;
+  z-index: 200;
 }
 
 .row-actions-item {
@@ -1730,7 +1760,7 @@ select {
 
 /* --- Layout --- */
 .app-shell {
-  min-height: 100vh;
+  height: 100dvh;
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
   grid-template-rows: 64px minmax(0, 1fr);
@@ -1738,7 +1768,7 @@ select {
     "sidebar topbar"
     "sidebar main";
   background: var(--color-page-bg);
-  overflow-x: clip;
+  overflow: hidden;
 }
 
 .app-shell-collapsed {
@@ -1750,9 +1780,12 @@ select {
   --app-main-pad-y: 20px;
   grid-area: main;
   min-width: 0;
+  min-height: 0;
   padding: var(--app-main-pad-y) var(--app-main-pad-x);
   width: 100%;
-  background: #e8ecf2;
+  background: var(--color-app-main-bg);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
 }
 
 /* --- Dashboard --- */
@@ -2529,6 +2562,10 @@ select {
   flex-wrap: nowrap;
 }
 
+.topbar-actions-slot .inventory-page-bulk-dock-slot {
+  justify-content: flex-start;
+}
+
 /* --- Search Bar --- */
 .search-bar {
   position: relative;
@@ -2975,12 +3012,6 @@ select {
     flex-wrap: wrap;
     align-items: stretch;
   }
-  .inventory-page-bulk-dock-slot {
-    width: 100%;
-  }
-  .inventory-page-bulk-dock-slot .inventory-bulk-dock {
-    width: 100%;
-  }
   .inventory-bulk-dock {
     align-items: stretch;
     flex-direction: column;
@@ -2996,6 +3027,26 @@ select {
   .inventory-bulk-dock-actions .btn,
   .inventory-bulk-dock-actions .inventory-reserve-button {
     flex: 1 1 0;
+  }
+  .topbar-actions-slot .inventory-page-bulk-dock-slot,
+  .topbar-actions-slot .inventory-page-bulk-dock-slot .inventory-bulk-dock {
+    width: auto;
+  }
+  .topbar-actions-slot .inventory-bulk-dock {
+    align-items: center;
+    flex-direction: row;
+  }
+  .topbar-actions-slot .inventory-bulk-dock-leading {
+    justify-content: flex-start;
+    width: auto;
+  }
+  .topbar-actions-slot .inventory-bulk-dock-actions {
+    justify-content: flex-end;
+    width: auto;
+  }
+  .topbar-actions-slot .inventory-bulk-dock-actions .btn,
+  .topbar-actions-slot .inventory-bulk-dock-actions .inventory-reserve-button {
+    flex: 0 0 auto;
   }
 }
 @media (max-width: 640px) {
@@ -3114,14 +3165,12 @@ select {
   .reserve-selected-controls {
     gap: 8px;
   }
-  .inventory-page-bulk-dock-slot {
-    width: 100%;
-  }
-  .inventory-page-bulk-dock-slot .inventory-bulk-dock {
-    width: 100%;
-  }
   .inventory-bulk-dock {
     padding: 0;
+  }
+  .topbar-actions-slot .inventory-page-bulk-dock-slot,
+  .topbar-actions-slot .inventory-page-bulk-dock-slot .inventory-bulk-dock {
+    width: auto;
   }
 }
 

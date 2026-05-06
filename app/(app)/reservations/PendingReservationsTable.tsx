@@ -4,12 +4,13 @@ import { type FormEvent, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSetBulkSelectionActive } from "@/components/BulkSelectionContext";
 import { CalendarIcon } from "@/components/MetadataIcons";
 import { Modal } from "@/components/Modal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { InventoryReservationRowActions } from "@/components/InventoryReservationRowActions";
 import { InventoryImagePreview } from "@/app/(app)/inventory/InventoryImagePreview";
-import { INVENTORY_BULK_DOCK_SLOT_ID } from "@/app/(app)/inventory/InventoryPageShell";
+import { useInventoryBulkDockSlot } from "@/app/(app)/inventory/InventoryPageShell";
 import { useToast } from "@/components/Toast";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import {
@@ -70,7 +71,8 @@ export function PendingReservationsTable({
   const [returnLocation, setReturnLocation] = useState("");
   const [returnNotes, setReturnNotes] = useState("");
   const [returnError, setReturnError] = useState("");
-  const [bulkDockSlot, setBulkDockSlot] = useState<HTMLElement | null>(null);
+  const bulkDockSlot = useInventoryBulkDockSlot();
+  const setBulkSelectionActive = useSetBulkSelectionActive();
   const router = useRouter();
   const { toast } = useToast();
   const pendingReservations = reservations.filter(
@@ -124,8 +126,14 @@ export function PendingReservationsTable({
   }, [reservations, isAdmin, userId]);
 
   useEffect(() => {
-    setBulkDockSlot(document.getElementById(INVENTORY_BULK_DOCK_SLOT_ID));
-  }, []);
+    setBulkSelectionActive(selected.size > 0);
+  }, [selected.size, setBulkSelectionActive]);
+
+  useEffect(() => {
+    return () => {
+      setBulkSelectionActive(false);
+    };
+  }, [setBulkSelectionActive]);
 
   function toggleOne(id: string) {
     if (!actionableReservationIdSet.has(id)) return;
@@ -343,6 +351,7 @@ export function PendingReservationsTable({
                     returnLocationOptions={returnLocationOptions}
                     allowRemoveTerminal
                     actionAppearance="reservations-page"
+                    bulkSelectionActive={selected.size > 0}
                   />
                 </td>
               </tr>
@@ -351,27 +360,23 @@ export function PendingReservationsTable({
         </table>
       </div>
 
-      {showSelectionColumn && bulkDockSlot
+      {showSelectionColumn && bulkDockSlot && selected.size > 0
         ? createPortal(
             <div className="inventory-bulk-dock-shell">
               <div
-                className={`inventory-bulk-dock${
-                  selected.size > 0 ? " inventory-bulk-dock-active" : ""
-                }`}
+                className="inventory-bulk-dock inventory-bulk-dock-active"
               >
                 <div className="inventory-bulk-dock-leading">
-                  <div className="inventory-bulk-dock-copy" aria-live="polite">
-                    <span className="bulk-approve-count">
-                      {selected.size}{" "}
-                      {selected.size === 1 ? "reservation" : "reservations"} selected
-                    </span>
-                  </div>
+                  <span className="sr-only" aria-live="polite">
+                    {selected.size}{" "}
+                    {selected.size === 1 ? "reservation" : "reservations"} selected
+                  </span>
 
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
                     onClick={() => setSelected(new Set())}
-                    disabled={selected.size === 0 || busy}
+                    disabled={busy}
                   >
                     Clear
                   </button>

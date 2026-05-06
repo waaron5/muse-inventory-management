@@ -4,10 +4,32 @@ import { prisma } from "@/lib/db";
 // In-app return reminders are handled entirely by lib/notifications.ts —
 // no email is sent for those; users see them on the dashboard.
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "no-reply@example.com";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+let resendClient: Resend | null = null;
+let resendClientInitialized = false;
+let warnedMissingResendApiKey = false;
+
+function getResendClient() {
+  if (resendClientInitialized) {
+    return resendClient;
+  }
+
+  resendClientInitialized = true;
+
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) {
+    if (!warnedMissingResendApiKey) {
+      warnedMissingResendApiKey = true;
+      console.warn("[email] RESEND_API_KEY is not configured. Email sending is disabled.");
+    }
+    resendClient = null;
+    return resendClient;
+  }
+
+  resendClient = new Resend(apiKey);
+  return resendClient;
+}
 
 export async function sendEmail({
   to,
@@ -18,6 +40,9 @@ export async function sendEmail({
   subject: string;
   html: string;
 }): Promise<void> {
+  const resend = getResendClient();
+  if (!resend) return;
+
   try {
     await resend.emails.send({ from: FROM_EMAIL, to, subject, html });
   } catch (err) {

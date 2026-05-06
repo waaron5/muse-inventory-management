@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useBulkSelectionActive } from "@/components/BulkSelectionContext";
 import {
   ReserveInventoryModal,
   type ReserveInventoryEventOption,
@@ -14,7 +15,9 @@ export function NewReservationButton({
   availableEvents,
 }: NewReservationButtonProps) {
   const [open, setOpen] = useState(false);
+  const bulkSelectionActive = useBulkSelectionActive();
   const hasAvailableEvents = availableEvents.length > 0;
+  const disabled = !hasAvailableEvents || bulkSelectionActive;
 
   return (
     <>
@@ -22,11 +25,13 @@ export function NewReservationButton({
         type="button"
         className="btn btn-primary"
         onClick={() => setOpen(true)}
-        disabled={!hasAvailableEvents}
+        disabled={disabled}
         title={
-          hasAvailableEvents
-            ? undefined
-            : "Create an upcoming event first to reserve inventory."
+          bulkSelectionActive
+            ? "Clear bulk selection before creating a new reservation."
+            : hasAvailableEvents
+              ? undefined
+              : "Create an upcoming event first to reserve inventory."
         }
       >
         + New Reservation

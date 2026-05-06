@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ReserveInventoryModal, type ReserveInventoryEventOption } from "@/components/ReserveInventoryModal";
+import { useSetBulkSelectionActive } from "@/components/BulkSelectionContext";
 import { LocationPinIcon } from "@/components/MetadataIcons";
-import { INVENTORY_BULK_DOCK_SLOT_ID } from "./InventoryPageShell";
+import { useInventoryBulkDockSlot } from "./InventoryPageShell";
 import { InventoryActions } from "./InventoryActions";
 import { InventoryImagePreview } from "./InventoryImagePreview";
 
@@ -37,7 +38,8 @@ export function InventoryTable({
 }: InventoryTableProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [reserveOpen, setReserveOpen] = useState(false);
-  const [bulkDockSlot, setBulkDockSlot] = useState<HTMLElement | null>(null);
+  const bulkDockSlot = useInventoryBulkDockSlot();
+  const setBulkSelectionActive = useSetBulkSelectionActive();
   const selectAllRef = useRef<HTMLInputElement>(null);
 
   const selectableItems = items.filter((item) => item.status === "ACTIVE");
@@ -76,8 +78,14 @@ export function InventoryTable({
   }, [someSelected]);
 
   useEffect(() => {
-    setBulkDockSlot(document.getElementById(INVENTORY_BULK_DOCK_SLOT_ID));
-  }, []);
+    setBulkSelectionActive(selected.size > 0);
+  }, [selected.size, setBulkSelectionActive]);
+
+  useEffect(() => {
+    return () => {
+      setBulkSelectionActive(false);
+    };
+  }, [setBulkSelectionActive]);
 
   function toggleOne(itemId: string) {
     if (!selectableItemIdSet.has(itemId)) return;
@@ -266,26 +274,21 @@ export function InventoryTable({
         </div>
       </div>
 
-      {showSelectionColumn && bulkDockSlot
+      {showSelectionColumn && bulkDockSlot && selected.size > 0
         ? createPortal(
             <div className="inventory-bulk-dock-shell">
               <div
-                className={`inventory-bulk-dock${
-                  selected.size > 0 ? " inventory-bulk-dock-active" : ""
-                }`}
+                className="inventory-bulk-dock inventory-bulk-dock-active"
               >
                 <div className="inventory-bulk-dock-leading">
-                  <div className="inventory-bulk-dock-copy" aria-live="polite">
-                    <span className="bulk-approve-count">
-                      {selected.size} {selected.size === 1 ? "item" : "items"} selected
-                    </span>
-                  </div>
+                  <span className="sr-only" aria-live="polite">
+                    {selected.size} {selected.size === 1 ? "item" : "items"} selected
+                  </span>
 
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
                     onClick={() => setSelected(new Set())}
-                    disabled={selected.size === 0}
                   >
                     Clear
                   </button>
@@ -296,7 +299,6 @@ export function InventoryTable({
                     type="button"
                     className="inventory-reserve-button"
                     onClick={() => setReserveOpen(true)}
-                    disabled={selected.size === 0}
                   >
                     <ReserveSelectedIcon className="inventory-reserve-icon" />
                     Reserve Selected
