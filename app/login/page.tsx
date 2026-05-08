@@ -1,6 +1,6 @@
 import { LoginPageClient } from "@/app/login/LoginPageClient";
 
-const DEFAULT_LOGIN_REDIRECT = "/dashboard";
+const DEFAULT_LOGIN_REDIRECT = "/events";
 
 function normalizeCallbackUrl(callbackUrl?: string | string[]) {
   if (!callbackUrl) return DEFAULT_LOGIN_REDIRECT;

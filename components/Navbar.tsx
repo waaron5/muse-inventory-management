@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -37,9 +37,7 @@ export function Navbar({
   onToggleSidebar,
 }: NavbarProps) {
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [notificationSeenAt, setNotificationSeenAt] = useState<string | null>(null);
-  const accountRef = useRef<HTMLDivElement>(null);
   const displayName = user.name.trim() || user.email;
   const initials = getInitials(displayName);
   const notificationSeenStorageKey = `${NOTIFICATIONS_SEEN_STORAGE_KEY_PREFIX}:${user.id}`;
@@ -49,10 +47,6 @@ export function Navbar({
     notificationsHasAttention || hasUnseenNotification;
   const titleSlot = useTopBarTitle();
   const actionsSlot = useTopBarActions();
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     try {
@@ -77,30 +71,6 @@ export function Navbar({
 
     setNotificationSeenAt(notificationAt);
   }, [pathname, notificationAt, notificationSeenStorageKey]);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    function handlePointerDown(event: MouseEvent) {
-      if (!accountRef.current?.contains(event.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [menuOpen]);
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + "/");
@@ -135,84 +105,29 @@ export function Navbar({
           </div>
         )}
 
-        <div className="app-navbar-right" ref={accountRef}>
-          <span className="app-navbar-user-name">{displayName}</span>
-          <button
-            type="button"
-            className={`app-account-trigger ${menuOpen ? "app-account-trigger-open" : ""}`}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            aria-label={`Open account menu for ${displayName}`}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            <span className="app-account-avatar">{initials}</span>
-            {showNotificationsIndicator && (
-              <span
-                className="app-account-avatar-indicator"
-                aria-label="Unread notifications"
-              />
-            )}
-          </button>
-
-          {menuOpen && (
-            <div className="app-account-menu" aria-label="Account menu">
-              <Link
-                href="/dashboard"
-                className={`app-account-menu-item ${
-                  isActive("/dashboard") ? "app-account-menu-item-active" : ""
-                }`}
-              >
-                <BellIcon className="app-account-menu-icon" />
-                <span className="app-account-menu-label-wrap">
-                  <span>Notifications</span>
-                  {showNotificationsIndicator && (
-                    <span className="app-account-menu-indicator-dot" aria-hidden="true" />
-                  )}
-                </span>
-              </Link>
-              <Link
-                href="/settings"
-                className={`app-account-menu-item ${
-                  isActive("/settings") ? "app-account-menu-item-active" : ""
-                }`}
-              >
-                <SettingsIcon className="app-account-menu-icon" />
-                <span>Settings</span>
-              </Link>
-              <button
-                type="button"
-                className="app-account-menu-item"
-                onClick={() => signOut({ callbackUrl: "/login" })}
-              >
-                <LogoutIcon className="app-account-menu-icon" />
-                <span>Log out</span>
-              </button>
-            </div>
-          )}
-        </div>
+        <div className="app-navbar-right" />
       </header>
 
       <aside
         id="primary-sidebar"
-        className="app-sidebar"
+        className={`app-sidebar${sidebarCollapsed ? " app-sidebar-collapsed" : ""}`}
         aria-label="Primary navigation"
-        hidden={sidebarCollapsed}
+        aria-hidden={sidebarCollapsed}
+        inert={sidebarCollapsed ? true : undefined}
       >
         <div className="app-sidebar-brand">
-          <Link
-            href="/dashboard"
-            className="app-sidebar-brand-logo"
-            aria-label="Go to dashboard"
-          >
-            <Image
-              src="/muse-logo.png"
-              alt="Muse"
-              width={124}
-              height={30}
-              style={{ width: "auto", height: 21, objectFit: "contain" }}
-              priority
-            />
-          </Link>
+          <div className="app-sidebar-account-summary">
+            <span className="app-account-trigger" aria-label={displayName}>
+              <span className="app-account-avatar">{initials}</span>
+              {showNotificationsIndicator && (
+                <span
+                  className="app-account-avatar-indicator"
+                  aria-label="Unread notifications"
+                />
+              )}
+            </span>
+            <span className="app-navbar-user-name">{displayName}</span>
+          </div>
           <button
             type="button"
             className="app-sidebar-toggle"
@@ -257,10 +172,61 @@ export function Navbar({
                     <span className="app-nav-link-label">{label}</span>
                   </span>
                 </Link>
+                {isReservationsIcon && <hr className="app-sidebar-divider" />}
               </React.Fragment>
             );
           })}
         </nav>
+
+        <div className="app-sidebar-bottom">
+          <hr className="app-sidebar-divider" />
+          <div className="app-sidebar-account-nav" aria-label="Account navigation">
+            <Link
+              href="/dashboard"
+              className={`app-sidebar-account-link ${
+                isActive("/dashboard") ? "app-sidebar-account-link-active" : ""
+              }`}
+            >
+              <BellIcon className="app-account-menu-icon" />
+              <span className="app-account-menu-label-wrap">
+                <span>Notifications</span>
+                {showNotificationsIndicator && (
+                  <span className="app-account-menu-indicator-dot" aria-hidden="true" />
+                )}
+              </span>
+            </Link>
+            <Link
+              href="/settings"
+              className={`app-sidebar-account-link ${
+                isActive("/settings") ? "app-sidebar-account-link-active" : ""
+              }`}
+            >
+              <SettingsIcon className="app-account-menu-icon" />
+              <span>Settings</span>
+            </Link>
+            <button
+              type="button"
+              className="app-sidebar-account-link"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+            >
+              <LogoutIcon className="app-account-menu-icon" />
+              <span>Log out</span>
+            </button>
+          </div>
+
+          <div className="app-sidebar-footer">
+            <div className="app-sidebar-brand-logo" aria-label="Muse">
+              <Image
+                src="/muse-logo.png"
+                alt="Muse"
+                width={124}
+                height={30}
+                style={{ width: "auto", height: 21, objectFit: "contain" }}
+                priority
+              />
+            </div>
+          </div>
+        </div>
       </aside>
     </>
   );

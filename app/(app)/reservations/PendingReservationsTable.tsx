@@ -15,6 +15,7 @@ import { useToast } from "@/components/Toast";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import {
   bulkApproveInventoryReservations,
+  bulkRemoveRejectedInventoryReservations,
   bulkReturnInventoryReservations,
 } from "@/app/(app)/inventory/reservation-actions";
 
@@ -64,9 +65,9 @@ export function PendingReservationsTable({
   returnLocationOptions: string[];
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loadingAction, setLoadingAction] = useState<"approve" | "return" | null>(
-    null
-  );
+  const [loadingAction, setLoadingAction] = useState<
+    "approve" | "return" | "remove" | null
+  >(null);
   const [returnOpen, setReturnOpen] = useState(false);
   const [returnLocation, setReturnLocation] = useState("");
   const [returnNotes, setReturnNotes] = useState("");
@@ -83,24 +84,45 @@ export function PendingReservationsTable({
       reservation.status === "APPROVED" &&
       (isAdmin || reservation.requestedById === userId)
   );
+  const removableRejectedReservations = reservations.filter(
+    (reservation) =>
+      reservation.status === "REJECTED" &&
+      (isAdmin || reservation.requestedById === userId)
+  );
   const pendingReservationIds = pendingReservations.map((reservation) => reservation.id);
   const returnableReservationIds = returnableReservations.map(
     (reservation) => reservation.id
   );
+  const removableRejectedReservationIds = removableRejectedReservations.map(
+    (reservation) => reservation.id
+  );
   const actionableReservationIds = isAdmin
-    ? [...pendingReservationIds, ...returnableReservationIds]
-    : returnableReservationIds;
+    ? [
+        ...pendingReservationIds,
+        ...returnableReservationIds,
+        ...removableRejectedReservationIds,
+      ]
+    : [...returnableReservationIds, ...removableRejectedReservationIds];
   const pendingReservationIdSet = new Set(pendingReservationIds);
   const returnableReservationIdSet = new Set(returnableReservationIds);
+  const removableRejectedReservationIdSet = new Set(
+    removableRejectedReservationIds
+  );
   const actionableReservationIdSet = new Set(actionableReservationIds);
   const selectedPendingIds = [...selected].filter((id) => pendingReservationIdSet.has(id));
   const selectedReturnableIds = [...selected].filter((id) =>
     returnableReservationIdSet.has(id)
   );
+  const selectedRejectedIds = [...selected].filter((id) =>
+    removableRejectedReservationIdSet.has(id)
+  );
   const selectedReturnableReservations = reservations.filter((reservation) =>
     selectedReturnableIds.includes(reservation.id)
   );
-  const showSelectionColumn = isAdmin || returnableReservationIds.length > 0;
+  const showSelectionColumn =
+    isAdmin ||
+    returnableReservationIds.length > 0 ||
+    removableRejectedReservationIds.length > 0;
   const columnCount = isAdmin ? 9 : showSelectionColumn ? 8 : 7;
   const busy = loadingAction !== null;
 
@@ -204,6 +226,44 @@ export function PendingReservationsTable({
       router.refresh();
     } catch (err: unknown) {
       setReturnError(err instanceof Error ? err.message : "Bulk return failed");
+    } finally {
+      setLoadingAction(null);
+    }
+  }
+
+  async function handleBulkRemoveRejected() {
+    if (selectedRejectedIds.length === 0) return;
+    if (
+      !window.confirm(
+        `Remove ${selectedRejectedIds.length} rejected reservation${
+          selectedRejectedIds.length === 1 ? "" : "s"
+        } from the list?`
+      )
+    ) {
+      return;
+    }
+
+    setLoadingAction("remove");
+    try {
+      const results = await bulkRemoveRejectedInventoryReservations(
+        selectedRejectedIds
+      );
+      if (results.failed.length === 0) {
+        toast(
+          `Removed ${results.removed} rejected reservation${
+            results.removed === 1 ? "" : "s"
+          }`
+        );
+      } else {
+        toast(
+          `Removed ${results.removed}, ${results.failed.length} failed`,
+          results.removed > 0 ? "success" : "error"
+        );
+      }
+      setSelected(new Set());
+      router.refresh();
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Bulk remove failed", "error");
     } finally {
       setLoadingAction(null);
     }
@@ -406,6 +466,16 @@ export function PendingReservationsTable({
                   >
                     <ReserveSelectedIcon className="inventory-reserve-icon" />
                     Return Selected ({selectedReturnableIds.length})
+                  </button>
+                  <button
+                    type="button"
+                    className="inventory-reserve-button"
+                    onClick={handleBulkRemoveRejected}
+                    disabled={selectedRejectedIds.length === 0 || busy}
+                  >
+                    {loadingAction === "remove"
+                      ? "Removing..."
+                      : `Remove Rejected (${selectedRejectedIds.length})`}
                   </button>
                 </div>
               </div>

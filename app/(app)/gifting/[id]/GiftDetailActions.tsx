@@ -15,6 +15,7 @@ interface GiftDetailActionsProps {
   userId: string;
   activeReservations: ActiveGiftRequest[];
   availableEvents: GiftUseEventOption[];
+  disabled?: boolean;
 }
 
 export function GiftDetailActions({
@@ -24,6 +25,7 @@ export function GiftDetailActions({
   userId,
   activeReservations,
   availableEvents,
+  disabled = false,
 }: GiftDetailActionsProps) {
   const [useOpen, setUseOpen] = useState(false);
   const myPendingRequests = activeReservations.filter(
@@ -40,7 +42,12 @@ export function GiftDetailActions({
   return (
     <>
       <div className="action-bar">
-        <button type="button" className="btn btn-dark" onClick={() => setUseOpen(true)}>
+        <button
+          type="button"
+          className="btn btn-dark"
+          onClick={() => setUseOpen(true)}
+          disabled={disabled}
+        >
           Use this item
         </button>
       </div>

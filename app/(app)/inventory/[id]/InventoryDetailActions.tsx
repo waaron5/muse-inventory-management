@@ -25,6 +25,7 @@ interface Props {
   userId: string;
   activeReservations: ActiveReservation[];
   availableEvents: AvailableEvent[];
+  disabled?: boolean;
 }
 
 export function InventoryDetailActions({
@@ -35,6 +36,7 @@ export function InventoryDetailActions({
   userId,
   activeReservations,
   availableEvents,
+  disabled = false,
 }: Props) {
   const [reserveOpen, setReserveOpen] = useState(false);
   const myPendingReservations = activeReservations.filter(
@@ -49,7 +51,12 @@ export function InventoryDetailActions({
   return (
     <>
       <div className="action-bar">
-        <button type="button" className="btn btn-dark" onClick={() => setReserveOpen(true)}>
+        <button
+          type="button"
+          className="btn btn-dark"
+          onClick={() => setReserveOpen(true)}
+          disabled={disabled}
+        >
           Reserve this item
         </button>
       </div>

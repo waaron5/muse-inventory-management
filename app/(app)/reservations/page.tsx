@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { InventoryReservationStatus } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SearchBar } from "@/components/SearchBar";
@@ -35,6 +36,12 @@ export default async function ReservationsPage({
   const todayStart = getTodayStart();
   const where = {
     ...(isAdmin ? {} : { requestedById: userId }),
+    status: {
+      notIn: [
+        InventoryReservationStatus.CANCELED,
+        InventoryReservationStatus.COMPLETED,
+      ],
+    },
     ...(query
       ? {
           OR: [

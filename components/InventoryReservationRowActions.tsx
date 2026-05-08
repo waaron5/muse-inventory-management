@@ -34,6 +34,7 @@ interface InventoryReservationRowActionsProps {
   allowRemoveTerminal?: boolean;
   actionAppearance?: "default" | "reservations-page";
   bulkSelectionActive?: boolean;
+  disabled?: boolean;
 }
 
 export function InventoryReservationRowActions({
@@ -46,6 +47,7 @@ export function InventoryReservationRowActions({
   allowRemoveTerminal = false,
   actionAppearance = "default",
   bulkSelectionActive = false,
+  disabled = false,
 }: InventoryReservationRowActionsProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -214,7 +216,7 @@ export function InventoryReservationRowActions({
             type="button"
             className="btn-action btn-action-primary"
             onClick={handleApprove}
-            disabled={loadingAction !== null || bulkSelectionActive}
+            disabled={disabled || loadingAction !== null || bulkSelectionActive}
           >
             {loadingAction === "approve" ? "Approving..." : "Approve"}
           </button>
@@ -224,7 +226,7 @@ export function InventoryReservationRowActions({
             type="button"
             className="btn-action btn-action-danger"
             onClick={handleReject}
-            disabled={loadingAction !== null}
+            disabled={disabled || loadingAction !== null}
           >
             {loadingAction === "reject" ? "Rejecting..." : "Reject"}
           </button>
@@ -238,7 +240,7 @@ export function InventoryReservationRowActions({
               setEditQuantity(String(reservation.quantity));
               setEditOpen(true);
             }}
-            disabled={loadingAction !== null}
+            disabled={disabled || loadingAction !== null}
             aria-label="Edit reservation"
             title="Edit reservation"
           >
@@ -250,7 +252,7 @@ export function InventoryReservationRowActions({
             type="button"
             className="btn-action btn-action-danger"
             onClick={handleCancel}
-            disabled={loadingAction !== null}
+            disabled={disabled || loadingAction !== null}
           >
             {loadingAction === "cancel" ? "Canceling..." : "Cancel Request"}
           </button>
@@ -267,7 +269,7 @@ export function InventoryReservationRowActions({
               setError("");
               setReturnOpen(true);
             }}
-            disabled={loadingAction !== null || bulkSelectionActive}
+            disabled={disabled || loadingAction !== null || bulkSelectionActive}
           >
             <ReturnIcon className="btn-action-inline-icon" />
             Return Item
@@ -282,7 +284,7 @@ export function InventoryReservationRowActions({
                 : ""
             }`}
             onClick={handleRemoveTerminal}
-            disabled={loadingAction !== null}
+            disabled={disabled || loadingAction !== null}
           >
             <RemoveCircleIcon className="btn-action-inline-icon" />
             {loadingAction === "remove" ? "Removing..." : "Remove"}
@@ -293,9 +295,15 @@ export function InventoryReservationRowActions({
           !canReturn &&
           !canRemoveTerminal &&
           resolvedFallbackHref && (
-          <Link href={resolvedFallbackHref} className="btn-action">
-            {fallbackLabel}
-          </Link>
+          disabled ? (
+            <span className="btn-action btn-action-disabled" aria-disabled="true">
+              {fallbackLabel}
+            </span>
+          ) : (
+            <Link href={resolvedFallbackHref} className="btn-action">
+              {fallbackLabel}
+            </Link>
+          )
         )}
       </div>
 

@@ -1017,3 +1017,97 @@ export async function bulkReturnInventoryReservations(
 
   return results;
 }
+
+export async function bulkRemoveRejectedInventoryReservations(ids: string[]) {
+  const session = await requireSession();
+  const uniqueIds = [...new Set(ids)];
+
+  if (uniqueIds.length === 0) throw new Error("No reservations selected");
+
+  const reservations = await prisma.inventoryReservation.findMany({
+    where: {
+      id: { in: uniqueIds },
+    },
+    include: {
+      event: {
+        select: {
+          eventName: true,
+        },
+      },
+      inventoryItem: {
+        select: {
+          title: true,
+        },
+      },
+    },
+  });
+
+  const reservationsById = new Map(
+    reservations.map((reservation) => [reservation.id, reservation])
+  );
+  const results: {
+    removed: number;
+    failed: Array<{ id: string; item: string; reason: string }>;
+  } = {
+    removed: 0,
+    failed: [],
+  };
+  const processedItemIds = new Set<string>();
+  const processedEventIds = new Set<string>();
+
+  for (const id of uniqueIds) {
+    const reservation = reservationsById.get(id);
+
+    if (!reservation) {
+      results.failed.push({
+        id,
+        item: "Unknown item",
+        reason: "Reservation not found",
+      });
+      continue;
+    }
+
+    if (
+      reservation.requestedById !== session.user.id &&
+      session.user.role !== "ADMIN"
+    ) {
+      results.failed.push({
+        id,
+        item: reservation.inventoryItem.title,
+        reason: "Forbidden",
+      });
+      continue;
+    }
+
+    if (reservation.status !== "REJECTED") {
+      results.failed.push({
+        id,
+        item: reservation.inventoryItem.title,
+        reason: "Only rejected reservations can be removed",
+      });
+      continue;
+    }
+
+    await prisma.inventoryReservation.delete({
+      where: { id: reservation.id },
+    });
+
+    await logAudit({
+      entityType: "INVENTORY_RESERVATION",
+      entityId: reservation.id,
+      actionType: "DELETED",
+      performedById: session.user.id,
+      summary: `Removed rejected reservation for "${reservation.inventoryItem.title}" from event "${reservation.event.eventName}" (bulk)`,
+    });
+
+    processedItemIds.add(reservation.inventoryItemId);
+    processedEventIds.add(reservation.eventId);
+    results.removed++;
+  }
+
+  for (const eventId of processedEventIds) {
+    revalidateInventoryReservationViews([...processedItemIds], eventId);
+  }
+
+  return results;
+}

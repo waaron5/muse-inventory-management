@@ -15,15 +15,21 @@ export interface RowAction {
 export function RowActionsMenu({
   actions,
   triggerLabel,
+  disabled = false,
 }: {
   actions: RowAction[];
   triggerLabel: string;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [dropdownStyle, setDropdownStyle] = useState<CSSProperties | null>(null);
+
+  useEffect(() => {
+    if (disabled) setOpen(false);
+  }, [disabled]);
 
   useEffect(() => {
     if (!open) return;
@@ -109,6 +115,7 @@ export function RowActionsMenu({
           aria-haspopup="menu"
           aria-expanded={open}
           aria-label={triggerLabel}
+          disabled={disabled}
           onClick={() => setOpen((o) => !o)}
         >
           <DotsIcon />

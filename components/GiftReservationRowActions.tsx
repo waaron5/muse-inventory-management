@@ -22,6 +22,7 @@ interface GiftReservationRowActionsProps {
   isAdmin: boolean;
   fallbackHref?: string;
   fallbackLabel?: string;
+  disabled?: boolean;
 }
 
 export function GiftReservationRowActions({
@@ -29,6 +30,7 @@ export function GiftReservationRowActions({
   isAdmin,
   fallbackHref,
   fallbackLabel = "View Event",
+  disabled = false,
 }: GiftReservationRowActionsProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -86,7 +88,7 @@ export function GiftReservationRowActions({
           type="button"
           className="btn-action btn-action-primary"
           onClick={handleApprove}
-          disabled={loadingAction !== null}
+          disabled={disabled || loadingAction !== null}
         >
           {loadingAction === "approve" ? "Approving..." : "Approve"}
         </button>
@@ -96,7 +98,7 @@ export function GiftReservationRowActions({
           type="button"
           className="btn-action btn-action-danger"
           onClick={handleReject}
-          disabled={loadingAction !== null}
+          disabled={disabled || loadingAction !== null}
         >
           {loadingAction === "reject" ? "Rejecting..." : "Reject"}
         </button>
@@ -106,15 +108,21 @@ export function GiftReservationRowActions({
           type="button"
           className="btn-action btn-action-with-icon"
           onClick={handleComplete}
-          disabled={loadingAction !== null}
+          disabled={disabled || loadingAction !== null}
         >
           {loadingAction === "complete" ? "Marking..." : "Mark Used"}
         </button>
       )}
       {!canApprove && !canComplete && fallbackHref && (
-        <Link href={fallbackHref} className="btn-action">
-          {fallbackLabel}
-        </Link>
+        disabled ? (
+          <span className="btn-action btn-action-disabled" aria-disabled="true">
+            {fallbackLabel}
+          </span>
+        ) : (
+          <Link href={fallbackHref} className="btn-action">
+            {fallbackLabel}
+          </Link>
+        )
       )}
     </div>
   );
