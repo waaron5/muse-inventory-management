@@ -13,7 +13,10 @@ import {
   getGiftReservationStatusLabel,
   getGiftReservationStatusVariant,
 } from "@/lib/gift-reservation-ui";
-import { getInventoryReservationStatusLabel, getInventoryReservationStatusVariant } from "@/lib/inventory-reservation-ui";
+import {
+  getInventoryReservationStatusLabel,
+  getInventoryReservationStatusVariant,
+} from "@/lib/inventory-reservation-ui";
 import { deleteEvent, updateEvent } from "../actions";
 import { ReserveInventoryForEventButton } from "../ReserveInventoryForEventButton";
 import type { EventDetailData } from "./detail-data";
@@ -54,7 +57,6 @@ function createDraft(data: EventDetailData): EventDraft {
     notes: data.event.notes,
   };
 }
-
 
 export function EventDetailClient({
   data,
@@ -103,7 +105,7 @@ export function EventDetailClient({
   async function handleDelete() {
     if (
       !confirm(
-        `Delete "${data.event.eventName}"? This cannot be undone. Any active reservations must be canceled first.`
+        `Delete "${data.event.eventName}"? This cannot be undone. Any active reservations must be canceled first.`,
       )
     ) {
       return;
@@ -115,10 +117,7 @@ export function EventDetailClient({
       toast(`"${data.event.eventName}" deleted`);
       router.push("/events");
     } catch (deleteError: unknown) {
-      toast(
-        deleteError instanceof Error ? deleteError.message : "Failed to delete event",
-        "error"
-      );
+      toast(deleteError instanceof Error ? deleteError.message : "Failed to delete event", "error");
     } finally {
       setDeleting(false);
     }
@@ -148,9 +147,7 @@ export function EventDetailClient({
         router.refresh();
       }
     } catch (submitError: unknown) {
-      setError(
-        submitError instanceof Error ? submitError.message : "Something went wrong"
-      );
+      setError(submitError instanceof Error ? submitError.message : "Something went wrong");
     } finally {
       setSaving(false);
     }
@@ -184,20 +181,13 @@ export function EventDetailClient({
   return (
     <>
       <DetailTopBar
-        crumbs={[
-          { label: "Events", href: "/events" },
-          { label: data.event.eventName },
-        ]}
+        crumbs={[{ label: "Events", href: "/events" }, { label: data.event.eventName }]}
         actions={headerActions}
       />
 
       <div className="detail-grid-stacked">
         {isEditing ? (
-          <form
-            id={EVENT_DETAIL_FORM_ID}
-            onSubmit={handleSubmit}
-            className="detail-edit-form"
-          >
+          <form id={EVENT_DETAIL_FORM_ID} onSubmit={handleSubmit} className="detail-edit-form">
             <div className="detail-card">
               <div className="detail-fields detail-edit-fields">
                 <div className="detail-row">
@@ -214,9 +204,7 @@ export function EventDetailClient({
                       type="text"
                       className="form-input"
                       value={draft.eventName}
-                      onChange={(event) =>
-                        updateDraft("eventName", event.target.value)
-                      }
+                      onChange={(event) => updateDraft("eventName", event.target.value)}
                       required
                       maxLength={200}
                       disabled={saving}
@@ -233,9 +221,7 @@ export function EventDetailClient({
                       type="text"
                       className="form-input"
                       value={draft.companyName}
-                      onChange={(event) =>
-                        updateDraft("companyName", event.target.value)
-                      }
+                      onChange={(event) => updateDraft("companyName", event.target.value)}
                       required
                       maxLength={200}
                       disabled={saving}
@@ -252,9 +238,7 @@ export function EventDetailClient({
                       type="text"
                       className="form-input"
                       value={draft.plCode}
-                      onChange={(event) =>
-                        updateDraft("plCode", event.target.value)
-                      }
+                      onChange={(event) => updateDraft("plCode", event.target.value)}
                       maxLength={80}
                       disabled={saving}
                     />
@@ -270,9 +254,7 @@ export function EventDetailClient({
                       type="date"
                       className="form-input"
                       value={draft.startDate}
-                      onChange={(event) =>
-                        updateDraft("startDate", event.target.value)
-                      }
+                      onChange={(event) => updateDraft("startDate", event.target.value)}
                       required
                       disabled={saving}
                     />
@@ -288,9 +270,7 @@ export function EventDetailClient({
                       type="date"
                       className="form-input"
                       value={draft.endDate}
-                      onChange={(event) =>
-                        updateDraft("endDate", event.target.value)
-                      }
+                      onChange={(event) => updateDraft("endDate", event.target.value)}
                       required
                       min={draft.startDate}
                       disabled={saving}
@@ -307,9 +287,7 @@ export function EventDetailClient({
                       type="text"
                       className="form-input"
                       value={draft.location}
-                      onChange={(event) =>
-                        updateDraft("location", event.target.value)
-                      }
+                      onChange={(event) => updateDraft("location", event.target.value)}
                       required
                       maxLength={200}
                       disabled={saving}
@@ -460,9 +438,7 @@ export function EventDetailClient({
         </div>
 
         <div className="reservations-section">
-          <h3 className="section-title">
-            Gift Reservations ({data.giftReservations.length})
-          </h3>
+          <h3 className="section-title">Gift Reservations ({data.giftReservations.length})</h3>
           {data.giftReservations.length === 0 ? (
             <p className="empty-hint">None yet.</p>
           ) : (
@@ -484,19 +460,14 @@ export function EventDetailClient({
                 {data.giftReservations.map((reservation) => (
                   <tr key={reservation.id}>
                     <td>
-                      <Link
-                        href={`/gifting/${reservation.giftItemId}`}
-                        className="item-link"
-                      >
+                      <Link href={`/gifting/${reservation.giftItemId}`} className="item-link">
                         {reservation.giftItemTitle}
                       </Link>
                     </td>
                     <td>{reservation.quantity}</td>
                     <td>
                       <StatusBadge
-                        variant={getGiftReservationStatusVariant(
-                          reservation.status
-                        )}
+                        variant={getGiftReservationStatusVariant(reservation.status)}
                         label={getGiftReservationStatusLabel(reservation.status)}
                       />
                     </td>

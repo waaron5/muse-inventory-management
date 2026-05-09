@@ -25,20 +25,10 @@ export function DetailHeaderActions({
     <div className="detail-topbar-actions">
       {isEditing ? (
         <>
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={onCancel}
-            disabled={loading}
-          >
+          <button type="button" className="btn btn-outline" onClick={onCancel} disabled={loading}>
             Cancel
           </button>
-          <button
-            type="submit"
-            form={formId}
-            className="btn btn-dark"
-            disabled={loading}
-          >
+          <button type="submit" form={formId} className="btn btn-dark" disabled={loading}>
             {loading ? "Saving..." : "Save Changes"}
           </button>
           <button

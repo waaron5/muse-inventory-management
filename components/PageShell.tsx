@@ -12,9 +12,7 @@ export function useInventoryBulkDockSlot() {
   useEffect(() => {
     function updateBulkDockSlot() {
       const nextSlot = document.getElementById(INVENTORY_BULK_DOCK_SLOT_ID);
-      setBulkDockSlot((currentSlot) =>
-        currentSlot === nextSlot ? currentSlot : nextSlot
-      );
+      setBulkDockSlot((currentSlot) => (currentSlot === nextSlot ? currentSlot : nextSlot));
     }
 
     updateBulkDockSlot();
@@ -62,16 +60,13 @@ export function PageShell({
   const actionsContent = useMemo(
     () => (
       <>
-        <div
-          id={INVENTORY_BULK_DOCK_SLOT_ID}
-          className="inventory-page-bulk-dock-slot"
-        />
+        <div id={INVENTORY_BULK_DOCK_SLOT_ID} className="inventory-page-bulk-dock-slot" />
         {controls}
         {action}
       </>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [controls, action]
+    [controls, action],
   );
   useSetTopBar(title, actionsContent);
 
@@ -99,11 +94,7 @@ export function PageShell({
       <div className="inventory-page-table-area">
         <div className="inventory-page-table-shell">{table}</div>
       </div>
-      {showPagination ? (
-        <div className="inventory-page-pagination">
-          {pagination}
-        </div>
-      ) : null}
+      {showPagination ? <div className="inventory-page-pagination">{pagination}</div> : null}
     </div>
   );
 }

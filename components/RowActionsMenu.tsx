@@ -36,10 +36,7 @@ export function RowActionsMenu({
 
     function onPointerDown(e: MouseEvent) {
       const target = e.target as Node;
-      if (
-        containerRef.current?.contains(target) ||
-        dropdownRef.current?.contains(target)
-      ) {
+      if (containerRef.current?.contains(target) || dropdownRef.current?.contains(target)) {
         return;
       }
 
@@ -76,15 +73,12 @@ export function RowActionsMenu({
       let left = triggerRect.right - dropdownRect.width;
       left = Math.max(
         viewportPadding,
-        Math.min(left, window.innerWidth - dropdownRect.width - viewportPadding)
+        Math.min(left, window.innerWidth - dropdownRect.width - viewportPadding),
       );
 
       let top = triggerRect.bottom + offset;
       if (top + dropdownRect.height > window.innerHeight - viewportPadding) {
-        top = Math.max(
-          viewportPadding,
-          triggerRect.top - dropdownRect.height - offset
-        );
+        top = Math.max(viewportPadding, triggerRect.top - dropdownRect.height - offset);
       }
 
       setDropdownStyle({
@@ -178,7 +172,7 @@ export function RowActionsMenu({
               );
             })}
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
@@ -186,13 +180,7 @@ export function RowActionsMenu({
 
 function DotsIcon() {
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <circle cx="5" cy="12" r="1.5" />
       <circle cx="12" cy="12" r="1.5" />
       <circle cx="19" cy="12" r="1.5" />

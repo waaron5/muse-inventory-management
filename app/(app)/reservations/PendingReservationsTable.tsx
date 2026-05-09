@@ -41,7 +41,6 @@ interface PendingReservation {
   requestedBy: { id: string; name: string };
 }
 
-
 export function PendingReservationsTable({
   reservations,
   isAdmin,
@@ -56,9 +55,7 @@ export function PendingReservationsTable({
   returnLocationOptions: string[];
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loadingAction, setLoadingAction] = useState<
-    "approve" | "return" | "remove" | null
-  >(null);
+  const [loadingAction, setLoadingAction] = useState<"approve" | "return" | "remove" | null>(null);
   const [pendingBulkRemoveConfirm, setPendingBulkRemoveConfirm] = useState(false);
   const [returnOpen, setReturnOpen] = useState(false);
   const [returnLocation, setReturnLocation] = useState("");
@@ -69,52 +66,38 @@ export function PendingReservationsTable({
   const router = useRouter();
   const { toast } = useToast();
   const pendingReservations = reservations.filter(
-    (reservation) => reservation.status === "PENDING"
+    (reservation) => reservation.status === "PENDING",
   );
   const returnableReservations = reservations.filter(
     (reservation) =>
-      reservation.status === "APPROVED" &&
-      (isAdmin || reservation.requestedById === userId)
+      reservation.status === "APPROVED" && (isAdmin || reservation.requestedById === userId),
   );
   const removableRejectedReservations = reservations.filter(
     (reservation) =>
-      reservation.status === "REJECTED" &&
-      (isAdmin || reservation.requestedById === userId)
+      reservation.status === "REJECTED" && (isAdmin || reservation.requestedById === userId),
   );
   const pendingReservationIds = pendingReservations.map((reservation) => reservation.id);
-  const returnableReservationIds = returnableReservations.map(
-    (reservation) => reservation.id
-  );
+  const returnableReservationIds = returnableReservations.map((reservation) => reservation.id);
   const removableRejectedReservationIds = removableRejectedReservations.map(
-    (reservation) => reservation.id
+    (reservation) => reservation.id,
   );
   const actionableReservationIds = isAdmin
-    ? [
-        ...pendingReservationIds,
-        ...returnableReservationIds,
-        ...removableRejectedReservationIds,
-      ]
+    ? [...pendingReservationIds, ...returnableReservationIds, ...removableRejectedReservationIds]
     : [...returnableReservationIds, ...removableRejectedReservationIds];
   const pendingReservationIdSet = new Set(pendingReservationIds);
   const returnableReservationIdSet = new Set(returnableReservationIds);
-  const removableRejectedReservationIdSet = new Set(
-    removableRejectedReservationIds
-  );
+  const removableRejectedReservationIdSet = new Set(removableRejectedReservationIds);
   const actionableReservationIdSet = new Set(actionableReservationIds);
   const selectedPendingIds = [...selected].filter((id) => pendingReservationIdSet.has(id));
-  const selectedReturnableIds = [...selected].filter((id) =>
-    returnableReservationIdSet.has(id)
-  );
+  const selectedReturnableIds = [...selected].filter((id) => returnableReservationIdSet.has(id));
   const selectedRejectedIds = [...selected].filter((id) =>
-    removableRejectedReservationIdSet.has(id)
+    removableRejectedReservationIdSet.has(id),
   );
   const selectedReturnableReservations = reservations.filter((reservation) =>
-    selectedReturnableIds.includes(reservation.id)
+    selectedReturnableIds.includes(reservation.id),
   );
   const showSelectionColumn =
-    isAdmin ||
-    returnableReservationIds.length > 0 ||
-    removableRejectedReservationIds.length > 0;
+    isAdmin || returnableReservationIds.length > 0 || removableRejectedReservationIds.length > 0;
   const columnCount = isAdmin ? 9 : showSelectionColumn ? 8 : 7;
   const busy = loadingAction !== null;
 
@@ -128,9 +111,7 @@ export function PendingReservationsTable({
   useEffect(() => {
     setSelected((prev) => {
       const next = new Set(
-        [...prev].filter((reservationId) =>
-          actionableReservationIdSet.has(reservationId)
-        )
+        [...prev].filter((reservationId) => actionableReservationIdSet.has(reservationId)),
       );
       if (next.size === prev.size) {
         return prev;
@@ -179,7 +160,7 @@ export function PendingReservationsTable({
       } else {
         toast(
           `Approved ${results.approved}, ${results.failed.length} failed (insufficient availability)`,
-          results.approved > 0 ? "success" : "error"
+          results.approved > 0 ? "success" : "error",
         );
       }
       setSelected(new Set());
@@ -201,18 +182,16 @@ export function PendingReservationsTable({
       const results = await bulkReturnInventoryReservations(
         selectedReturnableIds,
         returnLocation,
-        returnNotes || undefined
+        returnNotes || undefined,
       );
 
       closeReturnModal();
       if (results.failed.length === 0) {
-        toast(
-          `Returned ${results.returned} reservation${results.returned === 1 ? "" : "s"}`
-        );
+        toast(`Returned ${results.returned} reservation${results.returned === 1 ? "" : "s"}`);
       } else {
         toast(
           `Returned ${results.returned}, ${results.failed.length} failed`,
-          results.returned > 0 ? "success" : "error"
+          results.returned > 0 ? "success" : "error",
         );
       }
       setSelected(new Set());
@@ -233,19 +212,13 @@ export function PendingReservationsTable({
     setPendingBulkRemoveConfirm(false);
     setLoadingAction("remove");
     try {
-      const results = await bulkRemoveRejectedInventoryReservations(
-        selectedRejectedIds
-      );
+      const results = await bulkRemoveRejectedInventoryReservations(selectedRejectedIds);
       if (results.failed.length === 0) {
-        toast(
-          `Removed ${results.removed} rejected reservation${
-            results.removed === 1 ? "" : "s"
-          }`
-        );
+        toast(`Removed ${results.removed} rejected reservation${results.removed === 1 ? "" : "s"}`);
       } else {
         toast(
           `Removed ${results.removed}, ${results.failed.length} failed`,
-          results.removed > 0 ? "success" : "error"
+          results.removed > 0 ? "success" : "error",
         );
       }
       setSelected(new Set());
@@ -259,8 +232,7 @@ export function PendingReservationsTable({
 
   const allSelected =
     actionableReservationIds.length > 0 && selected.size === actionableReservationIds.length;
-  const someSelected =
-    selected.size > 0 && selected.size < actionableReservationIds.length;
+  const someSelected = selected.size > 0 && selected.size < actionableReservationIds.length;
 
   return (
     <>
@@ -274,7 +246,9 @@ export function PendingReservationsTable({
                     type="checkbox"
                     checked={allSelected}
                     disabled={actionableReservationIds.length === 0}
-                    ref={(el) => { if (el) el.indeterminate = someSelected; }}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someSelected;
+                    }}
                     onChange={toggleAll}
                     aria-label="Select all reservations"
                   />
@@ -343,15 +317,10 @@ export function PendingReservationsTable({
                 </td>
                 <td>
                   <div className="reservation-event-cell">
-                    <Link
-                      href={`/events/${reservation.event.id}`}
-                      className="event-title-link"
-                    >
+                    <Link href={`/events/${reservation.event.id}`} className="event-title-link">
                       {reservation.event.eventName}
                     </Link>
-                    <span className="reservation-event-meta">
-                      {reservation.event.companyName}
-                    </span>
+                    <span className="reservation-event-meta">{reservation.event.companyName}</span>
                   </div>
                 </td>
                 <td>
@@ -359,10 +328,7 @@ export function PendingReservationsTable({
                     <span className="table-meta-inline">
                       <CalendarIcon className="table-meta-icon" />
                       <span className="event-meta-text event-date-range">
-                        {formatDateRange(
-                          reservation.event.startDate,
-                          reservation.event.endDate
-                        )}
+                        {formatDateRange(reservation.event.startDate, reservation.event.endDate)}
                       </span>
                     </span>
                   </div>
@@ -379,9 +345,7 @@ export function PendingReservationsTable({
                   />
                 </td>
                 {isAdmin && (
-                  <td className="reservation-requester-cell">
-                    {reservation.requestedBy.name}
-                  </td>
+                  <td className="reservation-requester-cell">{reservation.requestedBy.name}</td>
                 )}
                 <td className="reservations-action-cell">
                   <InventoryReservationRowActions
@@ -411,13 +375,10 @@ export function PendingReservationsTable({
       {showSelectionColumn && bulkDockSlot && selected.size > 0
         ? createPortal(
             <div className="inventory-bulk-dock-shell">
-              <div
-                className="inventory-bulk-dock inventory-bulk-dock-active"
-              >
+              <div className="inventory-bulk-dock inventory-bulk-dock-active">
                 <div className="inventory-bulk-dock-leading">
                   <span className="sr-only" aria-live="polite">
-                    {selected.size}{" "}
-                    {selected.size === 1 ? "reservation" : "reservations"} selected
+                    {selected.size} {selected.size === 1 ? "reservation" : "reservations"} selected
                   </span>
 
                   <button
@@ -489,7 +450,7 @@ export function PendingReservationsTable({
                 </div>
               </div>
             </div>,
-            bulkDockSlot
+            bulkDockSlot,
           )
         : null}
 
@@ -508,9 +469,7 @@ export function PendingReservationsTable({
             <div className="bulk-return-list">
               {selectedReturnableReservations.slice(0, 4).map((reservation) => (
                 <div key={reservation.id} className="bulk-return-list-item">
-                  <span className="bulk-return-list-title">
-                    {reservation.inventoryItem.title}
-                  </span>
+                  <span className="bulk-return-list-title">{reservation.inventoryItem.title}</span>
                   <span className="bulk-return-list-meta">
                     {reservation.event.eventName} • {reservation.quantity} item
                     {reservation.quantity === 1 ? "" : "s"}
@@ -555,11 +514,7 @@ export function PendingReservationsTable({
           {returnError && <p className="form-error">{returnError}</p>}
 
           <div className="form-footer">
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={closeReturnModal}
-            >
+            <button type="button" className="btn btn-outline" onClick={closeReturnModal}>
               Cancel
             </button>
             <button type="submit" className="btn btn-dark" disabled={busy}>

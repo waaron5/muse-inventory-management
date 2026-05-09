@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ReserveInventoryModal, type ReserveInventoryEventOption } from "@/components/ReserveInventoryModal";
+import {
+  ReserveInventoryModal,
+  type ReserveInventoryEventOption,
+} from "@/components/ReserveInventoryModal";
 import { useSetBulkSelectionActive } from "@/components/BulkSelectionContext";
 import { LocationPinIcon } from "@/components/MetadataIcons";
 import { useInventoryBulkDockSlot } from "@/components/PageShell";
@@ -18,8 +21,6 @@ interface InventoryTableItem {
   quantity: number;
   status: "ACTIVE" | "RETIRED";
   detailText: string;
-  updatedDate: string;
-  updatedByText: string | null;
   pendingCount: number;
   approvedCount: number;
   reserved: number;
@@ -31,11 +32,7 @@ interface InventoryTableProps {
   availableEvents: ReserveInventoryEventOption[];
 }
 
-export function InventoryTable({
-  items,
-  isAdmin,
-  availableEvents,
-}: InventoryTableProps) {
+export function InventoryTable({ items, isAdmin, availableEvents }: InventoryTableProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [reserveOpen, setReserveOpen] = useState(false);
   const bulkDockSlot = useInventoryBulkDockSlot();
@@ -46,10 +43,8 @@ export function InventoryTable({
   const selectableItemIds = selectableItems.map((item) => item.id);
   const selectableItemIdSet = new Set(selectableItemIds);
   const showSelectionColumn = selectableItemIds.length > 0;
-  const allSelected =
-    selectableItemIds.length > 0 && selected.size === selectableItemIds.length;
-  const someSelected =
-    selected.size > 0 && selected.size < selectableItemIds.length;
+  const allSelected = selectableItemIds.length > 0 && selected.size === selectableItemIds.length;
+  const someSelected = selected.size > 0 && selected.size < selectableItemIds.length;
   const selectedItems = selectableItems.filter((item) => selected.has(item.id));
   const selectedReservationItems = selectedItems.map((item) => ({
     id: item.id,
@@ -61,9 +56,7 @@ export function InventoryTable({
 
   useEffect(() => {
     setSelected((prev) => {
-      const next = new Set(
-        [...prev].filter((itemId) => selectableItemIdSet.has(itemId))
-      );
+      const next = new Set([...prev].filter((itemId) => selectableItemIdSet.has(itemId)));
       if (next.size === prev.size) {
         return prev;
       }
@@ -183,29 +176,6 @@ export function InventoryTable({
                       >
                         {item.title}
                       </Link>
-                      <div className="inventory-item-meta-row">
-                        <span
-                          className="inventory-item-meta-text"
-                          title={
-                            item.updatedByText
-                              ? `Updated ${item.updatedDate} by ${item.updatedByText}`
-                              : `Updated ${item.updatedDate}`
-                          }
-                        >
-                          Updated {item.updatedDate}
-                          {item.updatedByText ? ` by ${item.updatedByText}` : ""}
-                        </span>
-                        {item.pendingCount > 0 && (
-                          <span className="action-status-chip action-status-chip-pending">
-                            {item.pendingCount} pending
-                          </span>
-                        )}
-                        {item.approvedCount > 0 && (
-                          <span className="action-status-chip action-status-chip-approved">
-                            {item.approvedCount} approved
-                          </span>
-                        )}
-                      </div>
                     </div>
                   </td>
                   <td className="col-details">
@@ -277,9 +247,7 @@ export function InventoryTable({
       {showSelectionColumn && bulkDockSlot && selected.size > 0
         ? createPortal(
             <div className="inventory-bulk-dock-shell">
-              <div
-                className="inventory-bulk-dock inventory-bulk-dock-active"
-              >
+              <div className="inventory-bulk-dock inventory-bulk-dock-active">
                 <div className="inventory-bulk-dock-leading">
                   <span className="sr-only" aria-live="polite">
                     {selected.size} {selected.size === 1 ? "item" : "items"} selected
@@ -306,7 +274,7 @@ export function InventoryTable({
                 </div>
               </div>
             </div>,
-            bulkDockSlot
+            bulkDockSlot,
           )
         : null}
 

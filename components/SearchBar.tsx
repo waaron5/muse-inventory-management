@@ -8,10 +8,7 @@ interface SearchBarProps {
   paramName?: string;
 }
 
-export function SearchBar({
-  placeholder = "Search…",
-  paramName = "q",
-}: SearchBarProps) {
+export function SearchBar({ placeholder = "Search…", paramName = "q" }: SearchBarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -32,7 +29,7 @@ export function SearchBar({
         router.replace(`${pathname}?${params.toString()}`);
       }, 300);
     },
-    [router, pathname, searchParams, paramName]
+    [router, pathname, searchParams, paramName],
   );
 
   return (

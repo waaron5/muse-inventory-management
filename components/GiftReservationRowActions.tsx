@@ -34,9 +34,9 @@ export function GiftReservationRowActions({
 }: GiftReservationRowActionsProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const [loadingAction, setLoadingAction] = useState<
-    "approve" | "reject" | "complete" | null
-  >(null);
+  const [loadingAction, setLoadingAction] = useState<"approve" | "reject" | "complete" | null>(
+    null,
+  );
   const [pendingConfirm, setPendingConfirm] = useState(false);
   const canApprove = isAdmin && reservation.status === "PENDING";
   const canComplete = isAdmin && reservation.status === "APPROVED";
@@ -55,7 +55,10 @@ export function GiftReservationRowActions({
   }
 
   async function handleReject() {
-    if (!pendingConfirm) { setPendingConfirm(true); return; }
+    if (!pendingConfirm) {
+      setPendingConfirm(true);
+      return;
+    }
     setPendingConfirm(false);
     setLoadingAction("reject");
     try {
@@ -113,15 +116,17 @@ export function GiftReservationRowActions({
             No
           </button>
         </>
-      ) : canApprove && (
-        <button
-          type="button"
-          className="btn-action btn-action-danger"
-          onClick={handleReject}
-          disabled={disabled || loadingAction !== null}
-        >
-          Reject
-        </button>
+      ) : (
+        canApprove && (
+          <button
+            type="button"
+            className="btn-action btn-action-danger"
+            onClick={handleReject}
+            disabled={disabled || loadingAction !== null}
+          >
+            Reject
+          </button>
+        )
       )}
       {canComplete && (
         <button
@@ -133,8 +138,10 @@ export function GiftReservationRowActions({
           {loadingAction === "complete" ? "Marking..." : "Mark Used"}
         </button>
       )}
-      {!canApprove && !canComplete && fallbackHref && (
-        disabled ? (
+      {!canApprove &&
+        !canComplete &&
+        fallbackHref &&
+        (disabled ? (
           <span className="btn-action btn-action-disabled" aria-disabled="true">
             {fallbackLabel}
           </span>
@@ -142,8 +149,7 @@ export function GiftReservationRowActions({
           <Link href={fallbackHref} className="btn-action">
             {fallbackLabel}
           </Link>
-        )
-      )}
+        ))}
     </div>
   );
 }

@@ -28,9 +28,7 @@ export function AppShell({
   return (
     <BulkSelectionProvider>
       <TopBarProvider>
-        <div
-          className={`app-shell${sidebarCollapsed ? " app-shell-collapsed" : ""}`}
-        >
+        <div className={`app-shell${sidebarCollapsed ? " app-shell-collapsed" : ""}`}>
           <Navbar
             user={user}
             notificationsHasAttention={notificationsHasAttention}

@@ -7,9 +7,10 @@ export async function uploadManagedItemImage(file: File) {
     body,
   });
 
-  const payload = (await response.json().catch(() => null)) as
-    | { imageUrl?: string; error?: string }
-    | null;
+  const payload = (await response.json().catch(() => null)) as {
+    imageUrl?: string;
+    error?: string;
+  } | null;
 
   if (!response.ok || !payload?.imageUrl) {
     throw new Error(payload?.error ?? "Unable to upload image.");

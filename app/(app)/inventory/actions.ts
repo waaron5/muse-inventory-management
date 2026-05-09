@@ -17,9 +17,7 @@ export async function createInventoryItem(formData: {
   notes?: string;
 }) {
   const session = await requireAdmin();
-  const currentLocation = await requireStorageLocationName(
-    formData.currentLocation
-  );
+  const currentLocation = await requireStorageLocationName(formData.currentLocation);
 
   const item = await prisma.inventoryItem.create({
     data: {
@@ -51,12 +49,10 @@ export async function updateInventoryItem(
     quantity?: number;
     currentLocation: string;
     notes?: string;
-  }
+  },
 ) {
   const session = await requireAdmin();
-  const currentLocation = await requireStorageLocationName(
-    formData.currentLocation
-  );
+  const currentLocation = await requireStorageLocationName(formData.currentLocation);
   const existingItem = await prisma.inventoryItem.findUnique({
     where: { id },
     select: { imageUrl: true },

@@ -32,19 +32,17 @@ export function TopBarProvider({ children }: { children: ReactNode }) {
   const setters = useMemo<TopBarSetters>(
     () => ({ setTitleSlot, setActionsSlot }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [],
   );
 
   const readers = useMemo<TopBarReaders>(
     () => ({ titleSlot, actionsSlot }),
-    [titleSlot, actionsSlot]
+    [titleSlot, actionsSlot],
   );
 
   return (
     <TopBarSetterContext.Provider value={setters}>
-      <TopBarReadContext.Provider value={readers}>
-        {children}
-      </TopBarReadContext.Provider>
+      <TopBarReadContext.Provider value={readers}>{children}</TopBarReadContext.Provider>
     </TopBarSetterContext.Provider>
   );
 }

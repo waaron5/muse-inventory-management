@@ -47,9 +47,7 @@ export async function createGiftItem(formData: {
   notes?: string;
 }) {
   const session = await requireAdmin();
-  const currentLocation = await requireStorageLocationName(
-    formData.currentLocation
-  );
+  const currentLocation = await requireStorageLocationName(formData.currentLocation);
 
   const item = await prisma.giftItem.create({
     data: {
@@ -81,12 +79,10 @@ export async function updateGiftItem(
     quantity?: number;
     currentLocation: string;
     notes?: string;
-  }
+  },
 ) {
   const session = await requireAdmin();
-  const currentLocation = await requireStorageLocationName(
-    formData.currentLocation
-  );
+  const currentLocation = await requireStorageLocationName(formData.currentLocation);
   const existingItem = await prisma.giftItem.findUnique({
     where: { id },
     select: { imageUrl: true },
@@ -256,19 +252,16 @@ export async function approveGiftReservation(id: string) {
     include: {
       event: { select: { id: true, eventName: true } },
       giftItem: true,
-      requestedBy: { select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true } },
+      requestedBy: {
+        select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true },
+      },
     },
   });
 
   if (!reservation) throw new Error("Reservation not found");
   if (reservation.status !== "PENDING") throw new Error("Request is not pending");
 
-  const available = await getGiftAvailableQty(
-    reservation.giftItemId,
-    undefined,
-    undefined,
-    id
-  );
+  const available = await getGiftAvailableQty(reservation.giftItemId, undefined, undefined, id);
 
   if (reservation.quantity > available) {
     throw new Error(`Only ${available} unit(s) available to approve now.`);
@@ -294,14 +287,19 @@ export async function approveGiftReservation(id: string) {
   revalidateGiftViews([reservation.giftItemId], reservation.event.id);
 
   if (reservation.requestedBy.emailNotificationsEnabled) {
-    const firstName = getFirstName(reservation.requestedBy.firstName ?? reservation.requestedBy.name, reservation.requestedBy.email);
+    const firstName = getFirstName(
+      reservation.requestedBy.firstName ?? reservation.requestedBy.name,
+      reservation.requestedBy.email,
+    );
     const { subject, html } = buildGiftApprovedEmail({
       requesterFirstName: firstName,
       itemTitle: reservation.giftItem.title,
       quantity: reservation.quantity,
       eventName: reservation.event.eventName,
     });
-    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) => console.error("Email dispatch failed:", err));
+    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) =>
+      console.error("Email dispatch failed:", err),
+    );
   }
 
   return { success: true };
@@ -315,7 +313,9 @@ export async function rejectGiftReservation(id: string) {
     include: {
       event: { select: { id: true, eventName: true } },
       giftItem: true,
-      requestedBy: { select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true } },
+      requestedBy: {
+        select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true },
+      },
     },
   });
 
@@ -342,14 +342,19 @@ export async function rejectGiftReservation(id: string) {
   revalidateGiftViews([reservation.giftItemId], reservation.event.id);
 
   if (reservation.requestedBy.emailNotificationsEnabled) {
-    const firstName = getFirstName(reservation.requestedBy.firstName ?? reservation.requestedBy.name, reservation.requestedBy.email);
+    const firstName = getFirstName(
+      reservation.requestedBy.firstName ?? reservation.requestedBy.name,
+      reservation.requestedBy.email,
+    );
     const { subject, html } = buildGiftRejectedEmail({
       requesterFirstName: firstName,
       itemTitle: reservation.giftItem.title,
       quantity: reservation.quantity,
       eventName: reservation.event.eventName,
     });
-    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) => console.error("Email dispatch failed:", err));
+    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) =>
+      console.error("Email dispatch failed:", err),
+    );
   }
 
   return { success: true };
@@ -372,10 +377,7 @@ export async function completeGiftReservation(id: string) {
       throw new Error("Only approved requests can be marked used");
     }
 
-    const remainingQuantity = Math.max(
-      0,
-      reservation.giftItem.quantity - reservation.quantity
-    );
+    const remainingQuantity = Math.max(0, reservation.giftItem.quantity - reservation.quantity);
 
     await tx.giftReservation.update({
       where: { id },
@@ -409,10 +411,7 @@ export async function completeGiftReservation(id: string) {
     summary: `Marked ${result.reservation.quantity}x "${result.reservation.giftItem.title}" as used for event "${result.reservation.event.eventName}"`,
   });
 
-  revalidateGiftViews(
-    [result.reservation.giftItemId],
-    result.reservation.event.id
-  );
+  revalidateGiftViews([result.reservation.giftItemId], result.reservation.event.id);
   return {
     success: true,
     remainingQuantity: result.remainingQuantity,

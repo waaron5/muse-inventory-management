@@ -3,13 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "prisma generate && next dev",
     "build": "prisma generate && next build",
-    "db:migrate:deploy": "prisma migrate deploy",
-    "db:migrate:status": "prisma migrate status",
     "start": "next start",
+    "postinstall": "prisma generate",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run build",
+    "fix": "npm run format && npm run lint:fix",
+    "typecheck": "tsc --noEmit --pretty",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "db": "tsx scripts/db.ts",
+    "deps": "tsx scripts/deps.ts",
     "seed": "tsx prisma/seed.ts",
-    "demo:reset": "tsx prisma/demo-seed.ts"
+    "demo": "tsx prisma/demo-seed.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.6.0",
@@ -35,6 +43,9 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.0",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.6",
+    "prettier": "^3.8.3",
     "tsx": "^4.21.0",
     "typescript": "^5"
   },

@@ -21,10 +21,7 @@ function formatTimestamp(value: string) {
   });
 }
 
-export function NotificationCards({
-  notifications,
-  emptyCopy,
-}: NotificationCardsProps) {
+export function NotificationCards({ notifications, emptyCopy }: NotificationCardsProps) {
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -37,7 +34,7 @@ export function NotificationCards({
   }, []);
 
   const visibleNotifications = notifications.filter(
-    (notification) => !dismissedIds.includes(notification.id)
+    (notification) => !dismissedIds.includes(notification.id),
   );
 
   function dismissNotification(id: string) {
@@ -72,9 +69,7 @@ export function NotificationCards({
             <article
               key={notification.id}
               className={`notification-card${
-                notification.section === "attention"
-                  ? " notification-card-attention"
-                  : ""
+                notification.section === "attention" ? " notification-card-attention" : ""
               }`}
             >
               <Link href={notification.href} className="notification-card-main">
@@ -87,10 +82,7 @@ export function NotificationCards({
                     <span>{notification.description}</span>
                     {notification.requesterName ? (
                       <>
-                        <span
-                          className="notification-card-supporting-separator"
-                          aria-hidden="true"
-                        >
+                        <span className="notification-card-supporting-separator" aria-hidden="true">
                           •
                         </span>
                         <span className="notification-card-supporting-detail">
@@ -101,24 +93,14 @@ export function NotificationCards({
                         </span>
                       </>
                     ) : null}
-                    <span
-                      className="notification-card-supporting-separator"
-                      aria-hidden="true"
-                    >
+                    <span className="notification-card-supporting-separator" aria-hidden="true">
                       •
                     </span>
-                    <span className="notification-card-supporting-detail">
-                      {notification.meta}
-                    </span>
-                    <span
-                      className="notification-card-supporting-separator"
-                      aria-hidden="true"
-                    >
+                    <span className="notification-card-supporting-detail">{notification.meta}</span>
+                    <span className="notification-card-supporting-separator" aria-hidden="true">
                       •
                     </span>
-                    <span className="notification-card-supporting-detail">
-                      {timestamp}
-                    </span>
+                    <span className="notification-card-supporting-detail">{timestamp}</span>
                   </p>
                 </div>
               </Link>
@@ -143,24 +125,14 @@ export function NotificationCards({
 
 function NotificationAttentionIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
+    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
       <path
         d="M10 3.2L17.3 16H2.7L10 3.2Z"
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinejoin="round"
       />
-      <path
-        d="M10 8V11.5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
+      <path d="M10 8V11.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       <circle cx="10" cy="14" r="1" fill="currentColor" />
     </svg>
   );

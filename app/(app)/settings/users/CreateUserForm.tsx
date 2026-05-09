@@ -37,7 +37,9 @@ export function CreateUserForm() {
     <form onSubmit={handleSubmit} className="inv-form">
       <div className="form-grid">
         <div className="form-field">
-          <label className="form-label" htmlFor="cu-first-name">First Name *</label>
+          <label className="form-label" htmlFor="cu-first-name">
+            First Name *
+          </label>
           <input
             id="cu-first-name"
             type="text"
@@ -52,7 +54,9 @@ export function CreateUserForm() {
         </div>
 
         <div className="form-field">
-          <label className="form-label" htmlFor="cu-last-name">Last Name *</label>
+          <label className="form-label" htmlFor="cu-last-name">
+            Last Name *
+          </label>
           <input
             id="cu-last-name"
             type="text"
@@ -67,7 +71,9 @@ export function CreateUserForm() {
         </div>
 
         <div className="form-field form-field-wide">
-          <label className="form-label" htmlFor="cu-email">Email *</label>
+          <label className="form-label" htmlFor="cu-email">
+            Email *
+          </label>
           <input
             id="cu-email"
             type="email"
@@ -82,7 +88,9 @@ export function CreateUserForm() {
         </div>
 
         <div className="form-field form-field-wide">
-          <label className="form-label" htmlFor="cu-password">Initial Password *</label>
+          <label className="form-label" htmlFor="cu-password">
+            Initial Password *
+          </label>
           <input
             id="cu-password"
             type="password"
@@ -99,7 +107,14 @@ export function CreateUserForm() {
 
       {error && <p className="form-error">{error}</p>}
       {success && (
-        <p style={{ marginTop: 12, fontSize: 14, color: "var(--color-success, #16a34a)", fontWeight: 500 }}>
+        <p
+          style={{
+            marginTop: 12,
+            fontSize: 14,
+            color: "var(--color-success, #16a34a)",
+            fontWeight: 500,
+          }}
+        >
           User created successfully. Share their credentials with them to log in.
         </p>
       )}

@@ -9,12 +9,7 @@ interface PaginationProps {
   alwaysShow?: boolean;
 }
 
-export function Pagination({
-  total,
-  pageSize,
-  currentPage,
-  alwaysShow = false,
-}: PaginationProps) {
+export function Pagination({ total, pageSize, currentPage, alwaysShow = false }: PaginationProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -56,7 +51,9 @@ export function Pagination({
         <div className="pg-pages">
           {pages.map((p, i) =>
             p === "…" ? (
-              <span key={`e${i}`} className="pg-ellipsis">…</span>
+              <span key={`e${i}`} className="pg-ellipsis">
+                …
+              </span>
             ) : (
               <button
                 key={p}
@@ -65,7 +62,7 @@ export function Pagination({
               >
                 {p}
               </button>
-            )
+            ),
           )}
         </div>
 

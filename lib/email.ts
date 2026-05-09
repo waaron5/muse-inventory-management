@@ -125,7 +125,7 @@ export function buildNewInventoryRequestEmail(p: {
       bodyText([
         `<strong>${p.requesterName}</strong> has requested <strong>${p.quantity}×</strong> <em>${p.itemTitle}</em> for <strong>${p.eventName}</strong>${p.eventCompany ? ` (${p.eventCompany})` : ""}.`,
         "Review and approve or reject the request in Muse.",
-      ]) + ctaButton("Review request", `${url}/reservations`)
+      ]) + ctaButton("Review request", `${url}/reservations`),
     ),
   };
 }
@@ -144,7 +144,7 @@ export function buildInventoryApprovedEmail(p: {
       bodyText([
         `Hi ${p.requesterFirstName},`,
         `Your request for <strong>${p.quantity}×</strong> <em>${p.itemTitle}</em> for <strong>${p.eventName}</strong> has been approved.`,
-      ]) + ctaButton("View in Muse", `${url}/reservations`)
+      ]) + ctaButton("View in Muse", `${url}/reservations`),
     ),
   };
 }
@@ -164,7 +164,7 @@ export function buildInventoryRejectedEmail(p: {
         `Hi ${p.requesterFirstName},`,
         `Your request for <strong>${p.quantity}×</strong> <em>${p.itemTitle}</em> for <strong>${p.eventName}</strong> was not approved.`,
         "Contact an admin if you have questions.",
-      ]) + ctaButton("View in Muse", `${url}/reservations`)
+      ]) + ctaButton("View in Muse", `${url}/reservations`),
     ),
   };
 }
@@ -184,7 +184,7 @@ export function buildInventoryReturnedEmail(p: {
       bodyText([
         `<strong>${p.requesterName}</strong> has returned <strong>${p.quantity}×</strong> <em>${p.itemTitle}</em> from <strong>${p.eventName}</strong>.`,
         `Return location: <strong>${p.returnLocation}</strong>`,
-      ]) + ctaButton("View in Muse", `${url}/reservations`)
+      ]) + ctaButton("View in Muse", `${url}/reservations`),
     ),
   };
 }
@@ -199,7 +199,7 @@ export function buildBulkReturnSummaryEmail(p: {
   const rows = p.items
     .map(
       (i) =>
-        `<tr><td style="padding:6px 12px 6px 0;font-size:14px;color:#18181b;">${i.quantity}× ${i.itemTitle}</td><td style="padding:6px 0;font-size:14px;color:#71717a;">${i.eventName}</td></tr>`
+        `<tr><td style="padding:6px 12px 6px 0;font-size:14px;color:#18181b;">${i.quantity}× ${i.itemTitle}</td><td style="padding:6px 0;font-size:14px;color:#71717a;">${i.eventName}</td></tr>`,
     )
     .join("");
   const table = `<table style="width:100%;border-collapse:collapse;margin:16px 0 4px;"><thead><tr><th style="text-align:left;padding:6px 12px 6px 0;font-size:12px;color:#71717a;font-weight:600;border-bottom:1px solid #e4e4e7;">Item</th><th style="text-align:left;padding:6px 0;font-size:12px;color:#71717a;font-weight:600;border-bottom:1px solid #e4e4e7;">Event</th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -210,7 +210,7 @@ export function buildBulkReturnSummaryEmail(p: {
         `<strong>${p.returnedByName}</strong> has returned ${p.items.length} item${p.items.length !== 1 ? "s" : ""} to <strong>${p.returnLocation}</strong>.`,
       ]) +
         table +
-        ctaButton("View in Muse", `${url}/reservations`)
+        ctaButton("View in Muse", `${url}/reservations`),
     ),
   };
 }
@@ -230,7 +230,7 @@ export function buildNewGiftRequestEmail(p: {
       bodyText([
         `<strong>${p.requesterName}</strong> has requested <strong>${p.quantity}×</strong> <em>${p.itemTitle}</em> for <strong>${p.eventName}</strong>${p.eventCompany ? ` (${p.eventCompany})` : ""}.`,
         "Review and approve or reject the request in Muse.",
-      ]) + ctaButton("Review request", `${url}/gifting`)
+      ]) + ctaButton("Review request", `${url}/gifting`),
     ),
   };
 }
@@ -249,7 +249,7 @@ export function buildGiftApprovedEmail(p: {
       bodyText([
         `Hi ${p.requesterFirstName},`,
         `Your request for <strong>${p.quantity}×</strong> <em>${p.itemTitle}</em> for <strong>${p.eventName}</strong> has been approved.`,
-      ]) + ctaButton("View in Muse", `${url}/reservations`)
+      ]) + ctaButton("View in Muse", `${url}/reservations`),
     ),
   };
 }
@@ -269,7 +269,7 @@ export function buildGiftRejectedEmail(p: {
         `Hi ${p.requesterFirstName},`,
         `Your request for <strong>${p.quantity}×</strong> <em>${p.itemTitle}</em> for <strong>${p.eventName}</strong> was not approved.`,
         "Contact an admin if you have questions.",
-      ]) + ctaButton("View in Muse", `${url}/reservations`)
+      ]) + ctaButton("View in Muse", `${url}/reservations`),
     ),
   };
 }

@@ -61,13 +61,38 @@ export async function POST(request: Request) {
 
     // Re-seed inventory
     const inventoryData = [
-      { title: "Signs", description: "Instructure, Curved Wall", quantity: 6, currentLocation: "JP Display" },
+      {
+        title: "Signs",
+        description: "Instructure, Curved Wall",
+        quantity: 6,
+        currentLocation: "JP Display",
+      },
       { title: "Cooler", description: "Red, Igloo", quantity: 1, currentLocation: "JP Display" },
-      { title: "Bottles/Vases", description: "Brown Glass", quantity: 7, currentLocation: "JP Display" },
-      { title: "Stanchions", description: "Red & Gold", quantity: 20, currentLocation: "JP Display" },
-      { title: "Ropes", description: "Red Velvet, 5'", quantity: 18, currentLocation: "JP Display" },
+      {
+        title: "Bottles/Vases",
+        description: "Brown Glass",
+        quantity: 7,
+        currentLocation: "JP Display",
+      },
+      {
+        title: "Stanchions",
+        description: "Red & Gold",
+        quantity: 20,
+        currentLocation: "JP Display",
+      },
+      {
+        title: "Ropes",
+        description: "Red Velvet, 5'",
+        quantity: 18,
+        currentLocation: "JP Display",
+      },
       { title: "Ticket Booth", description: null, quantity: 1, currentLocation: "JP Display" },
-      { title: "Stands", description: "Tall, Black Frame, Set of 5", quantity: 5, currentLocation: "JP Display" },
+      {
+        title: "Stands",
+        description: "Tall, Black Frame, Set of 5",
+        quantity: 5,
+        currentLocation: "JP Display",
+      },
     ];
 
     for (const item of inventoryData) {
@@ -179,10 +204,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Demo reset failed:", error);
     const details = error instanceof Error ? error.message : String(error);
-    return NextResponse.json(
-      { error: "Reset failed", details },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Reset failed", details }, { status: 500 });
   } finally {
     if (prisma) {
       try {

@@ -41,18 +41,14 @@ export function Navbar({
   const displayName = user.name.trim() || user.email;
   const initials = getInitials(displayName);
   const notificationSeenStorageKey = `${NOTIFICATIONS_SEEN_STORAGE_KEY_PREFIX}:${user.id}`;
-  const hasUnseenNotification =
-    parseTimestamp(notificationAt) > parseTimestamp(notificationSeenAt);
-  const showNotificationsIndicator =
-    notificationsHasAttention || hasUnseenNotification;
+  const hasUnseenNotification = parseTimestamp(notificationAt) > parseTimestamp(notificationSeenAt);
+  const showNotificationsIndicator = notificationsHasAttention || hasUnseenNotification;
   const titleSlot = useTopBarTitle();
   const actionsSlot = useTopBarActions();
 
   useEffect(() => {
     try {
-      setNotificationSeenAt(
-        window.localStorage.getItem(notificationSeenStorageKey)
-      );
+      setNotificationSeenAt(window.localStorage.getItem(notificationSeenStorageKey));
     } catch {
       setNotificationSeenAt(null);
     }
@@ -63,10 +59,7 @@ export function Navbar({
     if (!notificationAt) return;
 
     try {
-      window.localStorage.setItem(
-        notificationSeenStorageKey,
-        notificationAt
-      );
+      window.localStorage.setItem(notificationSeenStorageKey, notificationAt);
     } catch {}
 
     setNotificationSeenAt(notificationAt);
@@ -88,22 +81,13 @@ export function Navbar({
             aria-expanded={false}
             onClick={onToggleSidebar}
           >
-            <SidebarToggleIcon
-              collapsed={true}
-              className="app-sidebar-toggle-icon"
-            />
+            <SidebarToggleIcon collapsed={true} className="app-sidebar-toggle-icon" />
           </button>
         )}
 
-        <div className="app-topbar-title topbar-page-slot">
-          {titleSlot}
-        </div>
+        <div className="app-topbar-title topbar-page-slot">{titleSlot}</div>
 
-        {actionsSlot && (
-          <div className="app-topbar-actions topbar-actions-slot">
-            {actionsSlot}
-          </div>
-        )}
+        {actionsSlot && <div className="app-topbar-actions topbar-actions-slot">{actionsSlot}</div>}
 
         <div className="app-navbar-right" />
       </header>
@@ -120,10 +104,7 @@ export function Navbar({
             <span className="app-account-trigger" aria-label={displayName}>
               <span className="app-account-avatar">{initials}</span>
               {showNotificationsIndicator && (
-                <span
-                  className="app-account-avatar-indicator"
-                  aria-label="Unread notifications"
-                />
+                <span className="app-account-avatar-indicator" aria-label="Unread notifications" />
               )}
             </span>
             <span className="app-navbar-user-name">{displayName}</span>
@@ -136,10 +117,7 @@ export function Navbar({
             aria-expanded={true}
             onClick={onToggleSidebar}
           >
-            <SidebarToggleIcon
-              collapsed={false}
-              className="app-sidebar-toggle-icon"
-            />
+            <SidebarToggleIcon collapsed={false} className="app-sidebar-toggle-icon" />
           </button>
         </div>
 
@@ -250,13 +228,7 @@ function parseTimestamp(value: string | null | undefined) {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-function SidebarToggleIcon({
-  collapsed,
-  className,
-}: {
-  collapsed: boolean;
-  className?: string;
-}) {
+function SidebarToggleIcon({ collapsed, className }: { collapsed: boolean; className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -285,7 +257,13 @@ function SidebarToggleIcon({
 
 function LogoutIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      className={className}
+    >
       <path d="M10 17.5H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h4" />
       <path d="M14 16.5 19 12l-5-4.5" />
       <path d="M9 12h10" />
@@ -295,7 +273,13 @@ function LogoutIcon({ className }: { className?: string }) {
 
 function BellIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      className={className}
+    >
       <path d="M6.5 9.5a5.5 5.5 0 1 1 11 0v3.1c0 .9.3 1.8.9 2.5l.9 1.1H4.7l.9-1.1c.6-.7.9-1.6.9-2.5V9.5Z" />
       <path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" />
     </svg>
@@ -304,7 +288,13 @@ function BellIcon({ className }: { className?: string }) {
 
 function SettingsIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className={className}
+    >
       <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
       <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.2 1.2 0 0 1 0 1.7l-1.2 1.2a1.2 1.2 0 0 1-1.7 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1.2 1.2 0 0 1-1.2 1.2h-1.7A1.2 1.2 0 0 1 10 20v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1.2 1.2 0 0 1-1.7 0l-1.2-1.2a1.2 1.2 0 0 1 0-1.7l.1-.1A1 1 0 0 0 5.6 15a1 1 0 0 0-.9-.6H4.5A1.2 1.2 0 0 1 3.3 13v-2A1.2 1.2 0 0 1 4.5 9.8h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1.2 1.2 0 0 1 0-1.7l1.2-1.2a1.2 1.2 0 0 1 1.7 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4A1.2 1.2 0 0 1 11.2 2.8h1.7A1.2 1.2 0 0 1 14.1 4v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1.2 1.2 0 0 1 1.7 0l1.2 1.2a1.2 1.2 0 0 1 0 1.7l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2A1.2 1.2 0 0 1 20.8 11v2a1.2 1.2 0 0 1-1.2 1.2h-.2a1 1 0 0 0-.9.8Z" />
     </svg>

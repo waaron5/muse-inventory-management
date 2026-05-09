@@ -89,7 +89,9 @@
   text-decoration: none;
   font-weight: 600;
   font-size: 14px;
-  transition: background-color 120ms ease, color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
 .primary-nav a.active {
@@ -146,8 +148,7 @@
 .auth-shell {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.92), rgba(243, 244, 246, 0.94)),
-    #eef1f5;
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.92), rgba(243, 244, 246, 0.94)), #eef1f5;
   display: grid;
   place-items: center;
   padding: 24px;

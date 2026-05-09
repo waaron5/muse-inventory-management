@@ -22,7 +22,7 @@ export default async function GiftingPage({
 
   const where = {
     ...(query
-        ? {
+      ? {
           OR: [
             { title: { contains: query, mode: "insensitive" as const } },
             { description: { contains: query, mode: "insensitive" as const } },
@@ -38,7 +38,6 @@ export default async function GiftingPage({
       where,
       orderBy: [{ status: "asc" }, { title: "asc" }],
       include: {
-        updatedBy: { select: { name: true } },
         reservations: {
           where: {
             requestedById: userId,
@@ -70,8 +69,6 @@ export default async function GiftingPage({
     startDate: event.startDate.toISOString(),
     endDate: event.endDate.toISOString(),
   }));
-  const totalCount = items.length;
-
   return (
     <PageShell
       stripLegacyPaginationParams
@@ -97,7 +94,6 @@ export default async function GiftingPage({
                   <span className="sr-only">Image</span>
                 </th>
                 <th className="col-item">Item</th>
-                <th className="col-details">Details</th>
                 <th className="col-qty">Qty</th>
                 <th className="inventory-actions-header">
                   <span className="sr-only">Actions</span>
@@ -107,32 +103,18 @@ export default async function GiftingPage({
             <tbody>
               {items.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="empty-row">
+                  <td colSpan={4} className="empty-row">
                     No gift items found.
                   </td>
                 </tr>
               )}
               {items.map((item) => {
                 const pendingCount = item.reservations.filter(
-                  (reservation) => reservation.status === "PENDING"
+                  (reservation) => reservation.status === "PENDING",
                 ).length;
                 const approvedCount = item.reservations.filter(
-                  (reservation) => reservation.status === "APPROVED"
+                  (reservation) => reservation.status === "APPROVED",
                 ).length;
-                const detailText = [
-                  item.currentLocation?.trim()
-                    ? `Location: ${item.currentLocation.trim()}`
-                    : null,
-                  item.description?.trim(),
-                  item.notes?.trim() ? `Note: ${item.notes.trim()}` : null,
-                ]
-                  .filter(Boolean)
-                  .join(" • ");
-                const updatedDate = item.updatedAt.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                });
-                const updatedByText = item.updatedBy?.name?.trim();
 
                 return (
                   <tr
@@ -152,40 +134,7 @@ export default async function GiftingPage({
                         >
                           {item.title}
                         </Link>
-                        <div className="inventory-item-meta-row">
-                          <span
-                            className="inventory-item-meta-text"
-                            title={
-                              updatedByText
-                                ? `Updated ${updatedDate} by ${updatedByText}`
-                                : `Updated ${updatedDate}`
-                            }
-                          >
-                            Updated {updatedDate}
-                            {updatedByText ? ` by ${updatedByText}` : ""}
-                          </span>
-                          {pendingCount > 0 && (
-                            <span className="action-status-chip action-status-chip-pending">
-                              {pendingCount} pending
-                            </span>
-                          )}
-                          {approvedCount > 0 && (
-                            <span className="action-status-chip action-status-chip-approved">
-                              {approvedCount} approved
-                            </span>
-                          )}
-                        </div>
                       </div>
-                    </td>
-                    <td className="col-details">
-                      <span
-                        className={`inventory-text-block inventory-details-text${
-                          detailText ? "" : " inventory-details-empty"
-                        }`}
-                        title={detailText || undefined}
-                      >
-                        {detailText || "—"}
-                      </span>
                     </td>
                     <td className="col-qty">
                       <span className="qty-primary">{item.quantity}</span>

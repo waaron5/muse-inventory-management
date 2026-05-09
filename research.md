@@ -37,16 +37,16 @@ It also contains a small amount of dormant or reference-only material:
 
 ### Source and support areas
 
-| Path | File count | Purpose |
-| --- | ---: | --- |
-| `app/` | 55 | Next.js routes, layouts, pages, loading states, and API routes |
-| `components/` | 18 | Shared client/server UI primitives and interaction components |
-| `lib/` | 12 | Cross-cutting business helpers, Prisma client setup, auth config, notifications, upload helpers |
-| `prisma/` | 6 | Schema, migrations, and seed scripts |
-| `types/` | 1 | NextAuth type augmentation |
-| `public/` | 3 | Logo, demo image, and one checked-in uploaded inventory image |
-| `designs/` | 10 | Mockups, screenshots, and a non-runtime modal prototype |
-| `data/` | 2 | CSV exports of normalized source inventory/gift data |
+| Path          | File count | Purpose                                                                                         |
+| ------------- | ---------: | ----------------------------------------------------------------------------------------------- |
+| `app/`        |         55 | Next.js routes, layouts, pages, loading states, and API routes                                  |
+| `components/` |         18 | Shared client/server UI primitives and interaction components                                   |
+| `lib/`        |         12 | Cross-cutting business helpers, Prisma client setup, auth config, notifications, upload helpers |
+| `prisma/`     |          6 | Schema, migrations, and seed scripts                                                            |
+| `types/`      |          1 | NextAuth type augmentation                                                                      |
+| `public/`     |          3 | Logo, demo image, and one checked-in uploaded inventory image                                   |
+| `designs/`    |         10 | Mockups, screenshots, and a non-runtime modal prototype                                         |
+| `data/`       |          2 | CSV exports of normalized source inventory/gift data                                            |
 
 ### Important root files
 
@@ -235,24 +235,24 @@ Every mutation path rechecks auth in its server-action file. Common patterns:
 
 ### Effective permissions
 
-| Capability | User | Admin |
-| --- | --- | --- |
-| View app pages | Yes | Yes |
-| Create/edit/delete events | No | Yes |
-| Create/edit/retire/activate inventory items | No | Yes |
-| Create/edit/consume/activate gift items | No | Yes |
-| Create inventory reservation | Yes | Yes, auto-approved |
-| Approve/reject inventory reservation | No | Yes |
-| Cancel pending inventory reservation | Own pending only | Backend yes; UI mainly exposes own pending cancellations |
-| Edit inventory reservation | Own pending only | Backend yes; UI mainly exposes own pending edits |
-| Return approved inventory reservation | Own reservations only | Yes |
-| Bulk approve inventory reservations | No | Yes |
-| Bulk return inventory reservations | Own approved reservations only | Yes |
-| Remove rejected/completed inventory reservation history | Own reservations only | Yes |
-| Create gift reservation | Yes | Yes, auto-approved |
-| Approve/reject/complete gift reservation | No | Yes |
-| Upload item image | No | Yes |
-| Demo database reset | Only if env + bearer secret allow it | Same |
+| Capability                                              | User                                 | Admin                                                    |
+| ------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------- |
+| View app pages                                          | Yes                                  | Yes                                                      |
+| Create/edit/delete events                               | No                                   | Yes                                                      |
+| Create/edit/retire/activate inventory items             | No                                   | Yes                                                      |
+| Create/edit/consume/activate gift items                 | No                                   | Yes                                                      |
+| Create inventory reservation                            | Yes                                  | Yes, auto-approved                                       |
+| Approve/reject inventory reservation                    | No                                   | Yes                                                      |
+| Cancel pending inventory reservation                    | Own pending only                     | Backend yes; UI mainly exposes own pending cancellations |
+| Edit inventory reservation                              | Own pending only                     | Backend yes; UI mainly exposes own pending edits         |
+| Return approved inventory reservation                   | Own reservations only                | Yes                                                      |
+| Bulk approve inventory reservations                     | No                                   | Yes                                                      |
+| Bulk return inventory reservations                      | Own approved reservations only       | Yes                                                      |
+| Remove rejected/completed inventory reservation history | Own reservations only                | Yes                                                      |
+| Create gift reservation                                 | Yes                                  | Yes, auto-approved                                       |
+| Approve/reject/complete gift reservation                | No                                   | Yes                                                      |
+| Upload item image                                       | No                                   | Yes                                                      |
+| Demo database reset                                     | Only if env + bearer secret allow it | Same                                                     |
 
 ### Notable auth quirk
 
@@ -262,16 +262,16 @@ Every mutation path rechecks auth in its server-action file. Common patterns:
 
 ### Core entities
 
-| Model | Purpose | Notes |
-| --- | --- | --- |
-| `User` | Authenticated app user | Two roles: `ADMIN`, `USER` |
-| `StorageLocation` | Canonical allowed locations | Lookup table only |
-| `InventoryItem` | Reusable inventory | Can be `ACTIVE` or `RETIRED` |
-| `GiftItem` | Consumable giveaway/gift stock | Can be `ACTIVE` or `CONSUMED` |
-| `Event` | Event that consumes inventory/gifts | Stores company, name, location, date range |
-| `InventoryReservation` | Request/approval/return lifecycle for reusable items | Tracks requester, approver, last modifier, return location |
-| `GiftReservation` | Request/approval/consumption lifecycle for gift items | Tracks requester, approver, last modifier |
-| `AuditLog` | Append-only-ish activity stream | Polymorphic via `entityType` + `entityId` |
+| Model                  | Purpose                                               | Notes                                                      |
+| ---------------------- | ----------------------------------------------------- | ---------------------------------------------------------- |
+| `User`                 | Authenticated app user                                | Two roles: `ADMIN`, `USER`                                 |
+| `StorageLocation`      | Canonical allowed locations                           | Lookup table only                                          |
+| `InventoryItem`        | Reusable inventory                                    | Can be `ACTIVE` or `RETIRED`                               |
+| `GiftItem`             | Consumable giveaway/gift stock                        | Can be `ACTIVE` or `CONSUMED`                              |
+| `Event`                | Event that consumes inventory/gifts                   | Stores company, name, location, date range                 |
+| `InventoryReservation` | Request/approval/return lifecycle for reusable items  | Tracks requester, approver, last modifier, return location |
+| `GiftReservation`      | Request/approval/consumption lifecycle for gift items | Tracks requester, approver, last modifier                  |
+| `AuditLog`             | Append-only-ish activity stream                       | Polymorphic via `entityType` + `entityId`                  |
 
 ### Relationship shape
 

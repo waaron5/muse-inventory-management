@@ -12,7 +12,10 @@ export function isManagedInventoryImageUrl(imageUrl?: string | null) {
   if (!imageUrl) return false;
   try {
     const { hostname, pathname } = new URL(imageUrl);
-    return hostname.endsWith(".blob.vercel-storage.com") && pathname.startsWith(`/${INVENTORY_IMAGE_PATH_PREFIX}`);
+    return (
+      hostname.endsWith(".blob.vercel-storage.com") &&
+      pathname.startsWith(`/${INVENTORY_IMAGE_PATH_PREFIX}`)
+    );
   } catch {
     return false;
   }
@@ -24,11 +27,12 @@ export async function saveInventoryImageFile(file: File) {
     throw new InventoryImageUploadError(validationError);
   }
 
-  const extensionByMimeType: Record<(typeof INVENTORY_IMAGE_ACCEPTED_MIME_TYPES)[number], string> = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-  };
+  const extensionByMimeType: Record<(typeof INVENTORY_IMAGE_ACCEPTED_MIME_TYPES)[number], string> =
+    {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+    };
 
   const extension = extensionByMimeType[file.type as keyof typeof extensionByMimeType];
   if (!extension) {

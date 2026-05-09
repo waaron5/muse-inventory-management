@@ -5,10 +5,7 @@ import { useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { CalendarIcon, LocationPinIcon } from "@/components/MetadataIcons";
-import {
-  checkGiftAvailability,
-  createGiftReservation,
-} from "@/app/(app)/gifting/actions";
+import { checkGiftAvailability, createGiftReservation } from "@/app/(app)/gifting/actions";
 
 export interface GiftUseEventOption {
   id: string;
@@ -50,7 +47,7 @@ export function GiftUseModal({
 
   const selectedEvent = useMemo(
     () => availableEvents.find((event) => event.id === selectedEventId) ?? null,
-    [availableEvents, selectedEventId]
+    [availableEvents, selectedEventId],
   );
 
   useEffect(() => {
@@ -84,9 +81,7 @@ export function GiftUseModal({
         if (!cancelled) {
           setAvailableQty(null);
           setLoadingAvailability(false);
-          setError(
-            err instanceof Error ? err.message : "Unable to check availability."
-          );
+          setError(err instanceof Error ? err.message : "Unable to check availability.");
         }
       });
 
@@ -107,11 +102,7 @@ export function GiftUseModal({
         quantity: parseInt(quantity, 10),
         notes: notes || undefined,
       });
-      toast(
-        result.autoApproved
-          ? "Gift request approved"
-          : "Gift request pending approval"
-      );
+      toast(result.autoApproved ? "Gift request approved" : "Gift request pending approval");
       onClose();
       router.refresh();
     } catch (err: unknown) {
@@ -122,11 +113,14 @@ export function GiftUseModal({
   }
 
   const requestedQuantity = parseInt(quantity, 10) || 0;
-  const exceedsAvailability =
-    availableQty !== null && requestedQuantity > availableQty;
+  const exceedsAvailability = availableQty !== null && requestedQuantity > availableQty;
 
   return (
-    <Modal open={open} onClose={loadingSubmit ? () => {} : onClose} title={title ?? `Use "${giftItem.title}"`}>
+    <Modal
+      open={open}
+      onClose={loadingSubmit ? () => {} : onClose}
+      title={title ?? `Use "${giftItem.title}"`}
+    >
       <form onSubmit={handleSubmit} className="modal-form">
         <div className="form-field">
           <label className="form-label">Event *</label>
@@ -192,9 +186,7 @@ export function GiftUseModal({
             required
           />
           {exceedsAvailability && (
-            <span className="form-error-inline">
-              Only {availableQty} available for this event.
-            </span>
+            <span className="form-error-inline">Only {availableQty} available for this event.</span>
           )}
         </div>
 
@@ -224,10 +216,7 @@ export function GiftUseModal({
             type="submit"
             className="btn btn-dark"
             disabled={
-              loadingSubmit ||
-              !selectedEventId ||
-              requestedQuantity < 1 ||
-              exceedsAvailability
+              loadingSubmit || !selectedEventId || requestedQuantity < 1 || exceedsAvailability
             }
           >
             {loadingSubmit ? "Saving…" : "Request Use"}

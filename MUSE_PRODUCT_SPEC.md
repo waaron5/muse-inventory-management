@@ -3,13 +3,17 @@
 ## 1. Project Summary
 
 ### Product Name
+
 Muse Event Management
 
 ### Purpose
+
 Build a clean, fast internal inventory management system for Muse that replaces spreadsheet-based workflows with a reliable web app for managing inventory, events, and event gifting.
 
 ### Primary Outcome
+
 The system should let internal users:
+
 - view inventory and gifting availability clearly,
 - reserve items for specific events,
 - return inventory manually,
@@ -17,6 +21,7 @@ The system should let internal users:
 - and give admins full control over approvals, edits, and exceptions.
 
 ### Product Principles
+
 - Better than Excel for the common tasks Muse does every day
 - Simple, fast, and easy to use
 - Table-first UI with low cognitive load
@@ -40,6 +45,7 @@ The stack should be treated as fixed unless there is a strong reason to change i
 - **Image storage:** Object storage or simple hosted file storage depending on deployment choice
 
 ### Technical Priorities
+
 - Keep architecture simple
 - Avoid overengineering
 - Prefer maintainability over clever abstractions
@@ -51,7 +57,9 @@ The stack should be treated as fixed unless there is a strong reason to change i
 ## 3. Users and Roles
 
 ### Admin
+
 Admins can:
+
 - create, edit, retire, and manage inventory
 - create, edit, and delete events
 - create, edit, and manage gifts
@@ -61,7 +69,9 @@ Admins can:
 - verify who made changes and when
 
 ### Normal User
+
 Normal users can:
+
 - browse inventory, events, and gifts
 - create reservations for inventory or gifts
 - edit or cancel their own reservations
@@ -69,6 +79,7 @@ Normal users can:
 - specify where inventory was returned
 
 Normal users cannot:
+
 - approve reservations
 - directly edit inventory records outside the reservation flow
 - directly alter system-wide quantities except through approved workflows
@@ -78,9 +89,11 @@ Normal users cannot:
 ## 4. Core Domain Concepts
 
 ### Inventory
+
 Regular reusable inventory items.
 
 Examples:
+
 - display materials
 - decor pieces
 - event gear
@@ -88,6 +101,7 @@ Examples:
 - reusable equipment
 
 Inventory:
+
 - has a quantity
 - has a current location
 - can be reserved for an event
@@ -96,15 +110,18 @@ Inventory:
 - can be retired
 
 ### Gifts
+
 Consumable items intended to be given away to people at events.
 
 Examples:
+
 - jackets
 - bags
 - giveaway items
 - branded gifts
 
 Gifts:
+
 - have quantities
 - can be reserved for an event
 - require admin approval like inventory
@@ -113,9 +130,11 @@ Gifts:
 - should remain historically traceable even after use
 
 ### Events
+
 Events are the time-based container that reservations attach to.
 
 Each event has:
+
 - a company name
 - an event name
 - a start date
@@ -129,6 +148,7 @@ Reservations are made for a specific event. Availability is determined by whethe
 ## 5. Core Business Rules
 
 ### 5.1 Reservation Rules
+
 - All inventory reservations must be tied to a specific event.
 - All gift reservations must be tied to a specific event.
 - All reservations must be approved by an admin before they affect real availability.
@@ -139,15 +159,18 @@ Reservations are made for a specific event. Availability is determined by whethe
 - Multiple events may reserve the same item if quantity allows and the event windows do not conflict at the unit/quantity level.
 
 ### 5.2 Date Overlap Rules
+
 Two events are considered overlapping if their date ranges touch or overlap in any way.
 
 Example:
+
 - Event A: May 1–3
 - Event B: May 3–5
 
 This **is** considered overlapping and should not be allowed to share the same quantity allocation for the same inventory during that overlap window.
 
 ### 5.3 Inventory Return Rules
+
 - Reserved inventory must be returned manually by the user who reserved it.
 - There is no automatic return when an event ends.
 - A return action requires the user to specify where the inventory was returned.
@@ -155,12 +178,14 @@ This **is** considered overlapping and should not be allowed to share the same q
 - If items are lost or damaged, the user can note that in notes, and an admin can later adjust quantity manually.
 
 ### 5.4 Inventory Lifecycle Rules
+
 - Inventory can be active or retired.
 - Retired inventory is not available for new reservations.
 - Retired inventory should still be visible historically and referenceable in the UI.
 - Inventory is never permanently deleted.
 
 ### 5.5 Gift Lifecycle Rules
+
 - Gifts are consumable, not reusable.
 - After approved use, gifts are considered consumed/gone.
 - Gifts should not simply disappear from history.
@@ -168,12 +193,15 @@ This **is** considered overlapping and should not be allowed to share the same q
 - Gifts should not be treated the same as retired reusable inventory.
 
 ### 5.6 Event Rules
+
 - Event state should be inferred by date, not stored manually.
 - Events should appear visually distinct in the UI depending on whether they are past, current, or future.
 - Admins can create, edit, and delete events.
 
 ### 5.7 Audit Rules
+
 The system must make it clear:
+
 - who created a reservation,
 - who edited a reservation,
 - who approved or rejected it,
@@ -188,21 +216,25 @@ This is operationally important so admins can verify responsibility and trace is
 ## 6. Availability Logic
 
 ### Inventory Availability Formula
+
 Available quantity for a given inventory item during a requested event window should be:
 
 **total quantity - sum of approved reservation quantities for overlapping event windows**
 
 Important:
+
 - Pending reservations do not count against availability.
 - Rejected, canceled, and completed reservations do not count against availability.
 - Overlap includes shared boundary dates.
 
 ### Gift Availability Formula
+
 Gift availability should follow the same approval logic:
 
 **total quantity - approved allocated quantity not yet consumed, depending on exact implementation choice**
 
 For MVP, the simplest acceptable model is:
+
 - gifts have quantity,
 - reservations require approval,
 - once used, the gifted quantity is deducted and considered consumed.
@@ -212,9 +244,11 @@ For MVP, the simplest acceptable model is:
 ## 7. Required Pages
 
 ## 7.1 Dashboard
+
 Purpose: quick operational overview.
 
 Should include:
+
 - total active inventory count
 - total gift count
 - pending reservation approvals
@@ -228,10 +262,13 @@ Dashboard should be useful immediately, not decorative.
 ---
 
 ## 7.2 Inventory Page
+
 Purpose: primary inventory management table.
 
 ### Expected UI Pattern
+
 The provided design reference shows the general direction:
+
 - table-based layout
 - modern clean row design
 - compact navigation/sidebar layout
@@ -239,11 +276,14 @@ The provided design reference shows the general direction:
 - row-level actions
 
 ### Notes About the Design Reference
+
 The design image is a **directional reference**, not a literal locked final spec.
 The visual style, spacing, and table-first structure should be followed, but the exact columns and actions should be adjusted to reflect the real product rules in this specification.
 
 ### Inventory Table Should Include
+
 Recommended columns:
+
 - image
 - item name/title
 - description
@@ -256,11 +296,14 @@ Recommended columns:
 - notes or indicator that notes exist
 
 ### Inventory Actions
+
 For standard users:
+
 - open/view details
 - reserve
 
 For admins:
+
 - edit
 - retire
 - optionally adjust quantity from edit flow
@@ -268,6 +311,7 @@ For admins:
 Admin row actions may appear on hover.
 
 ### Inventory Status Presentation
+
 - active inventory should appear normally
 - retired inventory should be visually distinguished, such as:
   - greyed out,
@@ -277,9 +321,11 @@ Admin row actions may appear on hover.
 ---
 
 ## 7.3 Events Page
+
 Purpose: manage and browse events.
 
 Each event should show:
+
 - company name
 - event name
 - date range
@@ -288,6 +334,7 @@ Each event should show:
 - inferred status: past / current / future
 
 ### Event UI Expectations
+
 - past events should be greyed out or visually de-emphasized
 - current and future events should be easy to distinguish
 - admins can edit and delete events
@@ -295,11 +342,13 @@ Each event should show:
 ---
 
 ## 7.4 Gifting Page
+
 Purpose: manage consumable event gifts.
 
 Should mirror inventory patterns where useful, while respecting gifting-specific rules.
 
 Recommended columns:
+
 - item name/title
 - description
 - available quantity
@@ -309,16 +358,21 @@ Recommended columns:
 - notes
 
 ### Gift Actions
+
 For users:
+
 - reserve gifts for event
 
 For admins:
+
 - edit gifts
 - manage quantities
 - mark gift items as consumed through approved operational flow
 
 ### Gift Visual Behavior
+
 Consumed gifts should be visually distinguished, e.g.:
+
 - crossed out,
 - marked consumed,
 - or shown in a consumed section
@@ -336,6 +390,7 @@ There should be separate reservation records for inventory and gifts, or a caref
 For clarity and maintainability, separate models are acceptable and likely simpler.
 
 ### Reservation Statuses (Inventory)
+
 - pending
 - approved
 - rejected
@@ -343,6 +398,7 @@ For clarity and maintainability, separate models are acceptable and likely simpl
 - completed
 
 #### Meaning of statuses
+
 - **pending:** awaiting admin approval
 - **approved:** accepted and currently counts against availability
 - **rejected:** denied by admin
@@ -350,7 +406,9 @@ For clarity and maintainability, separate models are acceptable and likely simpl
 - **completed:** inventory was returned
 
 ### Reservation Statuses (Gifts)
+
 Recommended MVP statuses:
+
 - pending
 - approved
 - rejected
@@ -359,7 +417,9 @@ Recommended MVP statuses:
 Where completed means the gift allocation was used/consumed.
 
 ### Reservation Notes
+
 Reservations should support notes so users/admins can document:
+
 - damaged items
 - missing items
 - special circumstances
@@ -371,10 +431,12 @@ Reservations should support notes so users/admins can document:
 ## 9. Locations
 
 Location needs to support both:
+
 - known/common recurring locations, and
 - arbitrary real-world custom locations.
 
 Examples:
+
 - JP Display warehouse
 - California
 - Mexico
@@ -382,11 +444,14 @@ Examples:
 - someone’s garage
 
 ### Recommended Approach
+
 Use a flexible model that allows:
+
 - predefined saved locations for common use
 - freeform/custom return or event locations when needed
 
 ### Minimum Requirements
+
 - each event has a location
 - inventory has a current location
 - when returning inventory, the user must specify where it was returned
@@ -396,6 +461,7 @@ Use a flexible model that allows:
 ## 10. Search and Filtering
 
 For MVP, search should include:
+
 - item name/title
 - description
 - location
@@ -403,6 +469,7 @@ For MVP, search should include:
 The UI should support fast filtering and browsing.
 
 Recommended filters:
+
 - active vs retired inventory
 - event status (past/current/future)
 - reservation status
@@ -413,25 +480,31 @@ Recommended filters:
 ## 11. Design Assets and Brand Assets
 
 ## 11.1 Design Image
+
 Yes, the design image should be included as a reference for the agent.
 
 ### How to use it
+
 Place the design screenshot in the repo and reference it explicitly in this spec.
 Recommended path:
+
 - `docs/assets/inventory-page-reference.png`
 
 ### What the agent should do with it
+
 - use it as a visual style and layout reference,
 - preserve the overall clean table-first direction,
 - but not blindly copy incorrect placeholder columns or incomplete details from the mockup.
 
 The mockup is useful for:
+
 - visual hierarchy
 - table feel
 - spacing direction
 - sidebar/top-level layout direction
 
 The mockup is **not** the source of truth for:
+
 - exact column definitions
 - business logic
 - state rules
@@ -440,12 +513,15 @@ The mockup is **not** the source of truth for:
 This document is the source of truth for those.
 
 ## 11.2 Logo File
+
 Yes, the logo file should also be included and referenced.
 
 Recommended path:
+
 - `public/logo.png`
 
 ### Logo guidance
+
 - use `logo.png` in app navigation/header/sidebar branding
 - do not redesign the logo unless explicitly instructed
 - keep branding minimal and clean
@@ -457,6 +533,7 @@ Recommended path:
 This section describes the intended schema structure at the product level. The implementation can vary slightly, but the domain meaning should remain consistent.
 
 ### Required Models
+
 - User
 - InventoryItem
 - Event
@@ -467,6 +544,7 @@ This section describes the intended schema structure at the product level. The i
 - optional: AuditLog
 
 ### Recommendation
+
 The agent should strongly consider including an `AuditLog` model or equivalent history-tracking strategy, because traceability is a core requirement.
 
 ---
@@ -476,7 +554,9 @@ The agent should strongly consider including an `AuditLog` model or equivalent h
 Below is the intended schema structure in conceptual form.
 
 ### 13.1 User
+
 Fields:
+
 - `id`
 - `name`
 - `email`
@@ -485,6 +565,7 @@ Fields:
 - `updatedAt`
 
 Relationships:
+
 - one user can create many reservations
 - one user can approve many reservations
 - one user can perform many audit actions
@@ -492,7 +573,9 @@ Relationships:
 ---
 
 ### 13.2 InventoryItem
+
 Fields:
+
 - `id`
 - `title`
 - `description`
@@ -507,9 +590,11 @@ Fields:
 - `updatedByUserId` (nullable but recommended)
 
 Relationships:
+
 - one inventory item can have many reservations over time
 
 Important notes:
+
 - quantity is total owned quantity
 - available quantity is computed from approved overlapping reservations
 - inventory is never deleted
@@ -517,7 +602,9 @@ Important notes:
 ---
 
 ### 13.3 Event
+
 Fields:
+
 - `id`
 - `companyName`
 - `eventName`
@@ -531,17 +618,21 @@ Fields:
 - `updatedByUserId` (nullable but recommended)
 
 Relationships:
+
 - one event can have many inventory reservations
 - one event can have many gift reservations
 
 Important notes:
+
 - event status is inferred from dates, not stored manually
 - admins can delete events
 
 ---
 
 ### 13.4 InventoryReservation
+
 Fields:
+
 - `id`
 - `inventoryItemId`
 - `eventId`
@@ -556,12 +647,14 @@ Fields:
 - `lastModifiedByUserId` (recommended)
 
 Relationships:
+
 - belongs to one inventory item
 - belongs to one event
 - requested by one user
 - optionally approved by one admin user
 
 Important notes:
+
 - if edited after approval, it should revert to pending
 - completed means returned
 - user must return entire reservation, not partial
@@ -569,7 +662,9 @@ Important notes:
 ---
 
 ### 13.5 GiftItem
+
 Fields:
+
 - `id`
 - `title`
 - `description`
@@ -582,16 +677,20 @@ Fields:
 - `updatedByUserId` (nullable but recommended)
 
 Relationships:
+
 - one gift item can have many gift reservations over time
 
 Important notes:
+
 - gifts are consumable
 - consumed gifts should remain historically visible
 
 ---
 
 ### 13.6 GiftReservation
+
 Fields:
+
 - `id`
 - `giftItemId`
 - `eventId`
@@ -605,21 +704,25 @@ Fields:
 - `lastModifiedByUserId` (recommended)
 
 Relationships:
+
 - belongs to one gift item
 - belongs to one event
 - requested by one user
 - optionally approved by one admin user
 
 Important notes:
+
 - gifts do not get returned
 - completed means consumed/used
 
 ---
 
 ### 13.7 Optional Location Model
+
 A separate location model is optional but reasonable if the app benefits from reusable saved locations.
 
 Possible fields:
+
 - `id`
 - `name`
 - `type` (`SAVED` | `CUSTOM`)
@@ -631,9 +734,11 @@ If this adds too much complexity for MVP, a string field is acceptable initially
 ---
 
 ### 13.8 AuditLog (Strongly Recommended)
+
 Because the product requires visibility into who changed what and when, an audit trail should exist.
 
 Possible fields:
+
 - `id`
 - `entityType` (`INVENTORY_ITEM` | `EVENT` | `INVENTORY_RESERVATION` | `GIFT_ITEM` | `GIFT_RESERVATION`)
 - `entityId`
@@ -650,18 +755,22 @@ At minimum, the agent should implement some equivalent traceability mechanism.
 ## 14. Suggested Enums
 
 ### UserRole
+
 - `ADMIN`
 - `USER`
 
 ### InventoryStatus
+
 - `ACTIVE`
 - `RETIRED`
 
 ### GiftStatus
+
 - `ACTIVE`
 - `CONSUMED`
 
 ### InventoryReservationStatus
+
 - `PENDING`
 - `APPROVED`
 - `REJECTED`
@@ -669,12 +778,14 @@ At minimum, the agent should implement some equivalent traceability mechanism.
 - `COMPLETED`
 
 ### GiftReservationStatus
+
 - `PENDING`
 - `APPROVED`
 - `REJECTED`
 - `COMPLETED`
 
 ### AuditEntityType
+
 - `INVENTORY_ITEM`
 - `EVENT`
 - `INVENTORY_RESERVATION`
@@ -682,6 +793,7 @@ At minimum, the agent should implement some equivalent traceability mechanism.
 - `GIFT_RESERVATION`
 
 ### AuditActionType
+
 - `CREATED`
 - `UPDATED`
 - `APPROVED`
@@ -697,6 +809,7 @@ At minimum, the agent should implement some equivalent traceability mechanism.
 ## 15. UX and Interaction Requirements
 
 ### General UX Requirements
+
 - keep the UI clean and simple
 - prioritize clarity over density
 - make common actions fast
@@ -704,6 +817,7 @@ At minimum, the agent should implement some equivalent traceability mechanism.
 - preserve a professional internal tool feel
 
 ### Specific UX Requirements
+
 - reserve buttons must be present where appropriate
 - admin edit/retire actions should be accessible at row level
 - hover actions for admin are acceptable
@@ -711,15 +825,18 @@ At minimum, the agent should implement some equivalent traceability mechanism.
 - history or attribution should be visible where operationally useful
 
 ### Event Visual States
+
 - past events: greyed out/de-emphasized
 - current events: clearly indicated
 - future events: clearly indicated
 
 ### Inventory Visual States
+
 - retired inventory visually separated or greyed out
 - active inventory clear and easy to scan
 
 ### Gift Visual States
+
 - consumed gifts crossed out or marked consumed
 
 ---
@@ -747,6 +864,7 @@ The implementation plan must explicitly account for these:
 ## 17. Performance Expectations
 
 For MVP, the system should:
+
 - load primary pages quickly
 - support fast search and filtering
 - handle a moderate internal dataset without feeling sluggish
@@ -759,6 +877,7 @@ This is an internal business app, so perceived speed matters a lot.
 ## 18. Out of Scope for MVP
 
 These are intentionally not required for first release unless later requested:
+
 - email notifications
 - push notifications
 - advanced analytics dashboards
@@ -774,6 +893,7 @@ These are intentionally not required for first release unless later requested:
 ## 19. Definition of Done for MVP
 
 The MVP is complete when:
+
 - users can authenticate
 - admins and users have correct role-based access
 - inventory can be created, edited, searched, reserved, returned, and retired
@@ -805,6 +925,7 @@ If additional notes or data samples exist, they should also be added to `/docs` 
 ## 21. Agent Instructions
 
 When planning or implementing from this specification:
+
 - treat this document as the business/source-of-truth spec
 - use the design image as a visual/layout direction, not a business logic source
 - preserve the fixed stack unless a strong justification exists
@@ -813,4 +934,3 @@ When planning or implementing from this specification:
 - do not overbuild beyond MVP
 - do not omit admin override capabilities
 - do not treat gifts and reusable inventory as the same lifecycle
-

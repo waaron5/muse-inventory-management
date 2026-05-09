@@ -31,10 +31,7 @@ export default async function ReservationsPage({
   const where = {
     ...(isAdmin ? {} : { requestedById: userId }),
     status: {
-      notIn: [
-        InventoryReservationStatus.CANCELED,
-        InventoryReservationStatus.COMPLETED,
-      ],
+      notIn: [InventoryReservationStatus.CANCELED, InventoryReservationStatus.COMPLETED],
     },
     ...(query
       ? {
@@ -119,8 +116,7 @@ export default async function ReservationsPage({
   ]);
   const sortedReservations = [...reservations].sort((a, b) => {
     const statusDiff =
-      (RESERVATION_STATUS_ORDER[a.status] ?? 99) -
-      (RESERVATION_STATUS_ORDER[b.status] ?? 99);
+      (RESERVATION_STATUS_ORDER[a.status] ?? 99) - (RESERVATION_STATUS_ORDER[b.status] ?? 99);
     if (statusDiff !== 0) return statusDiff;
     return b.createdAt.getTime() - a.createdAt.getTime();
   });

@@ -5,13 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-export function LoginPageClient({
-  callbackUrl,
-  isDemo,
-}: {
-  callbackUrl: string;
-  isDemo: boolean;
-}) {
+export function LoginPageClient({ callbackUrl, isDemo }: { callbackUrl: string; isDemo: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,7 +41,7 @@ export function LoginPageClient({
         setError(
           isDemo
             ? "Sign-in failed. Check demo env vars and seeded demo data."
-            : "Sign-in failed. Check server auth configuration."
+            : "Sign-in failed. Check server auth configuration.",
         );
       }
     } else {

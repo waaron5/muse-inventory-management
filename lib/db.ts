@@ -18,12 +18,16 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-function hasCurrentSchemaClient(
-  client: PrismaClient | undefined
-): client is PrismaClient {
-  return typeof (client as PrismaClient & {
-    storageLocation?: { findMany?: unknown };
-  } | undefined)?.storageLocation?.findMany === "function";
+function hasCurrentSchemaClient(client: PrismaClient | undefined): client is PrismaClient {
+  return (
+    typeof (
+      client as
+        | (PrismaClient & {
+            storageLocation?: { findMany?: unknown };
+          })
+        | undefined
+    )?.storageLocation?.findMany === "function"
+  );
 }
 
 // In Next dev, globalThis can hold a Prisma client created before a schema change.

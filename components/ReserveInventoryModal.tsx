@@ -125,24 +125,21 @@ export function ReserveInventoryModal({
         item.currentLocation ?? "",
         item.totalQuantity ?? "",
         item.quantity ?? 1,
-      ].join(":")
+      ].join(":"),
     )
     .join("|");
   const selectedIds = new Set(selectedItems.map((item) => item.id));
   const visibleSearchResults = searchResults.filter((item) => !selectedIds.has(item.id));
   const hasInvalidQuantity = selectedItems.some(
-    (item) => item.quantity < 1 || item.quantityInput.trim() === ""
+    (item) => item.quantity < 1 || item.quantityInput.trim() === "",
   );
   const hasAvailabilityConflict = selectedItems.some(
-    (item) => item.availableQty !== null && item.quantity > item.availableQty
+    (item) => item.availableQty !== null && item.quantity > item.availableQty,
   );
   const checkingAvailability = selectedItems.some((item) => item.checkingAvailability);
   const canSearchInventory = Boolean(selectedEvent);
   const canSelectSingleSearchResult =
-    searchOpen &&
-    !searching &&
-    !searchError &&
-    visibleSearchResults.length === 1;
+    searchOpen && !searching && !searchError && visibleSearchResults.length === 1;
   const canSubmit =
     Boolean(activeEventId) &&
     selectedItems.length > 0 &&
@@ -202,7 +199,7 @@ export function ReserveInventoryModal({
           ...item,
           availableQty: null,
           checkingAvailability: false,
-        }))
+        })),
       );
       return;
     }
@@ -214,22 +211,20 @@ export function ReserveInventoryModal({
 
     setSelectedItems((current) =>
       current.map((item) =>
-        itemIds.includes(item.id)
-          ? { ...item, checkingAvailability: true }
-          : item
-      )
+        itemIds.includes(item.id) ? { ...item, checkingAvailability: true } : item,
+      ),
     );
 
     Promise.all(
       itemIds.map(async (itemId) => ({
         itemId,
         availableQty: await checkInventoryAvailability(itemId, activeEventId),
-      }))
+      })),
     )
       .then((results) => {
         if (cancelled) return;
         const availabilityMap = new Map(
-          results.map((result) => [result.itemId, result.availableQty])
+          results.map((result) => [result.itemId, result.availableQty]),
         );
 
         setSelectedItems((current) =>
@@ -237,20 +232,18 @@ export function ReserveInventoryModal({
             ...item,
             availableQty: availabilityMap.get(item.id) ?? null,
             checkingAvailability: false,
-          }))
+          })),
         );
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setSubmitError(
-          err instanceof Error ? err.message : "Failed to load availability."
-        );
+        setSubmitError(err instanceof Error ? err.message : "Failed to load availability.");
         setSelectedItems((current) =>
           current.map((item) => ({
             ...item,
             availableQty: null,
             checkingAvailability: false,
-          }))
+          })),
         );
       });
 
@@ -296,8 +289,8 @@ export function ReserveInventoryModal({
               quantityInput: nextValue,
               quantity: nextValue ? Math.floor(Number(nextValue)) : 0,
             }
-          : item
-      )
+          : item,
+      ),
     );
   }
 
@@ -315,8 +308,8 @@ export function ReserveInventoryModal({
                 quantity: 1,
                 quantityInput: "1",
               }
-          : item
-      )
+          : item,
+      ),
     );
   }
 
@@ -356,32 +349,28 @@ export function ReserveInventoryModal({
               : "Reservation updated"
             : result.count === 1
               ? "Reservation approved"
-              : `${result.count} reservations approved`
+              : `${result.count} reservations approved`,
         );
       } else if (result.revertedToPendingCount > 0) {
         toast(
           multipleReservations
             ? "Reservations updated and pending approval"
-            : "Reservation updated and pending approval"
+            : "Reservation updated and pending approval",
         );
       } else if (updatedOnly) {
         toast(
-          multipleReservations
-            ? "Reservation requests updated"
-            : "Reservation request updated"
+          multipleReservations ? "Reservation requests updated" : "Reservation request updated",
         );
       } else {
         toast(
           result.count === 1
             ? "Reservation pending approval"
-            : `${result.count} reservations pending approval`
+            : `${result.count} reservations pending approval`,
         );
       }
       router.refresh();
     } catch (err: unknown) {
-      setSubmitError(
-        err instanceof Error ? err.message : "Failed to submit reservation."
-      );
+      setSubmitError(err instanceof Error ? err.message : "Failed to submit reservation.");
     } finally {
       setSubmitting(false);
     }
@@ -396,8 +385,8 @@ export function ReserveInventoryModal({
               quantity: Math.max(1, getIncrementedQuantity(item)),
               quantityInput: String(Math.max(1, getIncrementedQuantity(item))),
             }
-          : item
-      )
+          : item,
+      ),
     );
   }
 
@@ -410,8 +399,8 @@ export function ReserveInventoryModal({
               quantity: Math.max(1, item.quantity - 1),
               quantityInput: String(Math.max(1, item.quantity - 1)),
             }
-          : item
-      )
+          : item,
+      ),
     );
   }
 
@@ -419,13 +408,7 @@ export function ReserveInventoryModal({
   const showSearchDropdown = canSearchInventory && searchOpen;
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={title}
-      size="lg"
-      bodyClassName="reserve-modal-body"
-    >
+    <Modal open={open} onClose={onClose} title={title} size="lg" bodyClassName="reserve-modal-body">
       <form onSubmit={handleSubmit} className="modal-form reserve-modal-form">
         {subtitle && <p className="event-info-detail modal-helper-text">{subtitle}</p>}
 
@@ -478,8 +461,8 @@ export function ReserveInventoryModal({
               </span>
             </span>
             <span className="event-info-detail">
-              Availability is based on this event. Pending requests do not hold stock
-              until approved.
+              Availability is based on this event. Pending requests do not hold stock until
+              approved.
             </span>
           </div>
         )}
@@ -512,9 +495,7 @@ export function ReserveInventoryModal({
                 type="search"
                 className="form-input reserve-search-input"
                 placeholder={
-                  canSearchInventory
-                    ? "Type to search inventory items..."
-                    : "Select an event first"
+                  canSearchInventory ? "Type to search inventory items..." : "Select an event first"
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -531,7 +512,11 @@ export function ReserveInventoryModal({
             </div>
 
             {showSearchDropdown && (
-              <div className="reserve-search-results" role="listbox" aria-label="Inventory search results">
+              <div
+                className="reserve-search-results"
+                role="listbox"
+                aria-label="Inventory search results"
+              >
                 {searching ? (
                   <p className="reserve-search-state">Searching inventory…</p>
                 ) : searchError ? (
@@ -643,12 +628,7 @@ export function ReserveInventoryModal({
         {submitError && <p className="form-error">{submitError}</p>}
 
         <div className="modal-actions reserve-modal-actions">
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={onClose}
-            disabled={submitting}
-          >
+          <button type="button" className="btn btn-outline" onClick={onClose} disabled={submitting}>
             Cancel
           </button>
           <button type="submit" className="btn btn-dark" disabled={!canSubmit}>
@@ -666,7 +646,13 @@ export function ReserveInventoryModal({
 
 function SearchIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className={className}
+    >
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.35-4.35" />
     </svg>
@@ -675,7 +661,13 @@ function SearchIcon({ className }: { className?: string }) {
 
 function MinusIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className={className}
+    >
       <path d="M5 12h14" />
     </svg>
   );
@@ -683,7 +675,13 @@ function MinusIcon({ className }: { className?: string }) {
 
 function PlusIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className={className}
+    >
       <path d="M12 5v14M5 12h14" />
     </svg>
   );
@@ -691,7 +689,13 @@ function PlusIcon({ className }: { className?: string }) {
 
 function TrashIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className={className}
+    >
       <path d="M3 6h18" />
       <path d="M8 6V4h8v2" />
       <path d="M19 6l-1 14H6L5 6" />

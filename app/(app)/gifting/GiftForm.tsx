@@ -52,22 +52,30 @@ export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
     () => (
       <ol className="bc-list" aria-label="Breadcrumb">
         <li className="bc-item">
-          <Link href="/gifting" className="bc-link">Gifting</Link>
+          <Link href="/gifting" className="bc-link">
+            Gifting
+          </Link>
         </li>
         {mode === "edit" && item && (
           <li className="bc-item">
-            <span className="bc-sep" aria-hidden="true">/</span>
-            <Link href={`/gifting/${item.id}`} className="bc-link">{item.title}</Link>
+            <span className="bc-sep" aria-hidden="true">
+              /
+            </span>
+            <Link href={`/gifting/${item.id}`} className="bc-link">
+              {item.title}
+            </Link>
           </li>
         )}
         <li className="bc-item">
-          <span className="bc-sep" aria-hidden="true">/</span>
+          <span className="bc-sep" aria-hidden="true">
+            /
+          </span>
           <span className="bc-current">{mode === "create" ? "New Item" : "Edit"}</span>
         </li>
       </ol>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mode, item?.id]
+    [mode, item?.id],
   );
 
   const actionsNode = useMemo(
@@ -90,7 +98,7 @@ export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
       </>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, uploadingImage, mode]
+    [loading, uploadingImage, mode],
   );
 
   useSetTopBar(titleNode, actionsNode);
@@ -142,11 +150,7 @@ export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
         router.push(giftingReturnHref);
       }
     } catch (submissionError: unknown) {
-      setError(
-        submissionError instanceof Error
-          ? submissionError.message
-          : "Something went wrong"
-      );
+      setError(submissionError instanceof Error ? submissionError.message : "Something went wrong");
     } finally {
       setUploadingImage(false);
       setLoading(false);
@@ -156,106 +160,105 @@ export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
   return (
     <div className="form-container">
       <form id="gift-item-form" onSubmit={handleSubmit} className="inv-form">
-          <div className="form-grid">
-            <InlineItemImageField
-              displayedImageUrl={displayedImageUrl}
-              selectedImageFile={selectedImageFile}
-              imageError={imageError}
-              disabled={loading}
-              onFileSelected={(file) => {
-                setImageError("");
-                setSelectedImageFile(file);
-                setRemoveExistingImage(false);
-              }}
-              onClear={() => {
-                setImageError("");
-                if (selectedImageFile) {
-                  setSelectedImageFile(null);
-                } else {
-                  setRemoveExistingImage(true);
-                }
-              }}
-              onError={setImageError}
+        <div className="form-grid">
+          <InlineItemImageField
+            displayedImageUrl={displayedImageUrl}
+            selectedImageFile={selectedImageFile}
+            imageError={imageError}
+            disabled={loading}
+            onFileSelected={(file) => {
+              setImageError("");
+              setSelectedImageFile(file);
+              setRemoveExistingImage(false);
+            }}
+            onClear={() => {
+              setImageError("");
+              if (selectedImageFile) {
+                setSelectedImageFile(null);
+              } else {
+                setRemoveExistingImage(true);
+              }
+            }}
+            onError={setImageError}
+          />
+
+          <div className="form-field form-field-wide">
+            <label className="form-label">Item Name *</label>
+            <input
+              type="text"
+              className="form-input"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              required
+              maxLength={200}
+              placeholder="e.g. Crystal Award"
             />
-
-            <div className="form-field form-field-wide">
-              <label className="form-label">Item Name *</label>
-              <input
-                type="text"
-                className="form-input"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                required
-                maxLength={200}
-                placeholder="e.g. Crystal Award"
-              />
-            </div>
-
-            <div className="form-field form-field-wide">
-              <label className="form-label">Description</label>
-              <input
-                type="text"
-                className="form-input"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                maxLength={500}
-                placeholder="Brief description of the item"
-              />
-            </div>
-
-            <div className="form-field">
-              <label className="form-label">Quantity *</label>
-              <input
-                type="number"
-                className="form-input"
-                min={0}
-                value={quantity}
-                onChange={(event) => setQuantity(Number(event.target.value))}
-                required
-              />
-            </div>
-
-            <div className="form-field">
-              <label className="form-label">Current Location *</label>
-              <select
-                className="form-input"
-                value={currentLocation}
-                onChange={(event) => setCurrentLocation(event.target.value)}
-                required
-              >
-                <option value="">Select a location</option>
-                {locationOptions.map((location) => (
-                  <option key={location} value={location}>
-                    {location}
-                  </option>
-                ))}
-              </select>
-              {mode === "edit" &&
-                item?.currentLocation &&
-                !locationOptions.includes(item.currentLocation) && (
-                  <p className="form-hint">
-                    This item has a legacy location. Choose one of the approved
-                    storage locations before saving.
-                  </p>
-                )}
-            </div>
-
-            <div className="form-field form-field-wide">
-              <label className="form-label">Notes</label>
-              <textarea
-                className="form-input"
-                rows={3}
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                maxLength={2000}
-                placeholder="Any special notes about this item…"
-              />
-            </div>
           </div>
 
-          {error && <p className="form-error">{error}</p>}
-        </form>
+          <div className="form-field form-field-wide">
+            <label className="form-label">Description</label>
+            <input
+              type="text"
+              className="form-input"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              maxLength={500}
+              placeholder="Brief description of the item"
+            />
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Quantity *</label>
+            <input
+              type="number"
+              className="form-input"
+              min={0}
+              value={quantity}
+              onChange={(event) => setQuantity(Number(event.target.value))}
+              required
+            />
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Current Location *</label>
+            <select
+              className="form-input"
+              value={currentLocation}
+              onChange={(event) => setCurrentLocation(event.target.value)}
+              required
+            >
+              <option value="">Select a location</option>
+              {locationOptions.map((location) => (
+                <option key={location} value={location}>
+                  {location}
+                </option>
+              ))}
+            </select>
+            {mode === "edit" &&
+              item?.currentLocation &&
+              !locationOptions.includes(item.currentLocation) && (
+                <p className="form-hint">
+                  This item has a legacy location. Choose one of the approved storage locations
+                  before saving.
+                </p>
+              )}
+          </div>
+
+          <div className="form-field form-field-wide">
+            <label className="form-label">Notes</label>
+            <textarea
+              className="form-input"
+              rows={3}
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              maxLength={2000}
+              placeholder="Any special notes about this item…"
+            />
+          </div>
+        </div>
+
+        {error && <p className="form-error">{error}</p>}
+      </form>
     </div>
   );
 }
-

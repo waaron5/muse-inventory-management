@@ -37,8 +37,18 @@ const RESERVATION_STATUS_ORDER = {
 } as const;
 
 function compareEventRows(
-  a: { computedStatus: "past" | "current" | "future"; startDate: Date; endDate: Date; eventName: string },
-  b: { computedStatus: "past" | "current" | "future"; startDate: Date; endDate: Date; eventName: string }
+  a: {
+    computedStatus: "past" | "current" | "future";
+    startDate: Date;
+    endDate: Date;
+    eventName: string;
+  },
+  b: {
+    computedStatus: "past" | "current" | "future";
+    startDate: Date;
+    endDate: Date;
+    eventName: string;
+  },
 ) {
   const statusDiff = EVENT_STATUS_ORDER[a.computedStatus] - EVENT_STATUS_ORDER[b.computedStatus];
   if (statusDiff !== 0) return statusDiff;
@@ -62,7 +72,6 @@ function compareReservations<T extends { status: string; createdAt: Date }>(a: T
 
   return b.createdAt.getTime() - a.createdAt.getTime();
 }
-
 
 function normalizeEventView(view?: string): EventView {
   return EVENT_VIEWS.includes(view as EventView) ? (view as EventView) : "upcoming";
@@ -145,17 +154,13 @@ export default async function EventsPage({
       const sortedInventoryReservations = event.inventoryReservations
         .slice()
         .sort(compareReservations);
-      const sortedGiftReservations = event.giftReservations
-        .slice()
-        .sort(compareReservations);
+      const sortedGiftReservations = event.giftReservations.slice().sort(compareReservations);
 
       const myPendingCount = sortedInventoryReservations.filter(
-        (reservation) =>
-          reservation.requestedById === userId && reservation.status === "PENDING"
+        (reservation) => reservation.requestedById === userId && reservation.status === "PENDING",
       ).length;
       const myApprovedCount = sortedInventoryReservations.filter(
-        (reservation) =>
-          reservation.requestedById === userId && reservation.status === "APPROVED"
+        (reservation) => reservation.requestedById === userId && reservation.status === "APPROVED",
       ).length;
 
       return {
@@ -169,9 +174,7 @@ export default async function EventsPage({
     })
     .sort(compareEventRows);
   const filteredEvents = allEnriched.filter((event) =>
-    eventView === "past"
-      ? event.computedStatus === "past"
-      : event.computedStatus !== "past"
+    eventView === "past" ? event.computedStatus === "past" : event.computedStatus !== "past",
   );
 
   const groupedByCompany = new Map<
@@ -197,12 +200,12 @@ export default async function EventsPage({
   }
 
   const companySections = Array.from(groupedByCompany.values()).sort((a, b) =>
-    a.companyName.localeCompare(b.companyName)
+    a.companyName.localeCompare(b.companyName),
   );
   const totalCount = companySections.length;
   const pagedSections = companySections.slice(
     (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+    currentPage * PAGE_SIZE,
   );
 
   return (
@@ -226,9 +229,7 @@ export default async function EventsPage({
           {pagedSections.length === 0 ? (
             <div className="table-container">
               <div className="events-empty-state">
-                {query
-                  ? `No matching ${eventView} events found.`
-                  : `No ${eventView} events found.`}
+                {query ? `No matching ${eventView} events found.` : `No ${eventView} events found.`}
               </div>
             </div>
           ) : (
@@ -326,7 +327,10 @@ export default async function EventsPage({
                                   ) : (
                                     <div className="event-reservation-list">
                                       {event.sortedInventoryReservations.map((reservation) => (
-                                        <div key={reservation.id} className="event-reservation-item">
+                                        <div
+                                          key={reservation.id}
+                                          className="event-reservation-item"
+                                        >
                                           <div className="event-reservation-copy">
                                             <Link
                                               href={`/inventory/${reservation.inventoryItemId}`}
@@ -386,7 +390,10 @@ export default async function EventsPage({
                                   ) : (
                                     <div className="event-reservation-list">
                                       {event.sortedGiftReservations.map((reservation) => (
-                                        <div key={reservation.id} className="event-reservation-item">
+                                        <div
+                                          key={reservation.id}
+                                          className="event-reservation-item"
+                                        >
                                           <div className="event-reservation-copy">
                                             <Link
                                               href={`/gifting/${reservation.giftItemId}`}
@@ -444,9 +451,7 @@ export default async function EventsPage({
         </div>
       }
       showPagination={totalCount > PAGE_SIZE}
-      pagination={
-        <Pagination total={totalCount} pageSize={PAGE_SIZE} currentPage={currentPage} />
-      }
+      pagination={<Pagination total={totalCount} pageSize={PAGE_SIZE} currentPage={currentPage} />}
     />
   );
 }

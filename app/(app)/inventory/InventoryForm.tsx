@@ -23,11 +23,7 @@ interface InventoryFormProps {
   };
 }
 
-export function InventoryForm({
-  locationOptions,
-  mode,
-  item,
-}: InventoryFormProps) {
+export function InventoryForm({ locationOptions, mode, item }: InventoryFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -56,22 +52,30 @@ export function InventoryForm({
     () => (
       <ol className="bc-list" aria-label="Breadcrumb">
         <li className="bc-item">
-          <Link href="/inventory" className="bc-link">Inventory</Link>
+          <Link href="/inventory" className="bc-link">
+            Inventory
+          </Link>
         </li>
         {mode === "edit" && item && (
           <li className="bc-item">
-            <span className="bc-sep" aria-hidden="true">/</span>
-            <Link href={`/inventory/${item.id}`} className="bc-link">{item.title}</Link>
+            <span className="bc-sep" aria-hidden="true">
+              /
+            </span>
+            <Link href={`/inventory/${item.id}`} className="bc-link">
+              {item.title}
+            </Link>
           </li>
         )}
         <li className="bc-item">
-          <span className="bc-sep" aria-hidden="true">/</span>
+          <span className="bc-sep" aria-hidden="true">
+            /
+          </span>
           <span className="bc-current">{mode === "create" ? "New Item" : "Edit"}</span>
         </li>
       </ol>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mode, item?.id]
+    [mode, item?.id],
   );
 
   const actionsNode = useMemo(
@@ -80,7 +84,12 @@ export function InventoryForm({
         <Link href={inventoryReturnHref} className="btn btn-outline">
           Cancel
         </Link>
-        <button type="submit" form="inventory-item-form" className="btn btn-dark" disabled={loading}>
+        <button
+          type="submit"
+          form="inventory-item-form"
+          className="btn btn-dark"
+          disabled={loading}
+        >
           {loading
             ? uploadingImage
               ? "Uploading…"
@@ -94,7 +103,7 @@ export function InventoryForm({
       </>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, uploadingImage, mode]
+    [loading, uploadingImage, mode],
   );
 
   useSetTopBar(titleNode, actionsNode);
@@ -156,106 +165,105 @@ export function InventoryForm({
   return (
     <div className="form-container">
       <form id="inventory-item-form" onSubmit={handleSubmit} className="inv-form">
-          <div className="form-grid">
-            <InlineItemImageField
-              displayedImageUrl={displayedImageUrl}
-              selectedImageFile={selectedImageFile}
-              imageError={imageError}
-              disabled={loading}
-              onFileSelected={(file) => {
-                setImageError("");
-                setSelectedImageFile(file);
-                setRemoveExistingImage(false);
-              }}
-              onClear={() => {
-                setImageError("");
-                if (selectedImageFile) {
-                  setSelectedImageFile(null);
-                } else {
-                  setRemoveExistingImage(true);
-                }
-              }}
-              onError={setImageError}
+        <div className="form-grid">
+          <InlineItemImageField
+            displayedImageUrl={displayedImageUrl}
+            selectedImageFile={selectedImageFile}
+            imageError={imageError}
+            disabled={loading}
+            onFileSelected={(file) => {
+              setImageError("");
+              setSelectedImageFile(file);
+              setRemoveExistingImage(false);
+            }}
+            onClear={() => {
+              setImageError("");
+              if (selectedImageFile) {
+                setSelectedImageFile(null);
+              } else {
+                setRemoveExistingImage(true);
+              }
+            }}
+            onError={setImageError}
+          />
+
+          <div className="form-field form-field-wide">
+            <label className="form-label">Item Name *</label>
+            <input
+              type="text"
+              className="form-input"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              maxLength={200}
+              placeholder="e.g. Award Platforms"
             />
-
-            <div className="form-field form-field-wide">
-              <label className="form-label">Item Name *</label>
-              <input
-                type="text"
-                className="form-input"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                maxLength={200}
-                placeholder="e.g. Award Platforms"
-              />
-            </div>
-
-            <div className="form-field form-field-wide">
-              <label className="form-label">Description</label>
-              <input
-                type="text"
-                className="form-input"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                maxLength={500}
-                placeholder="e.g. 6&quot; H, 36&quot; Square"
-              />
-            </div>
-
-            <div className="form-field">
-              <label className="form-label">Quantity *</label>
-              <input
-                type="number"
-                className="form-input"
-                min={0}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                required
-              />
-            </div>
-
-            <div className="form-field">
-              <label className="form-label">Current Location *</label>
-              <select
-                className="form-input"
-                value={currentLocation}
-                onChange={(e) => setCurrentLocation(e.target.value)}
-                required
-              >
-                <option value="">Select a location</option>
-                {locationOptions.map((location) => (
-                  <option key={location} value={location}>
-                    {location}
-                  </option>
-                ))}
-              </select>
-              {mode === "edit" &&
-                item?.currentLocation &&
-                !locationOptions.includes(item.currentLocation) && (
-                  <p className="form-hint">
-                    This item has a legacy location. Choose one of the approved
-                    storage locations before saving.
-                  </p>
-                )}
-            </div>
-
-            <div className="form-field form-field-wide">
-              <label className="form-label">Notes</label>
-              <textarea
-                className="form-input"
-                rows={3}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                maxLength={2000}
-                placeholder="Any special notes about this item…"
-              />
-            </div>
           </div>
 
-          {error && <p className="form-error">{error}</p>}
-        </form>
+          <div className="form-field form-field-wide">
+            <label className="form-label">Description</label>
+            <input
+              type="text"
+              className="form-input"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={500}
+              placeholder='e.g. 6" H, 36" Square'
+            />
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Quantity *</label>
+            <input
+              type="number"
+              className="form-input"
+              min={0}
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              required
+            />
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Current Location *</label>
+            <select
+              className="form-input"
+              value={currentLocation}
+              onChange={(e) => setCurrentLocation(e.target.value)}
+              required
+            >
+              <option value="">Select a location</option>
+              {locationOptions.map((location) => (
+                <option key={location} value={location}>
+                  {location}
+                </option>
+              ))}
+            </select>
+            {mode === "edit" &&
+              item?.currentLocation &&
+              !locationOptions.includes(item.currentLocation) && (
+                <p className="form-hint">
+                  This item has a legacy location. Choose one of the approved storage locations
+                  before saving.
+                </p>
+              )}
+          </div>
+
+          <div className="form-field form-field-wide">
+            <label className="form-label">Notes</label>
+            <textarea
+              className="form-input"
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              maxLength={2000}
+              placeholder="Any special notes about this item…"
+            />
+          </div>
+        </div>
+
+        {error && <p className="form-error">{error}</p>}
+      </form>
     </div>
   );
 }
-

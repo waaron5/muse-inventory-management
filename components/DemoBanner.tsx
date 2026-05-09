@@ -6,8 +6,7 @@ export function DemoBanner() {
   return (
     <div className="demo-banner">
       <span>
-        <strong>Demo Mode</strong> — This is a demo with sample data. Data may
-        reset periodically.
+        <strong>Demo Mode</strong> — This is a demo with sample data. Data may reset periodically.
       </span>
     </div>
   );

@@ -1,10 +1,10 @@
 // @ts-nocheck
 
-import { useState } from 'react';
-import { Dialog, DialogContent } from './ui/dialog';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-import { X, Search, Calendar, MapPin, Trash2, Minus, Plus } from 'lucide-react';
+import { useState } from "react";
+import { Dialog, DialogContent } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { X, Search, Calendar, MapPin, Trash2, Minus, Plus } from "lucide-react";
 
 interface ReservationModalProps {
   open: boolean;
@@ -14,60 +14,60 @@ interface ReservationModalProps {
   eventLocation?: string;
 }
 
-export function ReservationModal({ 
-  open, 
+export function ReservationModal({
+  open,
   onOpenChange,
   eventName = "Annual Tech Conference 2026",
   eventDate = "April 15, 2026",
-  eventLocation = "San Francisco Convention Center"
+  eventLocation = "San Francisco Convention Center",
 }: ReservationModalProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [items, setItems] = useState<Array<{ id: string; name: string; quantity: number }>>([]);
 
   // Mock inventory items for demonstration
   const mockInventory = [
-    'Laptop (MacBook Pro)',
-    'Projector',
-    'Microphone',
-    'Speaker System',
-    'Conference Table',
-    'Chairs',
-    'Whiteboard',
-    'Display Monitor',
-    'HDMI Cable',
-    'Extension Cord'
+    "Laptop (MacBook Pro)",
+    "Projector",
+    "Microphone",
+    "Speaker System",
+    "Conference Table",
+    "Chairs",
+    "Whiteboard",
+    "Display Monitor",
+    "HDMI Cable",
+    "Extension Cord",
   ];
 
   const filteredInventory = searchQuery
-    ? mockInventory.filter(item => 
-        item.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+    ? mockInventory.filter((item) => item.toLowerCase().includes(searchQuery.toLowerCase()))
     : [];
 
   const handleAddItem = (itemName: string) => {
     const itemId = `${itemName}-${Date.now()}`;
     setItems([...items, { id: itemId, name: itemName, quantity: 1 }]);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const handleRemoveItem = (itemId: string) => {
-    setItems(items.filter(item => item.id !== itemId));
+    setItems(items.filter((item) => item.id !== itemId));
   };
 
   const handleIncrementQuantity = (itemId: string) => {
-    setItems(items.map(item => 
-      item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
-    ));
+    setItems(
+      items.map((item) => (item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item)),
+    );
   };
 
   const handleDecrementQuantity = (itemId: string) => {
-    setItems(items.map(item => 
-      item.id === itemId ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item
-    ));
+    setItems(
+      items.map((item) =>
+        item.id === itemId ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item,
+      ),
+    );
   };
 
   const handleReserve = () => {
-    console.log('Reserving inventory for event:', { eventName, items });
+    console.log("Reserving inventory for event:", { eventName, items });
     // Handle reservation logic here
     onOpenChange(false);
     setItems([]);
@@ -110,9 +110,7 @@ export function ReservationModal({
         <div className="px-6 py-6 space-y-5">
           {/* Search Inventory */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Search Inventory
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Search Inventory</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
@@ -123,7 +121,7 @@ export function ReservationModal({
                 className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white"
               />
             </div>
-            
+
             {/* Search Results Dropdown */}
             {searchQuery && filteredInventory.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-[180px] overflow-y-auto">
@@ -138,7 +136,7 @@ export function ReservationModal({
                 ))}
               </div>
             )}
-            
+
             {searchQuery && filteredInventory.length === 0 && (
               <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-500 text-center">
                 No inventory items found
@@ -161,7 +159,7 @@ export function ReservationModal({
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{item.name}</p>
                     </div>
-                    
+
                     {/* Quantity Controls */}
                     <div className="flex items-center gap-3 ml-4">
                       <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-2 py-1">
@@ -182,7 +180,7 @@ export function ReservationModal({
                           <Plus className="w-3.5 h-3.5 text-gray-600" />
                         </button>
                       </div>
-                      
+
                       <button
                         onClick={() => handleRemoveItem(item.id)}
                         className="p-1.5 hover:bg-gray-100 rounded-md transition-colors"
@@ -199,7 +197,9 @@ export function ReservationModal({
           {items.length === 0 && (
             <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-6 text-center">
               <p className="text-sm text-blue-900 font-medium">No items added yet</p>
-              <p className="text-xs text-blue-700 mt-1">Search and select inventory items to reserve for this event</p>
+              <p className="text-xs text-blue-700 mt-1">
+                Search and select inventory items to reserve for this event
+              </p>
             </div>
           )}
         </div>
@@ -211,7 +211,8 @@ export function ReservationModal({
             disabled={items.length === 0}
             className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
           >
-            Reserve {items.length > 0 && `${totalItems} ${totalItems === 1 ? 'Item' : 'Items'}`} for Event
+            Reserve {items.length > 0 && `${totalItems} ${totalItems === 1 ? "Item" : "Items"}`} for
+            Event
           </Button>
         </div>
       </DialogContent>

@@ -37,7 +37,6 @@ export default async function InventoryPage({
       where,
       orderBy: [{ status: "asc" }, { title: "asc" }],
       include: {
-        updatedBy: { select: { name: true } },
         reservations: {
           where: {
             requestedById: userId,
@@ -88,15 +87,11 @@ export default async function InventoryPage({
     startDate: event.startDate.toISOString(),
     endDate: event.endDate.toISOString(),
   }));
-  const totalCount = items.length;
-
   return (
     <PageShell
       stripLegacyPaginationParams
       title="Inventory"
-      action={
-        isAdmin ? <AddInventoryItemButton /> : undefined
-      }
+      action={isAdmin ? <AddInventoryItemButton /> : undefined}
       controls={
         <div className="table-toolbar inventory-toolbar">
           <SearchBar placeholder="Search items, descriptions, locations..." />
@@ -106,10 +101,10 @@ export default async function InventoryPage({
         <InventoryTable
           items={items.map((item) => {
             const pendingCount = item.reservations.filter(
-              (reservation) => reservation.status === "PENDING"
+              (reservation) => reservation.status === "PENDING",
             ).length;
             const approvedCount = item.reservations.filter(
-              (reservation) => reservation.status === "APPROVED"
+              (reservation) => reservation.status === "APPROVED",
             ).length;
 
             return {
@@ -125,11 +120,6 @@ export default async function InventoryPage({
               ]
                 .filter(Boolean)
                 .join(" • "),
-              updatedDate: item.updatedAt.toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              }),
-              updatedByText: item.updatedBy?.name?.trim() ?? null,
               pendingCount,
               approvedCount,
               reserved: reservedMap.get(item.id) ?? 0,

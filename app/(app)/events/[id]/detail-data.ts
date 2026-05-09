@@ -2,9 +2,7 @@ import { getEventStatus } from "@/lib/availability";
 import { prisma } from "@/lib/db";
 import { getStorageLocationNames } from "@/lib/storage-locations";
 
-export type EventDetailData = NonNullable<
-  Awaited<ReturnType<typeof getEventDetailData>>
->;
+export type EventDetailData = NonNullable<Awaited<ReturnType<typeof getEventDetailData>>>;
 
 export async function getEventDetailData(id: string, userId: string) {
   const [event, returnLocationOptions] = await Promise.all([
@@ -38,12 +36,10 @@ export async function getEventDetailData(id: string, userId: string) {
 
   const status = getEventStatus(event.startDate, event.endDate);
   const myPendingCount = event.inventoryReservations.filter(
-    (reservation) =>
-      reservation.requestedById === userId && reservation.status === "PENDING"
+    (reservation) => reservation.requestedById === userId && reservation.status === "PENDING",
   ).length;
   const myApprovedCount = event.inventoryReservations.filter(
-    (reservation) =>
-      reservation.requestedById === userId && reservation.status === "APPROVED"
+    (reservation) => reservation.requestedById === userId && reservation.status === "APPROVED",
   ).length;
 
   return {

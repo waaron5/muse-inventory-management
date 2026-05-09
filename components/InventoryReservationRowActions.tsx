@@ -63,21 +63,16 @@ export function InventoryReservationRowActions({
   const [pendingConfirm, setPendingConfirm] = useState<"reject" | "cancel" | "remove" | null>(null);
 
   const canApprove = isAdmin && reservation.status === "PENDING";
-  const canCancel =
-    reservation.status === "PENDING" && reservation.requestedById === userId;
-  const canEdit =
-    reservation.status === "PENDING" && reservation.requestedById === userId;
+  const canCancel = reservation.status === "PENDING" && reservation.requestedById === userId;
+  const canEdit = reservation.status === "PENDING" && reservation.requestedById === userId;
   const canReturn =
-    reservation.status === "APPROVED" &&
-    (reservation.requestedById === userId || isAdmin);
+    reservation.status === "APPROVED" && (reservation.requestedById === userId || isAdmin);
   const canRemoveTerminal =
     allowRemoveTerminal &&
     ["REJECTED", "COMPLETED"].includes(reservation.status) &&
     (reservation.requestedById === userId || isAdmin);
-  const useReservationsPageAppearance =
-    actionAppearance === "reservations-page";
-  const resolvedFallbackHref =
-    fallbackHref ?? `/inventory/${reservation.inventoryItemId}`;
+  const useReservationsPageAppearance = actionAppearance === "reservations-page";
+  const resolvedFallbackHref = fallbackHref ?? `/inventory/${reservation.inventoryItemId}`;
 
   function closeReturnModal() {
     setReturnOpen(false);
@@ -120,17 +115,17 @@ export function InventoryReservationRowActions({
       toast("Reservation approved");
       router.refresh();
     } catch (err: unknown) {
-      toast(
-        err instanceof Error ? err.message : "Failed to approve reservation",
-        "error"
-      );
+      toast(err instanceof Error ? err.message : "Failed to approve reservation", "error");
     } finally {
       setLoadingAction(null);
     }
   }
 
   async function handleReject() {
-    if (pendingConfirm !== "reject") { setPendingConfirm("reject"); return; }
+    if (pendingConfirm !== "reject") {
+      setPendingConfirm("reject");
+      return;
+    }
     setPendingConfirm(null);
     setLoadingAction("reject");
     try {
@@ -138,17 +133,17 @@ export function InventoryReservationRowActions({
       toast("Reservation rejected");
       router.refresh();
     } catch (err: unknown) {
-      toast(
-        err instanceof Error ? err.message : "Failed to reject reservation",
-        "error"
-      );
+      toast(err instanceof Error ? err.message : "Failed to reject reservation", "error");
     } finally {
       setLoadingAction(null);
     }
   }
 
   async function handleCancel() {
-    if (pendingConfirm !== "cancel") { setPendingConfirm("cancel"); return; }
+    if (pendingConfirm !== "cancel") {
+      setPendingConfirm("cancel");
+      return;
+    }
     setPendingConfirm(null);
     setLoadingAction("cancel");
     try {
@@ -156,10 +151,7 @@ export function InventoryReservationRowActions({
       toast("Reservation canceled");
       router.refresh();
     } catch (err: unknown) {
-      toast(
-        err instanceof Error ? err.message : "Failed to cancel reservation",
-        "error"
-      );
+      toast(err instanceof Error ? err.message : "Failed to cancel reservation", "error");
     } finally {
       setLoadingAction(null);
     }
@@ -171,11 +163,7 @@ export function InventoryReservationRowActions({
     setLoadingAction("return");
 
     try {
-      await returnInventoryReservation(
-        reservation.id,
-        returnLocation,
-        returnNotes || undefined
-      );
+      await returnInventoryReservation(reservation.id, returnLocation, returnNotes || undefined);
       closeReturnModal();
       toast("Item returned");
       router.refresh();
@@ -187,7 +175,10 @@ export function InventoryReservationRowActions({
   }
 
   async function handleRemoveTerminal() {
-    if (pendingConfirm !== "remove") { setPendingConfirm("remove"); return; }
+    if (pendingConfirm !== "remove") {
+      setPendingConfirm("remove");
+      return;
+    }
     setPendingConfirm(null);
     setLoadingAction("remove");
     try {
@@ -195,10 +186,7 @@ export function InventoryReservationRowActions({
       toast("Reservation removed");
       router.refresh();
     } catch (err: unknown) {
-      toast(
-        err instanceof Error ? err.message : "Failed to remove reservation",
-        "error"
-      );
+      toast(err instanceof Error ? err.message : "Failed to remove reservation", "error");
     } finally {
       setLoadingAction(null);
     }
@@ -236,15 +224,17 @@ export function InventoryReservationRowActions({
               No
             </button>
           </>
-        ) : canApprove && (
-          <button
-            type="button"
-            className="btn-action btn-action-danger"
-            onClick={handleReject}
-            disabled={disabled || loadingAction !== null}
-          >
-            Reject
-          </button>
+        ) : (
+          canApprove && (
+            <button
+              type="button"
+              className="btn-action btn-action-danger"
+              onClick={handleReject}
+              disabled={disabled || loadingAction !== null}
+            >
+              Reject
+            </button>
+          )
         )}
         {canEdit && (
           <button
@@ -281,15 +271,17 @@ export function InventoryReservationRowActions({
               No
             </button>
           </>
-        ) : canCancel && (
-          <button
-            type="button"
-            className="btn-action btn-action-danger"
-            onClick={handleCancel}
-            disabled={disabled || loadingAction !== null}
-          >
-            Cancel Request
-          </button>
+        ) : (
+          canCancel && (
+            <button
+              type="button"
+              className="btn-action btn-action-danger"
+              onClick={handleCancel}
+              disabled={disabled || loadingAction !== null}
+            >
+              Cancel Request
+            </button>
+          )
         )}
         {canReturn && (
           <button
@@ -332,27 +324,29 @@ export function InventoryReservationRowActions({
               No
             </button>
           </>
-        ) : canRemoveTerminal && (
-          <button
-            type="button"
-            className={`btn-action btn-action-with-icon${
-              useReservationsPageAppearance
-                ? " inventory-reserve-button reservation-table-action-button reservation-table-action-button-muted"
-                : ""
-            }`}
-            onClick={handleRemoveTerminal}
-            disabled={disabled || loadingAction !== null}
-          >
-            <RemoveCircleIcon className="btn-action-inline-icon" />
-            {loadingAction === "remove" ? "Removing..." : "Remove"}
-          </button>
+        ) : (
+          canRemoveTerminal && (
+            <button
+              type="button"
+              className={`btn-action btn-action-with-icon${
+                useReservationsPageAppearance
+                  ? " inventory-reserve-button reservation-table-action-button reservation-table-action-button-muted"
+                  : ""
+              }`}
+              onClick={handleRemoveTerminal}
+              disabled={disabled || loadingAction !== null}
+            >
+              <RemoveCircleIcon className="btn-action-inline-icon" />
+              {loadingAction === "remove" ? "Removing..." : "Remove"}
+            </button>
+          )
         )}
         {!canApprove &&
           !canCancel &&
           !canReturn &&
           !canRemoveTerminal &&
-          resolvedFallbackHref && (
-          disabled ? (
+          resolvedFallbackHref &&
+          (disabled ? (
             <span className="btn-action btn-action-disabled" aria-disabled="true">
               {fallbackLabel}
             </span>
@@ -360,8 +354,7 @@ export function InventoryReservationRowActions({
             <Link href={resolvedFallbackHref} className="btn-action">
               {fallbackLabel}
             </Link>
-          )
-        )}
+          ))}
       </div>
 
       <Modal
@@ -405,29 +398,17 @@ export function InventoryReservationRowActions({
           {error && <p className="form-error">{error}</p>}
 
           <div className="form-footer">
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={closeReturnModal}
-            >
+            <button type="button" className="btn btn-outline" onClick={closeReturnModal}>
               Cancel
             </button>
-            <button
-              type="submit"
-              className="btn btn-dark"
-              disabled={loadingAction !== null}
-            >
+            <button type="submit" className="btn btn-dark" disabled={loadingAction !== null}>
               {loadingAction === "return" ? "Returning..." : "Confirm Return"}
             </button>
           </div>
         </form>
       </Modal>
 
-      <Modal
-        open={editOpen}
-        onClose={closeEditModal}
-        title={`Edit Reservation`}
-      >
+      <Modal open={editOpen} onClose={closeEditModal} title={`Edit Reservation`}>
         <form onSubmit={handleEdit} className="modal-form">
           <div className="reservation-return-summary">
             <strong>{reservation.inventoryItemTitle}</strong>
@@ -449,18 +430,10 @@ export function InventoryReservationRowActions({
           {error && <p className="form-error">{error}</p>}
 
           <div className="form-footer">
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={closeEditModal}
-            >
+            <button type="button" className="btn btn-outline" onClick={closeEditModal}>
               Cancel
             </button>
-            <button
-              type="submit"
-              className="btn btn-dark"
-              disabled={loadingAction !== null}
-            >
+            <button type="submit" className="btn btn-dark" disabled={loadingAction !== null}>
               {loadingAction === "edit" ? "Saving..." : "Save Changes"}
             </button>
           </div>
@@ -491,12 +464,7 @@ function EditIcon() {
 
 function RemoveCircleIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 256 256"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
       <path d="M176,128a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,128Zm56,0A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" />
     </svg>
   );

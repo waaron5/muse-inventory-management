@@ -13,11 +13,7 @@ export function AddInventoryItemButton() {
       className="btn btn-primary"
       onClick={() => router.push("/inventory/new")}
       disabled={bulkSelectionActive}
-      title={
-        bulkSelectionActive
-          ? "Clear bulk selection before adding a new item."
-          : undefined
-      }
+      title={bulkSelectionActive ? "Clear bulk selection before adding a new item." : undefined}
     >
       + Add Item
     </button>

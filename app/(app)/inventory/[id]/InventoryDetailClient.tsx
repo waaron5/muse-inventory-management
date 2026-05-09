@@ -12,11 +12,7 @@ import { useToast } from "@/components/Toast";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import { uploadManagedItemImage } from "@/lib/item-image-client";
 import { formatShortDate, formatAuditDate } from "@/lib/date-utils";
-import {
-  activateInventoryItem,
-  retireInventoryItem,
-  updateInventoryItem,
-} from "../actions";
+import { activateInventoryItem, retireInventoryItem, updateInventoryItem } from "../actions";
 import { InventoryDetailActions } from "./InventoryDetailActions";
 import type { InventoryDetailData } from "./detail-data";
 
@@ -41,9 +37,7 @@ interface InventoryDraft {
 function createDraft(data: InventoryDetailData): InventoryDraft {
   const currentLocation =
     data.item.currentLocation &&
-    (data.returnLocationOptions as readonly string[]).includes(
-      data.item.currentLocation
-    )
+    (data.returnLocationOptions as readonly string[]).includes(data.item.currentLocation)
       ? data.item.currentLocation
       : "";
 
@@ -55,7 +49,6 @@ function createDraft(data: InventoryDetailData): InventoryDraft {
     notes: data.item.notes,
   };
 }
-
 
 export function InventoryDetailClient({
   data,
@@ -110,10 +103,7 @@ export function InventoryDetailClient({
     setImageError("");
   }
 
-  function updateDraft<K extends keyof InventoryDraft>(
-    key: K,
-    value: InventoryDraft[K]
-  ) {
+  function updateDraft<K extends keyof InventoryDraft>(key: K, value: InventoryDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
   }
 
@@ -133,7 +123,7 @@ export function InventoryDetailClient({
   async function handleDelete() {
     if (
       !confirm(
-        `Delete "${data.item.title}"? It will be retired and moved to the bottom of inventory.`
+        `Delete "${data.item.title}"? It will be retired and moved to the bottom of inventory.`,
       )
     ) {
       return;
@@ -153,10 +143,7 @@ export function InventoryDetailClient({
       });
       router.push("/inventory");
     } catch (deleteError: unknown) {
-      toast(
-        deleteError instanceof Error ? deleteError.message : "Failed to delete item",
-        "error"
-      );
+      toast(deleteError instanceof Error ? deleteError.message : "Failed to delete item", "error");
     } finally {
       setDeleting(false);
     }
@@ -198,9 +185,7 @@ export function InventoryDetailClient({
         router.refresh();
       }
     } catch (submitError: unknown) {
-      setError(
-        submitError instanceof Error ? submitError.message : "Something went wrong"
-      );
+      setError(submitError instanceof Error ? submitError.message : "Something went wrong");
     } finally {
       setSaving(false);
     }
@@ -222,10 +207,7 @@ export function InventoryDetailClient({
   return (
     <>
       <DetailTopBar
-        crumbs={[
-          { label: "Inventory", href: "/inventory" },
-          { label: data.item.title },
-        ]}
+        crumbs={[{ label: "Inventory", href: "/inventory" }, { label: data.item.title }]}
         actions={headerActions}
       />
 
@@ -263,9 +245,7 @@ export function InventoryDetailClient({
                 <div className="detail-fields detail-edit-fields">
                   <div className="detail-row">
                     <span className="detail-label">Status</span>
-                    <StatusBadge
-                      variant={data.item.status === "ACTIVE" ? "active" : "retired"}
-                    />
+                    <StatusBadge variant={data.item.status === "ACTIVE" ? "active" : "retired"} />
                   </div>
                   <div className="detail-row">
                     <label className="detail-label" htmlFor="inventory-title">
@@ -285,10 +265,7 @@ export function InventoryDetailClient({
                     </span>
                   </div>
                   <div className="detail-row">
-                    <label
-                      className="detail-label"
-                      htmlFor="inventory-description"
-                    >
+                    <label className="detail-label" htmlFor="inventory-description">
                       Description
                     </label>
                     <span className="detail-row-control">
@@ -297,9 +274,7 @@ export function InventoryDetailClient({
                         type="text"
                         className="form-input"
                         value={draft.description}
-                        onChange={(event) =>
-                          updateDraft("description", event.target.value)
-                        }
+                        onChange={(event) => updateDraft("description", event.target.value)}
                         maxLength={500}
                         disabled={saving}
                       />
@@ -316,9 +291,7 @@ export function InventoryDetailClient({
                         className="form-input"
                         min={0}
                         value={draft.quantity}
-                        onChange={(event) =>
-                          updateDraft("quantity", event.target.value)
-                        }
+                        onChange={(event) => updateDraft("quantity", event.target.value)}
                         required
                         disabled={saving}
                       />
@@ -333,9 +306,7 @@ export function InventoryDetailClient({
                         id="inventory-location"
                         className="form-input"
                         value={draft.currentLocation}
-                        onChange={(event) =>
-                          updateDraft("currentLocation", event.target.value)
-                        }
+                        onChange={(event) => updateDraft("currentLocation", event.target.value)}
                         required
                         disabled={saving}
                       >
@@ -348,11 +319,11 @@ export function InventoryDetailClient({
                       </select>
                       {data.item.currentLocation &&
                         !(data.returnLocationOptions as readonly string[]).includes(
-                          data.item.currentLocation
+                          data.item.currentLocation,
                         ) && (
                           <p className="form-hint">
-                            This item has a legacy location. Choose one of the
-                            approved storage locations before saving.
+                            This item has a legacy location. Choose one of the approved storage
+                            locations before saving.
                           </p>
                         )}
                     </span>
@@ -391,9 +362,7 @@ export function InventoryDetailClient({
               <div className="detail-fields">
                 <div className="detail-row">
                   <span className="detail-label">Status</span>
-                  <StatusBadge
-                    variant={data.item.status === "ACTIVE" ? "active" : "retired"}
-                  />
+                  <StatusBadge variant={data.item.status === "ACTIVE" ? "active" : "retired"} />
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Item Name</span>
@@ -477,9 +446,7 @@ export function InventoryDetailClient({
                               typeof StatusBadge
                             >[0]["variant"]
                           }
-                          label={getInventoryReservationStatusLabel(
-                            reservation.status
-                          )}
+                          label={getInventoryReservationStatusLabel(reservation.status)}
                         />
                       </td>
                       <td className="text-muted">{reservation.requestedByName}</td>
@@ -526,26 +493,19 @@ export function InventoryDetailClient({
                           typeof StatusBadge
                         >[0]["variant"]
                       }
-                      label={getInventoryReservationStatusLabel(
-                        reservation.status
-                      )}
+                      label={getInventoryReservationStatusLabel(reservation.status)}
                     />
                   </div>
                   <div className="res-meta">
-                    {reservation.eventCompanyName} ·{" "}
-                    {formatShortDate(reservation.eventStartDate)}
+                    {reservation.eventCompanyName} · {formatShortDate(reservation.eventStartDate)}
                     {" – "}
                     {formatShortDate(reservation.eventEndDate, true)}
                   </div>
                   <div className="res-meta">
-                    Qty: {reservation.quantity} · By:{" "}
-                    {reservation.requestedByName}
-                    {reservation.approvedByName &&
-                      ` · Approved: ${reservation.approvedByName}`}
+                    Qty: {reservation.quantity} · By: {reservation.requestedByName}
+                    {reservation.approvedByName && ` · Approved: ${reservation.approvedByName}`}
                   </div>
-                  {reservation.notes && (
-                    <p className="res-notes">{reservation.notes}</p>
-                  )}
+                  {reservation.notes && <p className="res-notes">{reservation.notes}</p>}
                 </div>
               ))}
             </div>

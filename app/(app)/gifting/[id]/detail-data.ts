@@ -1,9 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getStorageLocationNames } from "@/lib/storage-locations";
 
-export type GiftDetailData = NonNullable<
-  Awaited<ReturnType<typeof getGiftDetailData>>
->;
+export type GiftDetailData = NonNullable<Awaited<ReturnType<typeof getGiftDetailData>>>;
 
 export async function getGiftDetailData(id: string) {
   const item = await prisma.giftItem.findUnique({
@@ -33,11 +31,7 @@ export async function getGiftDetailData(id: string) {
   if (!item) return null;
 
   const today = new Date();
-  const todayStart = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate()
-  );
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
   const [auditLogs, availableEvents, locationOptions] = await Promise.all([
     prisma.auditLog.findMany({
@@ -62,10 +56,10 @@ export async function getGiftDetailData(id: string) {
   ]);
 
   const activeReservations = item.reservations.filter((reservation) =>
-    ["PENDING", "APPROVED"].includes(reservation.status)
+    ["PENDING", "APPROVED"].includes(reservation.status),
   );
   const useHistory = item.reservations.filter(
-    (reservation) => !["PENDING", "APPROVED"].includes(reservation.status)
+    (reservation) => !["PENDING", "APPROVED"].includes(reservation.status),
   );
 
   return {

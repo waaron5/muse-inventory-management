@@ -26,10 +26,5 @@ export default async function LoginPage({
   const params = await searchParams;
   const callbackUrl = normalizeCallbackUrl(params.callbackUrl);
 
-  return (
-    <LoginPageClient
-      callbackUrl={callbackUrl}
-      isDemo={process.env.APP_MODE === "demo"}
-    />
-  );
+  return <LoginPageClient callbackUrl={callbackUrl} isDemo={process.env.APP_MODE === "demo"} />;
 }

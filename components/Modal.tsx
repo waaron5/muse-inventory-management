@@ -37,7 +37,7 @@ export function Modal({
 
       if (e.key === "Tab" && panelRef.current) {
         const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
         );
         if (focusable.length === 0) return;
         const first = focusable[0];
@@ -60,10 +60,10 @@ export function Modal({
     const timer = setTimeout(() => {
       if (panelRef.current) {
         const preferred = panelRef.current.querySelector<HTMLElement>(
-          '[data-autofocus], .modal-body input:not([disabled]), .modal-body select:not([disabled]), .modal-body textarea:not([disabled]), .modal-body button:not([disabled]), .modal-body [href], .modal-body [tabindex]:not([tabindex="-1"])'
+          '[data-autofocus], .modal-body input:not([disabled]), .modal-body select:not([disabled]), .modal-body textarea:not([disabled]), .modal-body button:not([disabled]), .modal-body [href], .modal-body [tabindex]:not([tabindex="-1"])',
         );
         const fallback = panelRef.current.querySelector<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
         );
         (preferred ?? fallback)?.focus();
       }
@@ -101,7 +101,10 @@ export function Modal({
       >
         <div className={`modal-header${headerClassName ? ` ${headerClassName}` : ""}`}>
           <div className="modal-header-copy">
-            <h2 id="modal-title" className={`modal-title${titleClassName ? ` ${titleClassName}` : ""}`}>
+            <h2
+              id="modal-title"
+              className={`modal-title${titleClassName ? ` ${titleClassName}` : ""}`}
+            >
               {title}
             </h2>
             {headerContent}
@@ -125,6 +128,6 @@ export function Modal({
         <div className={`modal-body${bodyClassName ? ` ${bodyClassName}` : ""}`}>{children}</div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

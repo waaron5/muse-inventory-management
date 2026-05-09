@@ -61,7 +61,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       }, duration);
       timeoutIdsRef.current.set(id, timeoutId);
     },
-    [dismiss]
+    [dismiss],
   );
 
   const toast = useCallback(
@@ -80,7 +80,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       ]);
       scheduleDismiss(id, options?.duration ?? 3500);
     },
-    [scheduleDismiss]
+    [scheduleDismiss],
   );
 
   const handleAction = useCallback(
@@ -94,9 +94,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       }
 
       setToasts((prev) =>
-        prev.map((t) =>
-          t.id === toastItem.id ? { ...t, actionLoading: true } : t
-        )
+        prev.map((t) => (t.id === toastItem.id ? { ...t, actionLoading: true } : t)),
       );
 
       try {
@@ -104,17 +102,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         dismiss(toastItem.id);
       } catch (error) {
         setToasts((prev) =>
-          prev.map((t) =>
-            t.id === toastItem.id ? { ...t, actionLoading: false } : t
-          )
+          prev.map((t) => (t.id === toastItem.id ? { ...t, actionLoading: false } : t)),
         );
-        toast(
-          error instanceof Error ? error.message : "Action failed",
-          "error"
-        );
+        toast(error instanceof Error ? error.message : "Action failed", "error");
       }
     },
-    [dismiss, toast]
+    [dismiss, toast],
   );
 
   const value = useMemo(() => ({ toast }), [toast]);
@@ -142,11 +135,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   {t.actionLoading ? "Working..." : t.actionLabel}
                 </button>
               )}
-              <button
-                className="toast-dismiss"
-                onClick={() => dismiss(t.id)}
-                aria-label="Dismiss"
-              >
+              <button className="toast-dismiss" onClick={() => dismiss(t.id)} aria-label="Dismiss">
                 ×
               </button>
             </div>

@@ -1,0 +1,11 @@
+.next
+out
+build
+node_modules
+coverage
+.claude
+next-env.d.ts
+tsconfig.tsbuildinfo
+app/generated
+package-lock.json
+public/uploads

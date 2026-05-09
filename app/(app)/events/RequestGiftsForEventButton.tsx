@@ -5,10 +5,7 @@ import { useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { CalendarIcon, LocationPinIcon } from "@/components/MetadataIcons";
-import {
-  checkGiftAvailability,
-  createGiftReservation,
-} from "@/app/(app)/gifting/actions";
+import { checkGiftAvailability, createGiftReservation } from "@/app/(app)/gifting/actions";
 
 interface EventOption {
   id: string;
@@ -49,7 +46,7 @@ export function RequestGiftsForEventButton({
 
   const selectedGift = useMemo(
     () => availableGifts.find((gift) => gift.id === selectedGiftId) ?? null,
-    [availableGifts, selectedGiftId]
+    [availableGifts, selectedGiftId],
   );
 
   useEffect(() => {
@@ -83,9 +80,7 @@ export function RequestGiftsForEventButton({
         if (cancelled) return;
         setAvailableQty(null);
         setLoadingAvailability(false);
-        setError(
-          err instanceof Error ? err.message : "Unable to check availability."
-        );
+        setError(err instanceof Error ? err.message : "Unable to check availability.");
       });
 
     return () => {
@@ -105,9 +100,7 @@ export function RequestGiftsForEventButton({
         quantity: parseInt(quantity, 10),
         notes: notes || undefined,
       });
-      toast(
-        result.autoApproved ? "Gift request approved" : "Gift request pending approval"
-      );
+      toast(result.autoApproved ? "Gift request approved" : "Gift request pending approval");
       setOpen(false);
       router.refresh();
     } catch (err: unknown) {
@@ -118,8 +111,7 @@ export function RequestGiftsForEventButton({
   }
 
   const requestedQuantity = parseInt(quantity, 10) || 0;
-  const exceedsAvailability =
-    availableQty !== null && requestedQuantity > availableQty;
+  const exceedsAvailability = availableQty !== null && requestedQuantity > availableQty;
 
   return (
     <>
@@ -240,10 +232,7 @@ export function RequestGiftsForEventButton({
               type="submit"
               className="btn btn-dark"
               disabled={
-                loadingSubmit ||
-                !selectedGiftId ||
-                requestedQuantity < 1 ||
-                exceedsAvailability
+                loadingSubmit || !selectedGiftId || requestedQuantity < 1 || exceedsAvailability
               }
             >
               {loadingSubmit ? "Saving…" : "Request Gift"}
@@ -257,12 +246,7 @@ export function RequestGiftsForEventButton({
 
 function PlusIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 256 256"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
       <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
     </svg>
   );

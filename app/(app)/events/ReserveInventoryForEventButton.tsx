@@ -39,11 +39,7 @@ export function ReserveInventoryForEventButton({
           type="button"
           className={`reserve-inline-button${
             variant === "text" ? " reserve-inline-button-text" : ""
-          }${
-            hasReservationActivity && variant !== "text"
-              ? " reserve-inline-button-active"
-              : ""
-          }`}
+          }${hasReservationActivity && variant !== "text" ? " reserve-inline-button-active" : ""}`}
           onClick={() => setOpen(true)}
           disabled={disabled}
         >
@@ -64,12 +60,7 @@ export function ReserveInventoryForEventButton({
 
 function PlusIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 256 256"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 256 256" fill="currentColor" className={className} aria-hidden="true">
       <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
     </svg>
   );

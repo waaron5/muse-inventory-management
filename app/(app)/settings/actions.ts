@@ -35,9 +35,7 @@ export async function updateProfileSettings({
     throw new Error(`Names must be ${PROFILE_NAME_MAX_LENGTH} characters or less.`);
   }
 
-  const displayName = [normalizedFirstName, normalizedLastName]
-    .filter(Boolean)
-    .join(" ");
+  const displayName = [normalizedFirstName, normalizedLastName].filter(Boolean).join(" ");
 
   await prisma.user.update({
     where: { id: session.user.id },
@@ -68,9 +66,7 @@ export async function updateEmail(email: string): Promise<void> {
   revalidatePath("/settings");
 }
 
-export async function updateEmailNotificationPreference(
-  enabled: boolean
-): Promise<void> {
+export async function updateEmailNotificationPreference(enabled: boolean): Promise<void> {
   const session = await getServerSession(authOptions);
   if (!session) throw new Error("Unauthorized");
 

@@ -1,9 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import {
-  InventoryImageUploadError,
-  saveInventoryImageFile,
-} from "@/lib/inventory-image-storage";
+import { InventoryImageUploadError, saveInventoryImageFile } from "@/lib/inventory-image-storage";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -32,9 +29,6 @@ export async function POST(request: Request) {
     }
 
     console.error("Inventory image upload failed", error);
-    return Response.json(
-      { error: "Unable to upload image right now." },
-      { status: 500 }
-    );
+    return Response.json({ error: "Unable to upload image right now." }, { status: 500 });
   }
 }

@@ -22,7 +22,7 @@ export function EventRowActions({
   async function handleDelete() {
     if (
       !confirm(
-        `Delete "${event.eventName}"? This cannot be undone. Any active reservations must be canceled first.`
+        `Delete "${event.eventName}"? This cannot be undone. Any active reservations must be canceled first.`,
       )
     )
       return;

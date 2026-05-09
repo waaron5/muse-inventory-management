@@ -41,9 +41,7 @@ export function NotificationPreferencesClient({
             <span className="settings-toggle-description">
               Receive email updates when your reservation requests are approved or rejected.
             </span>
-            {saving && (
-              <span className="settings-toggle-status">Saving preference...</span>
-            )}
+            {saving && <span className="settings-toggle-status">Saving preference...</span>}
           </span>
           <span className="settings-switch">
             <input

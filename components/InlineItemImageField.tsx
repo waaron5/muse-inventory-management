@@ -86,11 +86,7 @@ export function InlineItemImageField({
         {displayedImageUrl ? (
           <>
             <span className="inventory-image-upload-preview">
-              <img
-                src={displayedImageUrl}
-                alt=""
-                className="inventory-image-upload-preview-img"
-              />
+              <img src={displayedImageUrl} alt="" className="inventory-image-upload-preview-img" />
             </span>
             <span className="inventory-image-upload-copy inventory-image-upload-copy-left">
               <span className="inventory-image-upload-meta">
@@ -104,9 +100,7 @@ export function InlineItemImageField({
             <span className="inventory-image-upload-icon-wrap">
               <ImageUploadIcon className="inventory-image-upload-icon" />
             </span>
-            <span className="inventory-image-upload-meta">
-              {INVENTORY_IMAGE_REQUIREMENTS_TEXT}
-            </span>
+            <span className="inventory-image-upload-meta">{INVENTORY_IMAGE_REQUIREMENTS_TEXT}</span>
           </>
         )}
       </button>

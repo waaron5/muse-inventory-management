@@ -53,7 +53,7 @@ export async function updateEvent(
     startDate?: string;
     endDate?: string;
     notes?: string;
-  }
+  },
 ) {
   const session = await requireAdmin();
 
@@ -102,12 +102,11 @@ export async function deleteEvent(id: string) {
 
   if (!event) throw new Error("Event not found");
 
-  const activeCount =
-    event._count.inventoryReservations + event._count.giftReservations;
+  const activeCount = event._count.inventoryReservations + event._count.giftReservations;
 
   if (activeCount > 0) {
     throw new Error(
-      `Cannot delete event with ${activeCount} active reservation(s). Cancel or reject them first.`
+      `Cannot delete event with ${activeCount} active reservation(s). Cancel or reject them first.`,
     );
   }
 

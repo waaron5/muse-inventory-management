@@ -4,11 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { GiftDetailClient } from "../GiftDetailClient";
 import { getGiftDetailData } from "../detail-data";
 
-export default async function EditGiftPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function EditGiftPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
 

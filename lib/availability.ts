@@ -4,12 +4,7 @@ import { prisma } from "./db";
  * Returns true if two date ranges overlap (inclusive of boundary dates).
  * Overlap condition: A.start <= B.end AND A.end >= B.start
  */
-export function datesOverlap(
-  aStart: Date,
-  aEnd: Date,
-  bStart: Date,
-  bEnd: Date
-): boolean {
+export function datesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
   return aStart <= bEnd && aEnd >= bStart;
 }
 
@@ -23,7 +18,7 @@ export async function getInventoryAvailableQty(
   inventoryItemId: string,
   eventStart: Date,
   eventEnd: Date,
-  excludeReservationIds?: string | string[]
+  excludeReservationIds?: string | string[],
 ): Promise<number> {
   const item = await prisma.inventoryItem.findUnique({
     where: { id: inventoryItemId },
@@ -56,9 +51,7 @@ export async function getInventoryAvailableQty(
 
   // Sum quantities of reservations whose events overlap with the requested window
   const allocatedQty = approvedReservations
-    .filter((r) =>
-      datesOverlap(eventStart, eventEnd, r.event.startDate, r.event.endDate)
-    )
+    .filter((r) => datesOverlap(eventStart, eventEnd, r.event.startDate, r.event.endDate))
     .reduce((sum, r) => sum + r.quantity, 0);
 
   return Math.max(0, item.quantity - allocatedQty);
@@ -74,7 +67,7 @@ export async function getGiftAvailableQty(
   giftItemId: string,
   _eventStart?: Date,
   _eventEnd?: Date,
-  excludeReservationId?: string
+  excludeReservationId?: string,
 ): Promise<number> {
   const item = await prisma.giftItem.findUnique({
     where: { id: giftItemId },
@@ -96,7 +89,7 @@ export async function getGiftAvailableQty(
 
   const allocatedQty = approvedReservations.reduce(
     (sum, reservation) => sum + reservation.quantity,
-    0
+    0,
   );
 
   return Math.max(0, item.quantity - allocatedQty);
@@ -105,22 +98,11 @@ export async function getGiftAvailableQty(
 /**
  * Infer event status from dates.
  */
-export function getEventStatus(
-  startDate: Date,
-  endDate: Date
-): "past" | "current" | "future" {
+export function getEventStatus(startDate: Date, endDate: Date): "past" | "current" | "future" {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const start = new Date(
-    startDate.getFullYear(),
-    startDate.getMonth(),
-    startDate.getDate()
-  );
-  const end = new Date(
-    endDate.getFullYear(),
-    endDate.getMonth(),
-    endDate.getDate()
-  );
+  const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+  const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
 
   if (end < today) return "past";
   if (start <= today && end >= today) return "current";

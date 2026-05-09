@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 interface BulkSelectionContextValue {
   bulkSelectionActive: boolean;
@@ -20,14 +14,10 @@ export function BulkSelectionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({ bulkSelectionActive, setBulkSelectionActive }),
-    [bulkSelectionActive]
+    [bulkSelectionActive],
   );
 
-  return (
-    <BulkSelectionContext.Provider value={value}>
-      {children}
-    </BulkSelectionContext.Provider>
-  );
+  return <BulkSelectionContext.Provider value={value}>{children}</BulkSelectionContext.Provider>;
 }
 
 export function useBulkSelectionActive() {

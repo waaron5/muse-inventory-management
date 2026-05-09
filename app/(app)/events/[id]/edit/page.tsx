@@ -4,11 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { EventDetailClient } from "../EventDetailClient";
 import { getEventDetailData } from "../detail-data";
 
-export default async function EditEventPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
 

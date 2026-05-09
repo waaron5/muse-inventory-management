@@ -1,8 +1,5 @@
 import { prisma } from "@/lib/db";
-import {
-  isStorageLocationName,
-  STORAGE_LOCATION_NAMES,
-} from "@/lib/storage-location-options";
+import { isStorageLocationName, STORAGE_LOCATION_NAMES } from "@/lib/storage-location-options";
 
 export async function getStorageLocationNames() {
   const locations = await prisma.storageLocation.findMany({
@@ -10,9 +7,7 @@ export async function getStorageLocationNames() {
   });
 
   const availableNames = new Set(
-    locations
-      .map((location) => location.name)
-      .filter(isStorageLocationName)
+    locations.map((location) => location.name).filter(isStorageLocationName),
   );
 
   if (availableNames.size === 0) {

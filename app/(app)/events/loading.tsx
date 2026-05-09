@@ -2,7 +2,15 @@ export default function EventsLoading() {
   return (
     <>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ width: 100, height: 32, background: "#e5e7eb", borderRadius: 6, marginBottom: 8 }} />
+        <div
+          style={{
+            width: 100,
+            height: 32,
+            background: "#e5e7eb",
+            borderRadius: 6,
+            marginBottom: 8,
+          }}
+        />
         <div style={{ width: 300, height: 14, background: "#e5e7eb", borderRadius: 6 }} />
       </div>
       <div className="skeleton-toolbar">
@@ -35,7 +43,10 @@ export default function EventsLoading() {
             <div className="events-loading-reservations">
               <div className="events-loading-summary">
                 <div className="skeleton-box" style={{ height: 14, width: 110 }} />
-                <div className="skeleton-box" style={{ height: 18, width: 84, borderRadius: 999 }} />
+                <div
+                  className="skeleton-box"
+                  style={{ height: 18, width: 84, borderRadius: 999 }}
+                />
               </div>
               <div className="events-loading-line-group">
                 <div className="skeleton-box" style={{ height: 14, width: "84%" }} />
@@ -47,7 +58,10 @@ export default function EventsLoading() {
             <div className="events-loading-reservations">
               <div className="events-loading-summary">
                 <div className="skeleton-box" style={{ height: 14, width: 96 }} />
-                <div className="skeleton-box" style={{ height: 18, width: 84, borderRadius: 999 }} />
+                <div
+                  className="skeleton-box"
+                  style={{ height: 18, width: 84, borderRadius: 999 }}
+                />
               </div>
               <div className="events-loading-line-group">
                 <div className="skeleton-box" style={{ height: 14, width: "72%" }} />
@@ -55,7 +69,10 @@ export default function EventsLoading() {
               </div>
             </div>
 
-            <div className="skeleton-box" style={{ height: 30, width: 30, borderRadius: 8, justifySelf: "end" }} />
+            <div
+              className="skeleton-box"
+              style={{ height: 30, width: 30, borderRadius: 8, justifySelf: "end" }}
+            />
           </div>
         ))}
       </div>

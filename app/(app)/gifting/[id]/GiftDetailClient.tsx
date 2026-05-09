@@ -53,7 +53,6 @@ function createDraft(data: GiftDetailData): GiftDraft {
   };
 }
 
-
 export function GiftDetailClient({
   data,
   isAdmin,
@@ -127,7 +126,7 @@ export function GiftDetailClient({
   async function handleDelete() {
     if (
       !confirm(
-        `Delete "${data.item.title}"? It will be marked used and moved to the bottom of gifting.`
+        `Delete "${data.item.title}"? It will be marked used and moved to the bottom of gifting.`,
       )
     ) {
       return;
@@ -147,10 +146,7 @@ export function GiftDetailClient({
       });
       router.push("/gifting");
     } catch (deleteError: unknown) {
-      toast(
-        deleteError instanceof Error ? deleteError.message : "Failed to delete item",
-        "error"
-      );
+      toast(deleteError instanceof Error ? deleteError.message : "Failed to delete item", "error");
     } finally {
       setDeleting(false);
     }
@@ -192,9 +188,7 @@ export function GiftDetailClient({
         router.refresh();
       }
     } catch (submitError: unknown) {
-      setError(
-        submitError instanceof Error ? submitError.message : "Something went wrong"
-      );
+      setError(submitError instanceof Error ? submitError.message : "Something went wrong");
     } finally {
       setSaving(false);
     }
@@ -216,21 +210,14 @@ export function GiftDetailClient({
   return (
     <>
       <DetailTopBar
-        crumbs={[
-          { label: "Gifting", href: "/gifting" },
-          { label: data.item.title },
-        ]}
+        crumbs={[{ label: "Gifting", href: "/gifting" }, { label: data.item.title }]}
         actions={headerActions}
       />
 
       <div className="detail-grid">
         <div className="detail-main">
           {isEditing ? (
-            <form
-              id={GIFT_DETAIL_FORM_ID}
-              onSubmit={handleSubmit}
-              className="detail-edit-form"
-            >
+            <form id={GIFT_DETAIL_FORM_ID} onSubmit={handleSubmit} className="detail-edit-form">
               <div className="detail-card detail-card-with-media">
                 <div className="detail-image-section">
                   <InlineItemImageField
@@ -257,9 +244,7 @@ export function GiftDetailClient({
                 <div className="detail-fields detail-edit-fields">
                   <div className="detail-row">
                     <span className="detail-label">Status</span>
-                    <StatusBadge
-                      variant={data.item.status === "ACTIVE" ? "active" : "consumed"}
-                    />
+                    <StatusBadge variant={data.item.status === "ACTIVE" ? "active" : "consumed"} />
                   </div>
                   <div className="detail-row">
                     <label className="detail-label" htmlFor="gift-title">
@@ -288,9 +273,7 @@ export function GiftDetailClient({
                         type="text"
                         className="form-input"
                         value={draft.description}
-                        onChange={(event) =>
-                          updateDraft("description", event.target.value)
-                        }
+                        onChange={(event) => updateDraft("description", event.target.value)}
                         maxLength={500}
                         disabled={saving}
                       />
@@ -307,9 +290,7 @@ export function GiftDetailClient({
                         className="form-input"
                         min={0}
                         value={draft.quantity}
-                        onChange={(event) =>
-                          updateDraft("quantity", event.target.value)
-                        }
+                        onChange={(event) => updateDraft("quantity", event.target.value)}
                         required
                         disabled={saving}
                       />
@@ -324,9 +305,7 @@ export function GiftDetailClient({
                         id="gift-location"
                         className="form-input"
                         value={draft.currentLocation}
-                        onChange={(event) =>
-                          updateDraft("currentLocation", event.target.value)
-                        }
+                        onChange={(event) => updateDraft("currentLocation", event.target.value)}
                         required
                         disabled={saving}
                       >
@@ -339,11 +318,11 @@ export function GiftDetailClient({
                       </select>
                       {data.item.currentLocation &&
                         !(data.locationOptions as readonly string[]).includes(
-                          data.item.currentLocation
+                          data.item.currentLocation,
                         ) && (
                           <p className="form-hint">
-                            This item has a legacy location. Choose one of the
-                            approved storage locations before saving.
+                            This item has a legacy location. Choose one of the approved storage
+                            locations before saving.
                           </p>
                         )}
                     </span>
@@ -382,9 +361,7 @@ export function GiftDetailClient({
               <div className="detail-fields">
                 <div className="detail-row">
                   <span className="detail-label">Status</span>
-                  <StatusBadge
-                    variant={data.item.status === "ACTIVE" ? "active" : "consumed"}
-                  />
+                  <StatusBadge variant={data.item.status === "ACTIVE" ? "active" : "consumed"} />
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Item Name</span>
@@ -418,9 +395,7 @@ export function GiftDetailClient({
           )}
 
           <div className="reservations-section">
-            <h3 className="section-title">
-              Active Requests ({data.activeReservations.length})
-            </h3>
+            <h3 className="section-title">Active Requests ({data.activeReservations.length})</h3>
             {data.activeReservations.length === 0 ? (
               <p className="empty-hint">No active requests.</p>
             ) : (
@@ -463,9 +438,7 @@ export function GiftDetailClient({
                       <td>{reservation.quantity}</td>
                       <td>
                         <StatusBadge
-                          variant={getGiftReservationStatusVariant(
-                            reservation.status
-                          )}
+                          variant={getGiftReservationStatusVariant(reservation.status)}
                           label={getGiftReservationStatusLabel(reservation.status)}
                         />
                       </td>
@@ -508,20 +481,15 @@ export function GiftDetailClient({
                     />
                   </div>
                   <div className="res-meta">
-                    {reservation.eventCompanyName} ·{" "}
-                    {formatShortDate(reservation.eventStartDate)}
+                    {reservation.eventCompanyName} · {formatShortDate(reservation.eventStartDate)}
                     {" – "}
                     {formatShortDate(reservation.eventEndDate, true)}
                   </div>
                   <div className="res-meta">
-                    Qty: {reservation.quantity} · By:{" "}
-                    {reservation.requestedByName}
-                    {reservation.approvedByName &&
-                      ` · Approved: ${reservation.approvedByName}`}
+                    Qty: {reservation.quantity} · By: {reservation.requestedByName}
+                    {reservation.approvedByName && ` · Approved: ${reservation.approvedByName}`}
                   </div>
-                  {reservation.notes && (
-                    <p className="res-notes">{reservation.notes}</p>
-                  )}
+                  {reservation.notes && <p className="res-notes">{reservation.notes}</p>}
                 </div>
               ))}
             </div>

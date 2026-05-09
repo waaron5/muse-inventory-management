@@ -11,9 +11,7 @@ interface NewReservationButtonProps {
   availableEvents: ReserveInventoryEventOption[];
 }
 
-export function NewReservationButton({
-  availableEvents,
-}: NewReservationButtonProps) {
+export function NewReservationButton({ availableEvents }: NewReservationButtonProps) {
   const [open, setOpen] = useState(false);
   const bulkSelectionActive = useBulkSelectionActive();
   const hasAvailableEvents = availableEvents.length > 0;

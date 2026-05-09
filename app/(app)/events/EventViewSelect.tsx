@@ -27,11 +27,7 @@ export function EventViewSelect({ value }: { value: EventView }) {
   return (
     <label className="events-view-select-label">
       <span className="sr-only">Event view</span>
-      <select
-        className="events-view-select"
-        value={value}
-        onChange={handleChange}
-      >
+      <select className="events-view-select" value={value} onChange={handleChange}>
         <option value="upcoming">Upcoming Events</option>
         <option value="past">Past Events</option>
       </select>

@@ -7,11 +7,7 @@ import { ToastProvider } from "@/components/Toast";
 import { DemoBanner } from "@/components/DemoBanner";
 import { getNotificationIndicator } from "@/lib/notifications";
 
-export default async function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -31,9 +27,7 @@ export default async function AppLayout({
         <DemoBanner />
         <AppShell
           user={session.user}
-          notificationsHasAttention={
-            notificationIndicator.notificationsHasAttention
-          }
+          notificationsHasAttention={notificationIndicator.notificationsHasAttention}
           notificationAt={notificationIndicator.latestNotificationAt}
         >
           {children}

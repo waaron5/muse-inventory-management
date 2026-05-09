@@ -30,10 +30,7 @@ export default async function UsersPage() {
   return (
     <>
       <DetailTopBar
-        crumbs={[
-          { label: "Settings", href: "/settings" },
-          { label: "Team Members" },
-        ]}
+        crumbs={[{ label: "Settings", href: "/settings" }, { label: "Team Members" }]}
       />
 
       <div className="settings-page">
@@ -49,10 +46,50 @@ export default async function UsersPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--gray-200)" }}>
-                  <th style={{ textAlign: "left", padding: "8px 0", fontWeight: 600, color: "var(--gray-500)", fontSize: 12 }}>Name</th>
-                  <th style={{ textAlign: "left", padding: "8px 0", fontWeight: 600, color: "var(--gray-500)", fontSize: 12 }}>Email</th>
-                  <th style={{ textAlign: "left", padding: "8px 0", fontWeight: 600, color: "var(--gray-500)", fontSize: 12 }}>Role</th>
-                  <th style={{ textAlign: "left", padding: "8px 0", fontWeight: 600, color: "var(--gray-500)", fontSize: 12 }}>Joined</th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontWeight: 600,
+                      color: "var(--gray-500)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Name
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontWeight: 600,
+                      color: "var(--gray-500)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Email
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontWeight: 600,
+                      color: "var(--gray-500)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Role
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontWeight: 600,
+                      color: "var(--gray-500)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Joined
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -62,9 +99,15 @@ export default async function UsersPage() {
                       {u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.name}
                     </td>
                     <td style={{ padding: "10px 0", color: "var(--gray-600)" }}>{u.email}</td>
-                    <td style={{ padding: "10px 0", color: "var(--gray-600)" }}>{getRoleLabel(u.role)}</td>
+                    <td style={{ padding: "10px 0", color: "var(--gray-600)" }}>
+                      {getRoleLabel(u.role)}
+                    </td>
                     <td style={{ padding: "10px 0", color: "var(--gray-500)", fontSize: 13 }}>
-                      {u.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      {u.createdAt.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </td>
                   </tr>
                 ))}

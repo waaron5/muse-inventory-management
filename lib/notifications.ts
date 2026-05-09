@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/db";
-import { getGiftReservationStatusLabel, getGiftReservationStatusVariant } from "@/lib/gift-reservation-ui";
+import {
+  getGiftReservationStatusLabel,
+  getGiftReservationStatusVariant,
+} from "@/lib/gift-reservation-ui";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import { getTodayStart, formatAuditDate, formatDateRange } from "@/lib/date-utils";
 
@@ -79,11 +82,7 @@ function getDisplayName(name: string | null | undefined) {
 }
 
 export function getFirstName(name: string | null | undefined, email: string | null | undefined) {
-  return (
-    name?.trim().split(/\s+/)[0] ||
-    email?.split("@")[0] ||
-    "there"
-  );
+  return name?.trim().split(/\s+/)[0] || email?.split("@")[0] || "there";
 }
 
 export async function getNotificationIndicator({
@@ -96,73 +95,19 @@ export async function getNotificationIndicator({
   const todayStart = getTodayStart();
 
   if (isAdmin) {
-    const [latestPendingInventory, latestPendingGift, latestAwaitingReturn] =
-      await Promise.all([
-        prisma.inventoryReservation.findFirst({
-          where: { status: "PENDING" },
-          orderBy: { createdAt: "desc" },
-          select: { createdAt: true },
-        }),
-        prisma.giftReservation.findFirst({
-          where: { status: "PENDING" },
-          orderBy: { createdAt: "desc" },
-          select: { createdAt: true },
-        }),
-        prisma.inventoryReservation.findFirst({
-          where: {
-            status: "APPROVED",
-            event: { endDate: { lt: todayStart } },
-          },
-          orderBy: { event: { endDate: "desc" } },
-          select: {
-            event: { select: { endDate: true } },
-          },
-        }),
-      ]);
-
-    const latestNotificationAt = getLatestDate(
-      latestPendingInventory?.createdAt,
-      latestPendingGift?.createdAt,
-      latestAwaitingReturn?.event.endDate
-    );
-
-    return {
-      notificationsHasAttention: Boolean(
-        latestPendingInventory || latestPendingGift || latestAwaitingReturn
-      ),
-      latestNotificationAt: latestNotificationAt?.toISOString() ?? null,
-    };
-  }
-
-  const [latestInventoryUpdate, latestGiftUpdate, latestReturnReminder] =
-    await Promise.all([
+    const [latestPendingInventory, latestPendingGift, latestAwaitingReturn] = await Promise.all([
       prisma.inventoryReservation.findFirst({
-        where: {
-          requestedById: userId,
-          lastModifiedById: { not: userId },
-          OR: [
-            { status: { in: ["REJECTED", "CANCELED", "COMPLETED"] } },
-            {
-              status: "APPROVED",
-              event: { endDate: { gte: todayStart } },
-            },
-          ],
-        },
-        orderBy: { updatedAt: "desc" },
-        select: { updatedAt: true },
+        where: { status: "PENDING" },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
       }),
       prisma.giftReservation.findFirst({
-        where: {
-          requestedById: userId,
-          status: { in: ["APPROVED", "REJECTED", "COMPLETED"] },
-          lastModifiedById: { not: userId },
-        },
-        orderBy: { updatedAt: "desc" },
-        select: { updatedAt: true },
+        where: { status: "PENDING" },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
       }),
       prisma.inventoryReservation.findFirst({
         where: {
-          requestedById: userId,
           status: "APPROVED",
           event: { endDate: { lt: todayStart } },
         },
@@ -173,10 +118,62 @@ export async function getNotificationIndicator({
       }),
     ]);
 
+    const latestNotificationAt = getLatestDate(
+      latestPendingInventory?.createdAt,
+      latestPendingGift?.createdAt,
+      latestAwaitingReturn?.event.endDate,
+    );
+
+    return {
+      notificationsHasAttention: Boolean(
+        latestPendingInventory || latestPendingGift || latestAwaitingReturn,
+      ),
+      latestNotificationAt: latestNotificationAt?.toISOString() ?? null,
+    };
+  }
+
+  const [latestInventoryUpdate, latestGiftUpdate, latestReturnReminder] = await Promise.all([
+    prisma.inventoryReservation.findFirst({
+      where: {
+        requestedById: userId,
+        lastModifiedById: { not: userId },
+        OR: [
+          { status: { in: ["REJECTED", "CANCELED", "COMPLETED"] } },
+          {
+            status: "APPROVED",
+            event: { endDate: { gte: todayStart } },
+          },
+        ],
+      },
+      orderBy: { updatedAt: "desc" },
+      select: { updatedAt: true },
+    }),
+    prisma.giftReservation.findFirst({
+      where: {
+        requestedById: userId,
+        status: { in: ["APPROVED", "REJECTED", "COMPLETED"] },
+        lastModifiedById: { not: userId },
+      },
+      orderBy: { updatedAt: "desc" },
+      select: { updatedAt: true },
+    }),
+    prisma.inventoryReservation.findFirst({
+      where: {
+        requestedById: userId,
+        status: "APPROVED",
+        event: { endDate: { lt: todayStart } },
+      },
+      orderBy: { event: { endDate: "desc" } },
+      select: {
+        event: { select: { endDate: true } },
+      },
+    }),
+  ]);
+
   const latestNotificationAt = getLatestDate(
     latestInventoryUpdate?.updatedAt,
     latestGiftUpdate?.updatedAt,
-    latestReturnReminder?.event.endDate
+    latestReturnReminder?.event.endDate,
   );
 
   return {
@@ -288,7 +285,7 @@ export async function getDashboardNotifications({
         requesterName: getDisplayName(reservation.requestedBy.name),
         meta: `${reservation.event.companyName} • ${formatDateRange(
           reservation.event.startDate,
-          reservation.event.endDate
+          reservation.event.endDate,
         )}`,
         primaryAction: {
           type: "approveInventory" as const,
@@ -309,7 +306,7 @@ export async function getDashboardNotifications({
         requesterName: getDisplayName(reservation.requestedBy.name),
         meta: `${reservation.event.companyName} • ${formatDateRange(
           reservation.event.startDate,
-          reservation.event.endDate
+          reservation.event.endDate,
         )}`,
         primaryAction: {
           type: "approveGift" as const,
@@ -328,7 +325,7 @@ export async function getDashboardNotifications({
         title: "Return",
         description: `"${reservation.inventoryItem.title}" from "${reservation.event.eventName}" still needs to be checked back in.`,
         meta: `${getDisplayName(reservation.requestedBy.name)} • Event ended ${formatDate(
-          reservation.event.endDate
+          reservation.event.endDate,
         )}`,
         primaryAction: {
           type: "open" as const,
@@ -431,7 +428,7 @@ export async function getDashboardNotifications({
       title: "Return",
       description: `Return "${reservation.inventoryItem.title}" from "${reservation.event.eventName}".`,
       meta: `${reservation.event.companyName} • Event ended ${formatDate(
-        reservation.event.endDate
+        reservation.event.endDate,
       )}`,
       primaryAction: {
         type: "open" as const,
@@ -449,11 +446,9 @@ export async function getDashboardNotifications({
       statusLabel: getInventoryReservationStatusLabel(reservation.status),
       title: "Reservation",
       description: `Your request for ${reservation.quantity}x "${reservation.inventoryItem.title}" for "${reservation.event.eventName}" was ${getInventoryReservationStatusLabel(
-        reservation.status
+        reservation.status,
       ).toLowerCase()}.`,
-      meta: `${reservation.event.companyName} • Updated ${formatDate(
-        reservation.updatedAt
-      )}`,
+      meta: `${reservation.event.companyName} • Updated ${formatDate(reservation.updatedAt)}`,
     })),
     ...giftUpdates.map((reservation) => ({
       id: `gift-update-${reservation.id}`,
@@ -465,11 +460,9 @@ export async function getDashboardNotifications({
       statusLabel: getGiftReservationStatusLabel(reservation.status),
       title: "Reservation",
       description: `Your request for ${reservation.quantity}x "${reservation.giftItem.title}" for "${reservation.event.eventName}" was ${getGiftReservationStatusLabel(
-        reservation.status
+        reservation.status,
       ).toLowerCase()}.`,
-      meta: `${reservation.event.companyName} • Updated ${formatDate(
-        reservation.updatedAt
-      )}`,
+      meta: `${reservation.event.companyName} • Updated ${formatDate(reservation.updatedAt)}`,
     })),
   ];
 

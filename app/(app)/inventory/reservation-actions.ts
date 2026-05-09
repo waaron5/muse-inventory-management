@@ -31,10 +31,7 @@ function revalidateInventoryReservationViews(itemIds: string[], eventId: string)
   }
 }
 
-export async function checkInventoryAvailability(
-  inventoryItemId: string,
-  eventId: string
-) {
+export async function checkInventoryAvailability(inventoryItemId: string, eventId: string) {
   await requireSession();
 
   const event = await prisma.event.findUnique({
@@ -43,11 +40,7 @@ export async function checkInventoryAvailability(
   });
   if (!event) throw new Error("Event not found");
 
-  return getInventoryAvailableQty(
-    inventoryItemId,
-    event.startDate,
-    event.endDate
-  );
+  return getInventoryAvailableQty(inventoryItemId, event.startDate, event.endDate);
 }
 
 export async function searchReservableInventoryItems(query: string) {
@@ -159,19 +152,12 @@ export async function createInventoryReservationsBatch(formData: {
     },
     orderBy: [{ inventoryItemId: "asc" }, { createdAt: "asc" }],
   });
-  const existingReservationsByItemId = new Map<
-    string,
-    typeof existingActiveReservations
-  >();
+  const existingReservationsByItemId = new Map<string, typeof existingActiveReservations>();
 
   for (const reservation of existingActiveReservations) {
-    const reservationsForItem =
-      existingReservationsByItemId.get(reservation.inventoryItemId) ?? [];
+    const reservationsForItem = existingReservationsByItemId.get(reservation.inventoryItemId) ?? [];
     reservationsForItem.push(reservation);
-    existingReservationsByItemId.set(
-      reservation.inventoryItemId,
-      reservationsForItem
-    );
+    existingReservationsByItemId.set(reservation.inventoryItemId, reservationsForItem);
   }
 
   for (const item of normalizedItems) {
@@ -181,41 +167,39 @@ export async function createInventoryReservationsBatch(formData: {
       throw new Error(`"${inventoryItem.title}" is not available for new reservations.`);
     }
 
-    const existingReservations =
-      existingReservationsByItemId.get(item.inventoryItemId) ?? [];
+    const existingReservations = existingReservationsByItemId.get(item.inventoryItemId) ?? [];
     const existingApprovedReservationIds = existingReservations
       .filter((reservation) => reservation.status === "APPROVED")
       .map((reservation) => reservation.id);
     const requestedTotalQuantity =
-      existingReservations.reduce(
-        (sum, reservation) => sum + reservation.quantity,
-        0
-      ) + item.quantity;
+      existingReservations.reduce((sum, reservation) => sum + reservation.quantity, 0) +
+      item.quantity;
     const available = await getInventoryAvailableQty(
       item.inventoryItemId,
       event.startDate,
       event.endDate,
-      existingApprovedReservationIds
+      existingApprovedReservationIds,
     );
 
     if (requestedTotalQuantity > available) {
-      throw new Error(`Only ${available} unit(s) of "${inventoryItem.title}" are available for that event window.`);
+      throw new Error(
+        `Only ${available} unit(s) of "${inventoryItem.title}" are available for that event window.`,
+      );
     }
   }
 
   const reservations = await prisma.$transaction(async (tx) => {
     const created = await Promise.all(
       normalizedItems.map(async (item) => {
-        const existingReservations =
-          existingReservationsByItemId.get(item.inventoryItemId) ?? [];
+        const existingReservations = existingReservationsByItemId.get(item.inventoryItemId) ?? [];
         const [primaryReservation, ...duplicateReservations] = existingReservations;
         const existingQuantity = existingReservations.reduce(
           (sum, reservation) => sum + reservation.quantity,
-          0
+          0,
         );
         const nextQuantity = existingQuantity + item.quantity;
         const hadApprovedReservation = existingReservations.some(
-          (reservation) => reservation.status === "APPROVED"
+          (reservation) => reservation.status === "APPROVED",
         );
 
         if (primaryReservation) {
@@ -253,9 +237,7 @@ export async function createInventoryReservationsBatch(formData: {
             action: "merged" as const,
             previousQuantity: existingQuantity,
             revertedToPending: !autoApproved && hadApprovedReservation,
-            mergedDuplicateIds: duplicateReservations.map(
-              (reservation) => reservation.id
-            ),
+            mergedDuplicateIds: duplicateReservations.map((reservation) => reservation.id),
           };
         }
 
@@ -287,7 +269,7 @@ export async function createInventoryReservationsBatch(formData: {
           revertedToPending: false,
           mergedDuplicateIds: [] as string[],
         };
-      })
+      }),
     );
 
     if (autoApproved) {
@@ -296,8 +278,8 @@ export async function createInventoryReservationsBatch(formData: {
           tx.inventoryItem.update({
             where: { id: itemId },
             data: { updatedById: session.user.id },
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -317,27 +299,26 @@ export async function createInventoryReservationsBatch(formData: {
             : `Updated reservation for "${reservation.inventoryItem.title}" for event "${reservation.event.eventName}" — qty ${reservation.previousQuantity} → ${reservation.quantity}${reservation.revertedToPending ? " (pending approval again)" : ""}`,
       });
 
-      const mergedDuplicateAudits = reservation.mergedDuplicateIds.map(
-        (reservationId) =>
-          logAudit({
-            entityType: "INVENTORY_RESERVATION",
-            entityId: reservationId,
-            actionType: "CANCELED",
-            performedById: session.user.id,
-            summary: `Merged duplicate active reservation into "${reservation.inventoryItem.title}" for event "${reservation.event.eventName}"`,
-          })
+      const mergedDuplicateAudits = reservation.mergedDuplicateIds.map((reservationId) =>
+        logAudit({
+          entityType: "INVENTORY_RESERVATION",
+          entityId: reservationId,
+          actionType: "CANCELED",
+          performedById: session.user.id,
+          summary: `Merged duplicate active reservation into "${reservation.inventoryItem.title}" for event "${reservation.event.eventName}"`,
+        }),
       );
 
       return [primaryAudit, ...mergedDuplicateAudits];
-    })
+    }),
   );
 
   const createdCount = reservations.filter(
-    (reservation) => reservation.action === "created"
+    (reservation) => reservation.action === "created",
   ).length;
   const mergedCount = reservations.length - createdCount;
   const revertedToPendingCount = reservations.filter(
-    (reservation) => reservation.revertedToPending
+    (reservation) => reservation.revertedToPending,
   ).length;
 
   revalidateInventoryReservationViews(itemIds, formData.eventId);
@@ -356,7 +337,7 @@ export async function createInventoryReservationsBatch(formData: {
               eventCompany: event.companyName,
             });
             return sendEmail({ to: adminEmails, subject, html });
-          })
+          }),
         );
       }
     })().catch((err) => console.error("Email dispatch failed:", err));
@@ -405,7 +386,9 @@ export async function approveInventoryReservation(id: string, notes?: string) {
     include: {
       event: true,
       inventoryItem: true,
-      requestedBy: { select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true } },
+      requestedBy: {
+        select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true },
+      },
     },
   });
 
@@ -416,12 +399,12 @@ export async function approveInventoryReservation(id: string, notes?: string) {
     reservation.inventoryItemId,
     reservation.event.startDate,
     reservation.event.endDate,
-    id
+    id,
   );
 
   if (reservation.quantity > available) {
     throw new Error(
-      `Insufficient availability: only ${available} unit(s) available for this event window now.`
+      `Insufficient availability: only ${available} unit(s) available for this event window now.`,
     );
   }
 
@@ -454,14 +437,19 @@ export async function approveInventoryReservation(id: string, notes?: string) {
   revalidateInventoryReservationViews([reservation.inventoryItemId], reservation.eventId);
 
   if (reservation.requestedBy.emailNotificationsEnabled) {
-    const firstName = getFirstName(reservation.requestedBy.firstName ?? reservation.requestedBy.name, reservation.requestedBy.email);
+    const firstName = getFirstName(
+      reservation.requestedBy.firstName ?? reservation.requestedBy.name,
+      reservation.requestedBy.email,
+    );
     const { subject, html } = buildInventoryApprovedEmail({
       requesterFirstName: firstName,
       itemTitle: reservation.inventoryItem.title,
       quantity: reservation.quantity,
       eventName: reservation.event.eventName,
     });
-    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) => console.error("Email dispatch failed:", err));
+    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) =>
+      console.error("Email dispatch failed:", err),
+    );
   }
 
   return { success: true };
@@ -475,7 +463,9 @@ export async function rejectInventoryReservation(id: string, notes?: string) {
     include: {
       inventoryItem: true,
       event: { select: { eventName: true } },
-      requestedBy: { select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true } },
+      requestedBy: {
+        select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true },
+      },
     },
   });
 
@@ -503,14 +493,19 @@ export async function rejectInventoryReservation(id: string, notes?: string) {
   revalidateInventoryReservationViews([reservation.inventoryItemId], reservation.eventId);
 
   if (reservation.requestedBy.emailNotificationsEnabled) {
-    const firstName = getFirstName(reservation.requestedBy.firstName ?? reservation.requestedBy.name, reservation.requestedBy.email);
+    const firstName = getFirstName(
+      reservation.requestedBy.firstName ?? reservation.requestedBy.name,
+      reservation.requestedBy.email,
+    );
     const { subject, html } = buildInventoryRejectedEmail({
       requesterFirstName: firstName,
       itemTitle: reservation.inventoryItem.title,
       quantity: reservation.quantity,
       eventName: reservation.event.eventName,
     });
-    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) => console.error("Email dispatch failed:", err));
+    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) =>
+      console.error("Email dispatch failed:", err),
+    );
   }
 
   return { success: true };
@@ -526,10 +521,7 @@ export async function cancelInventoryReservation(id: string) {
 
   if (!reservation) throw new Error("Reservation not found");
 
-  if (
-    reservation.requestedById !== session.user.id &&
-    session.user.role !== "ADMIN"
-  ) {
+  if (reservation.requestedById !== session.user.id && session.user.role !== "ADMIN") {
     throw new Error("Forbidden");
   }
 
@@ -560,12 +552,10 @@ export async function cancelInventoryReservation(id: string) {
 export async function returnInventoryReservation(
   id: string,
   returnLocation: string,
-  notes?: string
+  notes?: string,
 ) {
   const session = await requireSession();
-  const normalizedReturnLocation = await requireStorageLocationName(
-    returnLocation
-  );
+  const normalizedReturnLocation = await requireStorageLocationName(returnLocation);
 
   const reservation = await prisma.inventoryReservation.findUnique({
     where: { id },
@@ -577,10 +567,7 @@ export async function returnInventoryReservation(
 
   if (!reservation) throw new Error("Reservation not found");
 
-  if (
-    reservation.requestedById !== session.user.id &&
-    session.user.role !== "ADMIN"
-  ) {
+  if (reservation.requestedById !== session.user.id && session.user.role !== "ADMIN") {
     throw new Error("Forbidden");
   }
 
@@ -652,10 +639,7 @@ export async function removeInventoryReservationHistory(id: string) {
 
   if (!reservation) throw new Error("Reservation not found");
 
-  if (
-    reservation.requestedById !== session.user.id &&
-    session.user.role !== "ADMIN"
-  ) {
+  if (reservation.requestedById !== session.user.id && session.user.role !== "ADMIN") {
     throw new Error("Forbidden");
   }
 
@@ -700,7 +684,7 @@ export async function removeInventoryReservationHistory(id: string) {
 
 export async function editInventoryReservation(
   id: string,
-  formData: { quantity: number; notes?: string }
+  formData: { quantity: number; notes?: string },
 ) {
   const session = await requireSession();
 
@@ -711,10 +695,7 @@ export async function editInventoryReservation(
 
   if (!reservation) throw new Error("Reservation not found");
 
-  if (
-    reservation.requestedById !== session.user.id &&
-    session.user.role !== "ADMIN"
-  ) {
+  if (reservation.requestedById !== session.user.id && session.user.role !== "ADMIN") {
     throw new Error("Forbidden");
   }
 
@@ -726,15 +707,14 @@ export async function editInventoryReservation(
     reservation.inventoryItemId,
     reservation.event.startDate,
     reservation.event.endDate,
-    id
+    id,
   );
 
   if (formData.quantity > available) {
     throw new Error(`Only ${available} unit(s) available for this event.`);
   }
 
-  const newStatus =
-    reservation.status === "APPROVED" ? "PENDING" : reservation.status;
+  const newStatus = reservation.status === "APPROVED" ? "PENDING" : reservation.status;
 
   await prisma.inventoryReservation.update({
     where: { id },
@@ -769,7 +749,9 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
     include: {
       event: { select: { startDate: true, endDate: true, eventName: true } },
       inventoryItem: { select: { title: true } },
-      requestedBy: { select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true } },
+      requestedBy: {
+        select: { email: true, name: true, firstName: true, emailNotificationsEnabled: true },
+      },
     },
   });
 
@@ -777,10 +759,11 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
     throw new Error("No pending reservations found for the selected IDs");
   }
 
-  const results: { approved: number; failed: Array<{ id: string; item: string; reason: string }> } = {
-    approved: 0,
-    failed: [],
-  };
+  const results: { approved: number; failed: Array<{ id: string; item: string; reason: string }> } =
+    {
+      approved: 0,
+      failed: [],
+    };
   const approvedReservations: typeof reservations = [];
 
   // Process sequentially so availability checks account for prior approvals in this batch
@@ -789,7 +772,7 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
       reservation.inventoryItemId,
       reservation.event.startDate,
       reservation.event.endDate,
-      reservation.id
+      reservation.id,
     );
 
     if (reservation.quantity > available) {
@@ -856,7 +839,7 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
               eventName: r.event.eventName,
             });
             return sendEmail({ to: requester.email, subject, html });
-          })
+          }),
         );
       }
     })().catch((err) => console.error("Email dispatch failed:", err));
@@ -868,13 +851,11 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
 export async function bulkReturnInventoryReservations(
   ids: string[],
   returnLocation: string,
-  notes?: string
+  notes?: string,
 ) {
   const session = await requireSession();
   const uniqueIds = [...new Set(ids)];
-  const normalizedReturnLocation = await requireStorageLocationName(
-    returnLocation
-  );
+  const normalizedReturnLocation = await requireStorageLocationName(returnLocation);
 
   if (uniqueIds.length === 0) throw new Error("No reservations selected");
 
@@ -897,7 +878,7 @@ export async function bulkReturnInventoryReservations(
   });
 
   const reservationsById = new Map(
-    reservations.map((reservation) => [reservation.id, reservation])
+    reservations.map((reservation) => [reservation.id, reservation]),
   );
   const results: {
     returned: number;
@@ -922,10 +903,7 @@ export async function bulkReturnInventoryReservations(
       continue;
     }
 
-    if (
-      reservation.requestedById !== session.user.id &&
-      session.user.role !== "ADMIN"
-    ) {
+    if (reservation.requestedById !== session.user.id && session.user.role !== "ADMIN") {
       results.failed.push({
         id,
         item: reservation.inventoryItem.title,
@@ -1027,7 +1005,7 @@ export async function bulkRemoveRejectedInventoryReservations(ids: string[]) {
   });
 
   const reservationsById = new Map(
-    reservations.map((reservation) => [reservation.id, reservation])
+    reservations.map((reservation) => [reservation.id, reservation]),
   );
   const results: {
     removed: number;
@@ -1051,10 +1029,7 @@ export async function bulkRemoveRejectedInventoryReservations(ids: string[]) {
       continue;
     }
 
-    if (
-      reservation.requestedById !== session.user.id &&
-      session.user.role !== "ADMIN"
-    ) {
+    if (reservation.requestedById !== session.user.id && session.user.role !== "ADMIN") {
       results.failed.push({
         id,
         item: reservation.inventoryItem.title,

@@ -380,7 +380,9 @@ tbody td {
   background: #fbfbfc;
   overflow: hidden;
   cursor: pointer;
-  transition: border-color 140ms ease, background-color 140ms ease;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
 }
 
 .image-upload-picker:hover {

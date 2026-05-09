@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ReserveInventoryModal, type ReserveInventoryEventOption } from "@/components/ReserveInventoryModal";
+import {
+  ReserveInventoryModal,
+  type ReserveInventoryEventOption,
+} from "@/components/ReserveInventoryModal";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { useToast } from "@/components/Toast";
 import { retireInventoryItem, activateInventoryItem } from "./actions";
@@ -44,7 +47,8 @@ export function InventoryActions({
     if (
       item.status === "ACTIVE" &&
       !confirm(`Retire "${item.title}"? It will no longer be available for new reservations.`)
-    ) return;
+    )
+      return;
     setLoading(true);
     try {
       if (item.status === "ACTIVE") {
