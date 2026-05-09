@@ -6,11 +6,9 @@ import { NotificationCards } from "./NotificationCards";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
-  if (!session) return null;
-
-  const isAdmin = session.user.role === "ADMIN";
+  const isAdmin = session?.user.role === "ADMIN";
   const notifications = await getDashboardNotifications({
-    userId: session.user.id,
+    userId: session?.user.id ?? "",
     isAdmin,
   });
   const emptyCopy = isAdmin

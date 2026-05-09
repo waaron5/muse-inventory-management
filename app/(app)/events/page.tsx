@@ -15,11 +15,13 @@ import {
 import { getEventStatus } from "@/lib/availability";
 import { getGiftReservationStatusLabel } from "@/lib/gift-reservation-ui";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
+import { formatDateRange } from "@/lib/date-utils";
+import { getCompanyTheme, type CompanyColorTheme } from "@/lib/company-themes";
 import { EventRowActions } from "./EventRowActions";
 import { EventViewSelect, type EventView } from "./EventViewSelect";
 import { ReserveInventoryForEventButton } from "./ReserveInventoryForEventButton";
 import { RequestGiftsForEventButton } from "./RequestGiftsForEventButton";
-import { InventoryPageShell } from "@/app/(app)/inventory/InventoryPageShell";
+import { PageShell } from "@/components/PageShell";
 
 const PAGE_SIZE = 20;
 const ACTIVE_RESERVATION_STATUSES = ["PENDING", "APPROVED"] as const;
@@ -33,65 +35,6 @@ const RESERVATION_STATUS_ORDER = {
   PENDING: 0,
   APPROVED: 1,
 } as const;
-
-type CompanyColorTheme = {
-  accent: string;
-  wash: string;
-  soft: string;
-  border: string;
-};
-
-const COMPANY_COLOR_THEMES = [
-  {
-    accent: "#64748b",
-    wash: "#eef2f6",
-    soft: "#f8fafc",
-    border: "#cbd5e1",
-  },
-  {
-    accent: "#0284c7",
-    wash: "#e0f4ff",
-    soft: "#f0faff",
-    border: "#bae6fd",
-  },
-  {
-    accent: "#16a34a",
-    wash: "#e9f8ee",
-    soft: "#f3fbf6",
-    border: "#bde8c9",
-  },
-  {
-    accent: "#7c3aed",
-    wash: "#f0eaff",
-    soft: "#f8f5ff",
-    border: "#d8caff",
-  },
-  {
-    accent: "#1d4ed8",
-    wash: "#e4ecff",
-    soft: "#f1f5ff",
-    border: "#b8c9ff",
-  },
-] as const satisfies readonly CompanyColorTheme[];
-
-const COMPANY_THEME_OVERRIDES: Record<string, number> = {
-  "horizon tech": 1,
-  "stellar brands": 4,
-};
-
-const COMPANY_CUSTOM_THEMES: Record<
-  string,
-  CompanyColorTheme
-> = {
-  instructure: {
-    accent: "#e11d48",
-    wash: "#ffedf2",
-    soft: "#fff6f8",
-    border: "#ffc9d6",
-  },
-  bamboohr: COMPANY_COLOR_THEMES[3],
-  "bamboo hr": COMPANY_COLOR_THEMES[3],
-};
 
 function compareEventRows(
   a: { computedStatus: "past" | "current" | "future"; startDate: Date; endDate: Date; eventName: string },
@@ -120,32 +63,6 @@ function compareReservations<T extends { status: string; createdAt: Date }>(a: T
   return b.createdAt.getTime() - a.createdAt.getTime();
 }
 
-function formatEventDateRange(startDate: Date, endDate: Date) {
-  return `${startDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  })} – ${endDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })}`;
-}
-
-function getCompanyTheme(companyName: string) {
-  const normalizedCompanyName = companyName.trim().toLowerCase();
-  const customTheme = COMPANY_CUSTOM_THEMES[normalizedCompanyName];
-  if (customTheme) return customTheme;
-
-  const overrideIndex = COMPANY_THEME_OVERRIDES[normalizedCompanyName];
-  if (overrideIndex !== undefined) return COMPANY_COLOR_THEMES[overrideIndex];
-
-  let hash = 0;
-  for (const char of companyName) {
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  }
-
-  return COMPANY_COLOR_THEMES[hash % COMPANY_COLOR_THEMES.length];
-}
 
 function normalizeEventView(view?: string): EventView {
   return EVENT_VIEWS.includes(view as EventView) ? (view as EventView) : "upcoming";
@@ -289,7 +206,7 @@ export default async function EventsPage({
   );
 
   return (
-    <InventoryPageShell
+    <PageShell
       title="Events"
       action={
         isAdmin ? (
@@ -379,7 +296,7 @@ export default async function EventsPage({
                                 <div className="table-meta-inline event-detail-line">
                                   <CalendarIcon className="table-meta-icon" />
                                   <span className="event-meta-text event-date-range">
-                                    {formatEventDateRange(event.startDate, event.endDate)}
+                                    {formatDateRange(event.startDate, event.endDate)}
                                   </span>
                                 </div>
                               </div>

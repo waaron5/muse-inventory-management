@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SearchBar } from "@/components/SearchBar";
 import { InventoryImagePreview } from "@/app/(app)/inventory/InventoryImagePreview";
-import { InventoryPageShell } from "@/app/(app)/inventory/InventoryPageShell";
+import { PageShell } from "@/components/PageShell";
 import { GiftRowActions } from "./GiftRowActions";
 
 export default async function GiftingPage({
@@ -73,7 +73,7 @@ export default async function GiftingPage({
   const totalCount = items.length;
 
   return (
-    <InventoryPageShell
+    <PageShell
       stripLegacyPaginationParams
       title="Gifting"
       action={

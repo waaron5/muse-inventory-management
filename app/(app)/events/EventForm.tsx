@@ -39,12 +39,12 @@ export function EventForm({ mode, event }: EventFormProps) {
     () => (
       <ol className="bc-list" aria-label="Breadcrumb">
         <li className="bc-item">
-          <a href="/events" className="bc-link">Events</a>
+          <Link href="/events" className="bc-link">Events</Link>
         </li>
         {mode === "edit" && event && (
           <li className="bc-item">
             <span className="bc-sep" aria-hidden="true">/</span>
-            <a href={`/events/${event.id}`} className="bc-link">{event.eventName}</a>
+            <Link href={`/events/${event.id}`} className="bc-link">{event.eventName}</Link>
           </li>
         )}
         <li className="bc-item">

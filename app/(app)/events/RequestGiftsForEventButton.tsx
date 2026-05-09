@@ -73,7 +73,7 @@ export function RequestGiftsForEventButton({
     setLoadingAvailability(true);
     setError("");
 
-    checkGiftAvailability(selectedGiftId, event.id)
+    checkGiftAvailability(selectedGiftId)
       .then((qty) => {
         if (cancelled) return;
         setAvailableQty(qty);

@@ -5,8 +5,6 @@ import {
   saveInventoryImageFile,
 } from "@/lib/inventory-image-storage";
 
-export const runtime = "nodejs";
-
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
 

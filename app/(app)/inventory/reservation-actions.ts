@@ -1,7 +1,5 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
@@ -17,11 +15,9 @@ import {
   buildInventoryReturnedEmail,
   buildBulkReturnSummaryEmail,
 } from "@/lib/email";
-
-function getTodayStart() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
+import { requireSession, requireAdmin } from "@/lib/action-helpers";
+import { getTodayStart } from "@/lib/date-utils";
+import { getFirstName } from "@/lib/notifications";
 
 function revalidateInventoryReservationViews(itemIds: string[], eventId: string) {
   revalidatePath("/inventory");
@@ -39,8 +35,7 @@ export async function checkInventoryAvailability(
   inventoryItemId: string,
   eventId: string
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) throw new Error("Unauthorized");
+  await requireSession();
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
@@ -53,18 +48,6 @@ export async function checkInventoryAvailability(
     event.startDate,
     event.endDate
   );
-}
-
-async function requireSession() {
-  const session = await getServerSession(authOptions);
-  if (!session) throw new Error("Unauthorized");
-  return session;
-}
-
-async function requireAdmin() {
-  const session = await requireSession();
-  if (session.user.role !== "ADMIN") throw new Error("Forbidden");
-  return session;
 }
 
 export async function searchReservableInventoryItems(query: string) {
@@ -376,7 +359,7 @@ export async function createInventoryReservationsBatch(formData: {
           })
         );
       }
-    })();
+    })().catch((err) => console.error("Email dispatch failed:", err));
   }
 
   return {
@@ -471,14 +454,14 @@ export async function approveInventoryReservation(id: string, notes?: string) {
   revalidateInventoryReservationViews([reservation.inventoryItemId], reservation.eventId);
 
   if (reservation.requestedBy.emailNotificationsEnabled) {
-    const firstName = reservation.requestedBy.firstName ?? reservation.requestedBy.name.split(" ")[0];
+    const firstName = getFirstName(reservation.requestedBy.firstName ?? reservation.requestedBy.name, reservation.requestedBy.email);
     const { subject, html } = buildInventoryApprovedEmail({
       requesterFirstName: firstName,
       itemTitle: reservation.inventoryItem.title,
       quantity: reservation.quantity,
       eventName: reservation.event.eventName,
     });
-    void sendEmail({ to: reservation.requestedBy.email, subject, html });
+    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) => console.error("Email dispatch failed:", err));
   }
 
   return { success: true };
@@ -497,6 +480,7 @@ export async function rejectInventoryReservation(id: string, notes?: string) {
   });
 
   if (!reservation) throw new Error("Reservation not found");
+  if (reservation.status !== "PENDING") throw new Error("Reservation is not pending");
 
   await prisma.inventoryReservation.update({
     where: { id },
@@ -519,14 +503,14 @@ export async function rejectInventoryReservation(id: string, notes?: string) {
   revalidateInventoryReservationViews([reservation.inventoryItemId], reservation.eventId);
 
   if (reservation.requestedBy.emailNotificationsEnabled) {
-    const firstName = reservation.requestedBy.firstName ?? reservation.requestedBy.name.split(" ")[0];
+    const firstName = getFirstName(reservation.requestedBy.firstName ?? reservation.requestedBy.name, reservation.requestedBy.email);
     const { subject, html } = buildInventoryRejectedEmail({
       requesterFirstName: firstName,
       itemTitle: reservation.inventoryItem.title,
       quantity: reservation.quantity,
       eventName: reservation.event.eventName,
     });
-    void sendEmail({ to: reservation.requestedBy.email, subject, html });
+    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) => console.error("Email dispatch failed:", err));
   }
 
   return { success: true };
@@ -644,9 +628,9 @@ export async function returnInventoryReservation(
         eventName: reservation.event.eventName,
         returnLocation: normalizedReturnLocation,
       });
-      void sendEmail({ to: adminEmails, subject, html });
+      await sendEmail({ to: adminEmails, subject, html });
     }
-  })();
+  })().catch((err) => console.error("Email dispatch failed:", err));
 
   return { success: true };
 }
@@ -862,7 +846,7 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
       for (const [, userReservations] of byRequester) {
         const requester = userReservations[0].requestedBy;
         if (!requester.emailNotificationsEnabled) continue;
-        const firstName = requester.firstName ?? requester.name.split(" ")[0];
+        const firstName = getFirstName(requester.firstName ?? requester.name, requester.email);
         await Promise.all(
           userReservations.map((r) => {
             const { subject, html } = buildInventoryApprovedEmail({
@@ -875,7 +859,7 @@ export async function bulkApproveInventoryReservations(ids: string[]) {
           })
         );
       }
-    })();
+    })().catch((err) => console.error("Email dispatch failed:", err));
   }
 
   return results;
@@ -1010,9 +994,9 @@ export async function bulkReturnInventoryReservations(
           returnLocation: normalizedReturnLocation,
           returnedByName: session.user.name,
         });
-        void sendEmail({ to: adminEmails, subject, html });
+        await sendEmail({ to: adminEmails, subject, html });
       }
-    })();
+    })().catch((err) => console.error("Email dispatch failed:", err));
   }
 
   return results;

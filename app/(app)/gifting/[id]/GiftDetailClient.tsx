@@ -15,6 +15,7 @@ import {
 } from "@/lib/gift-reservation-ui";
 import { uploadManagedItemImage } from "@/lib/item-image-client";
 import { activateGiftItem, consumeGiftItem, updateGiftItem } from "../actions";
+import { formatShortDate, formatAuditDate } from "@/lib/date-utils";
 import { GiftDetailActions } from "./GiftDetailActions";
 import type { GiftDetailData } from "./detail-data";
 
@@ -52,21 +53,6 @@ function createDraft(data: GiftDetailData): GiftDraft {
   };
 }
 
-function formatShortDate(value: string, includeYear = false) {
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    ...(includeYear ? { year: "numeric" as const } : {}),
-  });
-}
-
-function formatLongDate(value: string) {
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 export function GiftDetailClient({
   data,
@@ -362,29 +348,6 @@ export function GiftDetailClient({
                         )}
                     </span>
                   </div>
-                  <div className="detail-row detail-row-block">
-                    <span className="detail-label">Availability</span>
-                    <p className="detail-notes">
-                      Approved requests reduce current gift stock. Once marked
-                      used, gifts are consumed and cannot be returned.
-                    </p>
-                  </div>
-                  <div className="detail-row detail-row-block">
-                    <label className="detail-label" htmlFor="gift-notes">
-                      Notes
-                    </label>
-                    <span className="detail-row-control">
-                      <textarea
-                        id="gift-notes"
-                        className="form-input"
-                        rows={3}
-                        value={draft.notes}
-                        onChange={(event) => updateDraft("notes", event.target.value)}
-                        maxLength={2000}
-                        disabled={saving}
-                      />
-                    </span>
-                  </div>
                   <div className="detail-row">
                     <span className="detail-label">Created by</span>
                     <span>{data.item.createdByName ?? "—"}</span>
@@ -392,7 +355,7 @@ export function GiftDetailClient({
                   <div className="detail-row">
                     <span className="detail-label">Last Updated</span>
                     <span>
-                      {formatLongDate(data.item.updatedAt)}
+                      {formatAuditDate(data.item.updatedAt)}
                       {data.item.updatedByName && ` by ${data.item.updatedByName}`}
                     </span>
                   </div>
@@ -439,17 +402,6 @@ export function GiftDetailClient({
                   <span className="detail-label">Location</span>
                   <span>{data.item.currentLocation || "—"}</span>
                 </div>
-                <div className="detail-row detail-row-block">
-                  <span className="detail-label">Availability</span>
-                  <p className="detail-notes">
-                    Approved requests reduce current gift stock. Once marked
-                    used, gifts are consumed and cannot be returned.
-                  </p>
-                </div>
-                <div className="detail-row detail-row-block">
-                  <span className="detail-label">Notes</span>
-                  <p className="detail-notes">{data.item.notes || "—"}</p>
-                </div>
                 <div className="detail-row">
                   <span className="detail-label">Created by</span>
                   <span>{data.item.createdByName ?? "—"}</span>
@@ -457,7 +409,7 @@ export function GiftDetailClient({
                 <div className="detail-row">
                   <span className="detail-label">Last Updated</span>
                   <span>
-                    {formatLongDate(data.item.updatedAt)}
+                    {formatAuditDate(data.item.updatedAt)}
                     {data.item.updatedByName && ` by ${data.item.updatedByName}`}
                   </span>
                 </div>
@@ -575,38 +527,12 @@ export function GiftDetailClient({
             </div>
           )}
 
-          <h3 className="section-title" style={{ marginTop: 28 }}>
-            Change History
-          </h3>
-          {data.auditLogs.length === 0 ? (
-            <p className="empty-hint">No history recorded.</p>
-          ) : (
-            <div className="audit-list">
-              {data.auditLogs.map((log) => (
-                <div key={log.id} className="audit-row">
-                  <span className="audit-action">
-                    {log.actionType.replace("_", " ")}
-                  </span>
-                  <span className="audit-meta">
-                    {log.performedByName} · {formatLongDate(log.timestamp)}
-                  </span>
-                  <p className="audit-summary">{log.summary}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
           {data.item.status === "ACTIVE" && data.item.quantity > 0 && (
             <div className="detail-side-action">
               <GiftDetailActions
                 itemId={data.item.id}
                 itemTitle={data.item.title}
                 itemTotalQuantity={data.item.quantity}
-                userId={userId}
-                activeReservations={data.activeReservations.map((reservation) => ({
-                  status: reservation.status,
-                  requestedById: reservation.requestedById,
-                }))}
                 availableEvents={data.availableEvents}
                 disabled={isEditing}
               />

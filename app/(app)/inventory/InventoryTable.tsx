@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ReserveInventoryModal, type ReserveInventoryEventOption } from "@/components/ReserveInventoryModal";
 import { useSetBulkSelectionActive } from "@/components/BulkSelectionContext";
 import { LocationPinIcon } from "@/components/MetadataIcons";
-import { useInventoryBulkDockSlot } from "./InventoryPageShell";
+import { useInventoryBulkDockSlot } from "@/components/PageShell";
 import { InventoryActions } from "./InventoryActions";
 import { InventoryImagePreview } from "./InventoryImagePreview";
 

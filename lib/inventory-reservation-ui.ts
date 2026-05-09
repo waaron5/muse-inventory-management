@@ -14,3 +14,20 @@ export function getInventoryReservationStatusLabel(status: string) {
       return status;
   }
 }
+
+export function getInventoryReservationStatusVariant(status: string) {
+  switch (status) {
+    case "PENDING":
+      return "pending" as const;
+    case "APPROVED":
+      return "approved" as const;
+    case "REJECTED":
+      return "rejected" as const;
+    case "CANCELED":
+      return "canceled" as const;
+    case "COMPLETED":
+      return "completed" as const;
+    default:
+      return "active" as const;
+  }
+}

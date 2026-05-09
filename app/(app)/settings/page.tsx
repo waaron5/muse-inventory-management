@@ -12,10 +12,8 @@ function getRoleLabel(role: string) {
 
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
-  if (!session) return null;
-
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: session?.user.id ?? "" },
     select: { emailNotificationsEnabled: true },
   });
 
@@ -42,7 +40,7 @@ export default async function SettingsPage() {
               <input
                 id="settings-name"
                 className="form-input settings-readonly-input"
-                defaultValue={session.user.name}
+                defaultValue={session?.user.name}
                 readOnly
               />
             </div>
@@ -54,7 +52,7 @@ export default async function SettingsPage() {
               <input
                 id="settings-email"
                 className="form-input settings-readonly-input"
-                defaultValue={session.user.email}
+                defaultValue={session?.user.email}
                 readOnly
               />
             </div>
@@ -66,7 +64,7 @@ export default async function SettingsPage() {
               <input
                 id="settings-role"
                 className="form-input settings-readonly-input"
-                defaultValue={getRoleLabel(session.user.role)}
+                defaultValue={getRoleLabel(session?.user.role)}
                 readOnly
               />
             </div>
@@ -96,7 +94,7 @@ export default async function SettingsPage() {
           <NotificationPreferencesClient initialEmailEnabled={emailEnabled} />
         </section>
 
-        {session.user.role === "ADMIN" && (
+        {session?.user.role === "ADMIN" && (
           <section className="detail-card settings-card">
             <div className="settings-card-head">
               <h2 className="section-title">Team</h2>
@@ -110,66 +108,6 @@ export default async function SettingsPage() {
           </section>
         )}
 
-        <section className="detail-card settings-card">
-          <div className="settings-card-head">
-            <h2 className="section-title">Workspace Defaults</h2>
-            <p className="settings-card-copy">
-              Set the default views and display behavior you want when opening the app.
-            </p>
-          </div>
-
-          <div className="settings-field-grid">
-            <div className="form-field">
-              <label className="form-label" htmlFor="settings-landing-page">
-                Default Landing Page
-              </label>
-              <select id="settings-landing-page" className="form-input">
-                <option>Dashboard</option>
-                <option>Events</option>
-                <option>Inventory</option>
-                <option>Reservations</option>
-              </select>
-            </div>
-
-            <div className="form-field">
-              <label className="form-label" htmlFor="settings-density">
-                Table Density
-              </label>
-              <select id="settings-density" className="form-input">
-                <option>Comfortable</option>
-                <option>Compact</option>
-              </select>
-            </div>
-
-            <div className="form-field">
-              <label className="form-label" htmlFor="settings-date-format">
-                Date Format
-              </label>
-              <select id="settings-date-format" className="form-input">
-                <option>Apr 22, 2026</option>
-                <option>04/22/2026</option>
-                <option>2026-04-22</option>
-              </select>
-            </div>
-
-            <div className="form-field">
-              <label className="form-label" htmlFor="settings-inventory-view">
-                Reservation View
-              </label>
-              <select id="settings-inventory-view" className="form-input">
-                <option>Pending First</option>
-                <option>All Active</option>
-                <option>Approved Only</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
-        <div className="settings-page-footer">
-          <p className="settings-note">
-            Workspace default settings are placeholder UI and are not yet saved.
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -10,9 +10,10 @@ import { Modal } from "@/components/Modal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { InventoryReservationRowActions } from "@/components/InventoryReservationRowActions";
 import { InventoryImagePreview } from "@/app/(app)/inventory/InventoryImagePreview";
-import { useInventoryBulkDockSlot } from "@/app/(app)/inventory/InventoryPageShell";
+import { useInventoryBulkDockSlot } from "@/components/PageShell";
 import { useToast } from "@/components/Toast";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
+import { formatDateRange } from "@/lib/date-utils";
 import {
   bulkApproveInventoryReservations,
   bulkRemoveRejectedInventoryReservations,
@@ -40,16 +41,6 @@ interface PendingReservation {
   requestedBy: { id: string; name: string };
 }
 
-function formatDateRange(start: string, end: string) {
-  return `${new Date(start).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  })} – ${new Date(end).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })}`;
-}
 
 export function PendingReservationsTable({
   reservations,
@@ -68,6 +59,7 @@ export function PendingReservationsTable({
   const [loadingAction, setLoadingAction] = useState<
     "approve" | "return" | "remove" | null
   >(null);
+  const [pendingBulkRemoveConfirm, setPendingBulkRemoveConfirm] = useState(false);
   const [returnOpen, setReturnOpen] = useState(false);
   const [returnLocation, setReturnLocation] = useState("");
   const [returnNotes, setReturnNotes] = useState("");
@@ -149,6 +141,7 @@ export function PendingReservationsTable({
 
   useEffect(() => {
     setBulkSelectionActive(selected.size > 0);
+    setPendingBulkRemoveConfirm(false);
   }, [selected.size, setBulkSelectionActive]);
 
   useEffect(() => {
@@ -233,16 +226,11 @@ export function PendingReservationsTable({
 
   async function handleBulkRemoveRejected() {
     if (selectedRejectedIds.length === 0) return;
-    if (
-      !window.confirm(
-        `Remove ${selectedRejectedIds.length} rejected reservation${
-          selectedRejectedIds.length === 1 ? "" : "s"
-        } from the list?`
-      )
-    ) {
+    if (!pendingBulkRemoveConfirm) {
+      setPendingBulkRemoveConfirm(true);
       return;
     }
-
+    setPendingBulkRemoveConfirm(false);
     setLoadingAction("remove");
     try {
       const results = await bulkRemoveRejectedInventoryReservations(
@@ -467,16 +455,37 @@ export function PendingReservationsTable({
                     <ReserveSelectedIcon className="inventory-reserve-icon" />
                     Return Selected ({selectedReturnableIds.length})
                   </button>
-                  <button
-                    type="button"
-                    className="inventory-reserve-button"
-                    onClick={handleBulkRemoveRejected}
-                    disabled={selectedRejectedIds.length === 0 || busy}
-                  >
-                    {loadingAction === "remove"
-                      ? "Removing..."
-                      : `Remove Rejected (${selectedRejectedIds.length})`}
-                  </button>
+                  {pendingBulkRemoveConfirm ? (
+                    <>
+                      <button
+                        type="button"
+                        className="inventory-reserve-button inventory-reserve-button-danger"
+                        onClick={handleBulkRemoveRejected}
+                        disabled={busy}
+                      >
+                        {loadingAction === "remove" ? "Removing..." : "Confirm Remove"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setPendingBulkRemoveConfirm(false)}
+                        disabled={busy}
+                      >
+                        No
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className="inventory-reserve-button"
+                      onClick={handleBulkRemoveRejected}
+                      disabled={selectedRejectedIds.length === 0 || busy}
+                    >
+                      {loadingAction === "remove"
+                        ? "Removing..."
+                        : `Remove Rejected (${selectedRejectedIds.length})`}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>,

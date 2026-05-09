@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getGiftReservationStatusLabel, getGiftReservationStatusVariant } from "@/lib/gift-reservation-ui";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
+import { getTodayStart, formatAuditDate, formatDateRange } from "@/lib/date-utils";
 
 type NotificationStatusVariant =
   | "active"
@@ -46,28 +47,8 @@ export interface NotificationIndicator {
   latestNotificationAt: string | null;
 }
 
-function getTodayStart() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
 function formatDate(date: Date) {
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatDateRange(startDate: Date, endDate: Date) {
-  return `${startDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  })} – ${endDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })}`;
+  return formatAuditDate(date.toISOString());
 }
 
 function getInventoryNotificationVariant(status: string): NotificationStatusVariant {

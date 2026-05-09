@@ -37,6 +37,7 @@ export function GiftReservationRowActions({
   const [loadingAction, setLoadingAction] = useState<
     "approve" | "reject" | "complete" | null
   >(null);
+  const [pendingConfirm, setPendingConfirm] = useState(false);
   const canApprove = isAdmin && reservation.status === "PENDING";
   const canComplete = isAdmin && reservation.status === "APPROVED";
 
@@ -54,8 +55,8 @@ export function GiftReservationRowActions({
   }
 
   async function handleReject() {
-    if (!window.confirm("Reject this gift request?")) return;
-
+    if (!pendingConfirm) { setPendingConfirm(true); return; }
+    setPendingConfirm(false);
     setLoadingAction("reject");
     try {
       await rejectGiftReservation(reservation.id);
@@ -93,14 +94,33 @@ export function GiftReservationRowActions({
           {loadingAction === "approve" ? "Approving..." : "Approve"}
         </button>
       )}
-      {canApprove && (
+      {canApprove && pendingConfirm ? (
+        <>
+          <button
+            type="button"
+            className="btn-action btn-action-danger"
+            onClick={handleReject}
+            disabled={disabled || loadingAction !== null}
+          >
+            {loadingAction === "reject" ? "Rejecting..." : "Confirm Reject"}
+          </button>
+          <button
+            type="button"
+            className="btn-action"
+            onClick={() => setPendingConfirm(false)}
+            aria-label="Cancel reject"
+          >
+            No
+          </button>
+        </>
+      ) : canApprove && (
         <button
           type="button"
           className="btn-action btn-action-danger"
           onClick={handleReject}
           disabled={disabled || loadingAction !== null}
         >
-          {loadingAction === "reject" ? "Rejecting..." : "Reject"}
+          Reject
         </button>
       )}
       {canComplete && (

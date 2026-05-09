@@ -3,11 +3,6 @@
 import { useState } from "react";
 import { ReserveInventoryModal } from "@/components/ReserveInventoryModal";
 
-interface ActiveReservation {
-  status: string;
-  requestedById: string;
-}
-
 interface AvailableEvent {
   id: string;
   eventName: string;
@@ -22,8 +17,6 @@ interface Props {
   itemTitle: string;
   itemCurrentLocation: string | null;
   itemTotalQuantity: number;
-  userId: string;
-  activeReservations: ActiveReservation[];
   availableEvents: AvailableEvent[];
   disabled?: boolean;
 }
@@ -33,20 +26,10 @@ export function InventoryDetailActions({
   itemTitle,
   itemCurrentLocation,
   itemTotalQuantity,
-  userId,
-  activeReservations,
   availableEvents,
   disabled = false,
 }: Props) {
   const [reserveOpen, setReserveOpen] = useState(false);
-  const myPendingReservations = activeReservations.filter(
-    (r) => r.status === "PENDING" && r.requestedById === userId
-  );
-  const approvedMyReservations = activeReservations.filter(
-    (r) => r.status === "APPROVED" && r.requestedById === userId
-  );
-  const hasMyReservationActivity =
-    myPendingReservations.length > 0 || approvedMyReservations.length > 0;
 
   return (
     <>
@@ -60,20 +43,6 @@ export function InventoryDetailActions({
           Reserve this item
         </button>
       </div>
-      {hasMyReservationActivity && (
-        <div className="action-status-row">
-          {myPendingReservations.length > 0 && (
-            <span className="action-status-chip action-status-chip-pending">
-              {myPendingReservations.length} pending approval
-            </span>
-          )}
-          {approvedMyReservations.length > 0 && (
-            <span className="action-status-chip action-status-chip-approved">
-              {approvedMyReservations.length} approved
-            </span>
-          )}
-        </div>
-      )}
 
       <ReserveInventoryModal
         open={reserveOpen}

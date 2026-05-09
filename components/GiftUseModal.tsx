@@ -73,7 +73,7 @@ export function GiftUseModal({
     let cancelled = false;
     setLoadingAvailability(true);
 
-    checkGiftAvailability(giftItem.id, selectedEventId)
+    checkGiftAvailability(giftItem.id)
       .then((qty) => {
         if (!cancelled) {
           setAvailableQty(qty);

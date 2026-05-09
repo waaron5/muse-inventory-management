@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { DashboardNotification } from "@/lib/notifications";
 
 type NotificationCard = Omit<DashboardNotification, "timestamp"> & {
@@ -27,14 +27,30 @@ export function NotificationCards({
 }: NotificationCardsProps) {
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("dismissed-notifications");
+      if (stored) setDismissedIds(JSON.parse(stored));
+    } catch {
+      // ignore — corrupt storage, start fresh
+    }
+  }, []);
+
   const visibleNotifications = notifications.filter(
     (notification) => !dismissedIds.includes(notification.id)
   );
 
   function dismissNotification(id: string) {
-    setDismissedIds((current) =>
-      current.includes(id) ? current : [...current, id]
-    );
+    setDismissedIds((current) => {
+      if (current.includes(id)) return current;
+      const next = [...current, id];
+      try {
+        localStorage.setItem("dismissed-notifications", JSON.stringify(next));
+      } catch {
+        // ignore — storage quota or private browsing
+      }
+      return next;
+    });
   }
 
   if (visibleNotifications.length === 0) {

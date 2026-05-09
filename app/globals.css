@@ -1743,7 +1743,7 @@ select {
 }
 .detail-fields { display: flex; flex-direction: column; gap: 12px; }
 .detail-row { display: flex; align-items: baseline; gap: 8px; font-size: 14px; }
-.detail-row-block { flex-direction: column; gap: 4px; }
+.detail-row-block { flex-direction: column; align-items: stretch; gap: 4px; }
 .detail-label { font-weight: 500; color: var(--gray-500); min-width: 130px; flex-shrink: 0; }
 .detail-notes { margin: 0; color: var(--gray-700); font-size: 14px; }
 .detail-edit-form { margin: 0; }
@@ -1757,6 +1757,9 @@ select {
 .detail-row-control {
   flex: 1;
   min-width: 0;
+}
+.detail-row-block .detail-row-control {
+  width: 100%;
 }
 .detail-row-control .form-input {
   width: 100%;
@@ -1938,7 +1941,7 @@ select {
   height: 64px;
   padding: 0;
   border-bottom: 1px solid var(--color-sidebar-divider);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .app-sidebar-account-summary {

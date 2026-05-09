@@ -13,10 +13,11 @@ import {
   getGiftReservationStatusLabel,
   getGiftReservationStatusVariant,
 } from "@/lib/gift-reservation-ui";
-import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
+import { getInventoryReservationStatusLabel, getInventoryReservationStatusVariant } from "@/lib/inventory-reservation-ui";
 import { deleteEvent, updateEvent } from "../actions";
 import { ReserveInventoryForEventButton } from "../ReserveInventoryForEventButton";
 import type { EventDetailData } from "./detail-data";
+import { formatLongDate, formatShortDate, formatAuditDate } from "@/lib/date-utils";
 
 const EVENT_DETAIL_FORM_ID = "event-detail-edit-form";
 
@@ -54,29 +55,6 @@ function createDraft(data: EventDetailData): EventDraft {
   };
 }
 
-function formatLongDate(value: string) {
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatShortDate(value: string, includeYear = false) {
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    ...(includeYear ? { year: "numeric" as const } : {}),
-  });
-}
-
-function formatAuditDate(value: string) {
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 export function EventDetailClient({
   data,
@@ -452,14 +430,8 @@ export function EventDetailClient({
                     <td>{reservation.quantity}</td>
                     <td>
                       <StatusBadge
-                        variant={
-                          reservation.status.toLowerCase() as Parameters<
-                            typeof StatusBadge
-                          >[0]["variant"]
-                        }
-                        label={getInventoryReservationStatusLabel(
-                          reservation.status
-                        )}
+                        variant={getInventoryReservationStatusVariant(reservation.status)}
+                        label={getInventoryReservationStatusLabel(reservation.status)}
                       />
                     </td>
                     <td className="text-muted">{reservation.requestedByName}</td>

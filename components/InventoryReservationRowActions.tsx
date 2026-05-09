@@ -60,6 +60,7 @@ export function InventoryReservationRowActions({
   const [loadingAction, setLoadingAction] = useState<
     "approve" | "reject" | "cancel" | "return" | "edit" | "remove" | null
   >(null);
+  const [pendingConfirm, setPendingConfirm] = useState<"reject" | "cancel" | "remove" | null>(null);
 
   const canApprove = isAdmin && reservation.status === "PENDING";
   const canCancel =
@@ -129,8 +130,8 @@ export function InventoryReservationRowActions({
   }
 
   async function handleReject() {
-    if (!window.confirm("Reject this reservation?")) return;
-
+    if (pendingConfirm !== "reject") { setPendingConfirm("reject"); return; }
+    setPendingConfirm(null);
     setLoadingAction("reject");
     try {
       await rejectInventoryReservation(reservation.id);
@@ -147,9 +148,9 @@ export function InventoryReservationRowActions({
   }
 
   async function handleCancel() {
-    if (!window.confirm("Cancel this reservation request?")) return;
-
-    setLoadingAction("remove");
+    if (pendingConfirm !== "cancel") { setPendingConfirm("cancel"); return; }
+    setPendingConfirm(null);
+    setLoadingAction("cancel");
     try {
       await cancelInventoryReservation(reservation.id);
       toast("Reservation canceled");
@@ -186,13 +187,8 @@ export function InventoryReservationRowActions({
   }
 
   async function handleRemoveTerminal() {
-    const label =
-      reservation.status === "COMPLETED" ? "returned" : "rejected";
-
-    if (!window.confirm(`Remove this ${label} reservation from the list?`)) {
-      return;
-    }
-
+    if (pendingConfirm !== "remove") { setPendingConfirm("remove"); return; }
+    setPendingConfirm(null);
     setLoadingAction("remove");
     try {
       await removeInventoryReservationHistory(reservation.id);
@@ -221,14 +217,33 @@ export function InventoryReservationRowActions({
             {loadingAction === "approve" ? "Approving..." : "Approve"}
           </button>
         )}
-        {canApprove && (
+        {canApprove && pendingConfirm === "reject" ? (
+          <>
+            <button
+              type="button"
+              className="btn-action btn-action-danger"
+              onClick={handleReject}
+              disabled={disabled || loadingAction !== null}
+            >
+              {loadingAction === "reject" ? "Rejecting..." : "Confirm Reject"}
+            </button>
+            <button
+              type="button"
+              className="btn-action"
+              onClick={() => setPendingConfirm(null)}
+              aria-label="Cancel reject"
+            >
+              No
+            </button>
+          </>
+        ) : canApprove && (
           <button
             type="button"
             className="btn-action btn-action-danger"
             onClick={handleReject}
             disabled={disabled || loadingAction !== null}
           >
-            {loadingAction === "reject" ? "Rejecting..." : "Reject"}
+            Reject
           </button>
         )}
         {canEdit && (
@@ -247,14 +262,33 @@ export function InventoryReservationRowActions({
             <EditIcon />
           </button>
         )}
-        {canCancel && (
+        {canCancel && pendingConfirm === "cancel" ? (
+          <>
+            <button
+              type="button"
+              className="btn-action btn-action-danger"
+              onClick={handleCancel}
+              disabled={disabled || loadingAction !== null}
+            >
+              {loadingAction === "cancel" ? "Canceling..." : "Confirm Cancel"}
+            </button>
+            <button
+              type="button"
+              className="btn-action"
+              onClick={() => setPendingConfirm(null)}
+              aria-label="Keep reservation"
+            >
+              No
+            </button>
+          </>
+        ) : canCancel && (
           <button
             type="button"
             className="btn-action btn-action-danger"
             onClick={handleCancel}
             disabled={disabled || loadingAction !== null}
           >
-            {loadingAction === "cancel" ? "Canceling..." : "Cancel Request"}
+            Cancel Request
           </button>
         )}
         {canReturn && (
@@ -275,7 +309,30 @@ export function InventoryReservationRowActions({
             Return Item
           </button>
         )}
-        {canRemoveTerminal && (
+        {canRemoveTerminal && pendingConfirm === "remove" ? (
+          <>
+            <button
+              type="button"
+              className={`btn-action btn-action-danger${
+                useReservationsPageAppearance
+                  ? " inventory-reserve-button reservation-table-action-button"
+                  : ""
+              }`}
+              onClick={handleRemoveTerminal}
+              disabled={disabled || loadingAction !== null}
+            >
+              {loadingAction === "remove" ? "Removing..." : "Confirm Remove"}
+            </button>
+            <button
+              type="button"
+              className="btn-action"
+              onClick={() => setPendingConfirm(null)}
+              aria-label="Keep reservation"
+            >
+              No
+            </button>
+          </>
+        ) : canRemoveTerminal && (
           <button
             type="button"
             className={`btn-action btn-action-with-icon${

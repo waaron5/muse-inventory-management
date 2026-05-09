@@ -1,25 +1,12 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { deleteManagedInventoryImage } from "@/lib/inventory-image-storage";
 import { requireStorageLocationName } from "@/lib/storage-locations";
 import { revalidatePath } from "next/cache";
 import { InventoryStatus } from "@prisma/client";
-
-async function requireSession() {
-  const session = await getServerSession(authOptions);
-  if (!session) throw new Error("Unauthorized");
-  return session;
-}
-
-async function requireAdmin() {
-  const session = await requireSession();
-  if (session.user.role !== "ADMIN") throw new Error("Forbidden");
-  return session;
-}
+import { requireSession, requireAdmin } from "@/lib/action-helpers";
 
 export async function createInventoryItem(formData: {
   title: string;

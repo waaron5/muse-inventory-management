@@ -1,17 +1,9 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
-
-async function requireAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session) throw new Error("Unauthorized");
-  if (session.user.role !== "ADMIN") throw new Error("Forbidden");
-  return session;
-}
+import { requireAdmin } from "@/lib/action-helpers";
 
 export async function createUser(data: {
   firstName: string;

@@ -1,14 +1,14 @@
 "use server";
 
-import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { GiftStatus } from "@prisma/client";
-import { authOptions } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { getGiftAvailableQty } from "@/lib/availability";
 import { prisma } from "@/lib/db";
 import { deleteManagedInventoryImage } from "@/lib/inventory-image-storage";
 import { requireStorageLocationName } from "@/lib/storage-locations";
+import { requireSession, requireAdmin } from "@/lib/action-helpers";
+import { getFirstName } from "@/lib/notifications";
 import {
   sendEmail,
   getAdminEmailRecipients,
@@ -31,32 +31,11 @@ function revalidateGiftViews(giftItemIds: string[], eventId?: string) {
   }
 }
 
-export async function checkGiftAvailability(
-  giftItemId: string,
-  eventId: string
-) {
-  const session = await getServerSession(authOptions);
-  if (!session) throw new Error("Unauthorized");
-
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    select: { id: true },
-  });
-  if (!event) throw new Error("Event not found");
-
+// Gift availability is global (not event-scoped) — approved requests reduce
+// total quantity regardless of event dates.
+export async function checkGiftAvailability(giftItemId: string) {
+  await requireSession();
   return getGiftAvailableQty(giftItemId);
-}
-
-async function requireSession() {
-  const session = await getServerSession(authOptions);
-  if (!session) throw new Error("Unauthorized");
-  return session;
-}
-
-async function requireAdmin() {
-  const session = await requireSession();
-  if (session.user.role !== "ADMIN") throw new Error("Forbidden");
-  return session;
 }
 
 export async function createGiftItem(formData: {
@@ -261,9 +240,9 @@ export async function createGiftReservation(formData: {
           eventName: reservation.event.eventName,
           eventCompany: event.companyName,
         });
-        void sendEmail({ to: adminEmails, subject, html });
+        await sendEmail({ to: adminEmails, subject, html });
       }
-    })();
+    })().catch((err) => console.error("Email dispatch failed:", err));
   }
 
   return { success: true, id: reservation.id, autoApproved };
@@ -315,14 +294,14 @@ export async function approveGiftReservation(id: string) {
   revalidateGiftViews([reservation.giftItemId], reservation.event.id);
 
   if (reservation.requestedBy.emailNotificationsEnabled) {
-    const firstName = reservation.requestedBy.firstName ?? reservation.requestedBy.name.split(" ")[0];
+    const firstName = getFirstName(reservation.requestedBy.firstName ?? reservation.requestedBy.name, reservation.requestedBy.email);
     const { subject, html } = buildGiftApprovedEmail({
       requesterFirstName: firstName,
       itemTitle: reservation.giftItem.title,
       quantity: reservation.quantity,
       eventName: reservation.event.eventName,
     });
-    void sendEmail({ to: reservation.requestedBy.email, subject, html });
+    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) => console.error("Email dispatch failed:", err));
   }
 
   return { success: true };
@@ -363,14 +342,14 @@ export async function rejectGiftReservation(id: string) {
   revalidateGiftViews([reservation.giftItemId], reservation.event.id);
 
   if (reservation.requestedBy.emailNotificationsEnabled) {
-    const firstName = reservation.requestedBy.firstName ?? reservation.requestedBy.name.split(" ")[0];
+    const firstName = getFirstName(reservation.requestedBy.firstName ?? reservation.requestedBy.name, reservation.requestedBy.email);
     const { subject, html } = buildGiftRejectedEmail({
       requesterFirstName: firstName,
       itemTitle: reservation.giftItem.title,
       quantity: reservation.quantity,
       eventName: reservation.event.eventName,
     });
-    void sendEmail({ to: reservation.requestedBy.email, subject, html });
+    void sendEmail({ to: reservation.requestedBy.email, subject, html }).catch((err) => console.error("Email dispatch failed:", err));
   }
 
   return { success: true };

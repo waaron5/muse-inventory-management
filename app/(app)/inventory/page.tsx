@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SearchBar } from "@/components/SearchBar";
-import { InventoryPageShell } from "./InventoryPageShell";
+import { PageShell } from "@/components/PageShell";
 import { AddInventoryItemButton } from "./AddInventoryItemButton";
 import { InventoryTable } from "./InventoryTable";
 
@@ -91,7 +91,7 @@ export default async function InventoryPage({
   const totalCount = items.length;
 
   return (
-    <InventoryPageShell
+    <PageShell
       stripLegacyPaginationParams
       title="Inventory"
       action={

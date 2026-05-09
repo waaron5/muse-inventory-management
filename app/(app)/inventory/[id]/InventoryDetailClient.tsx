@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { useToast } from "@/components/Toast";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import { uploadManagedItemImage } from "@/lib/item-image-client";
+import { formatShortDate, formatAuditDate } from "@/lib/date-utils";
 import {
   activateInventoryItem,
   retireInventoryItem,
@@ -55,21 +56,6 @@ function createDraft(data: InventoryDetailData): InventoryDraft {
   };
 }
 
-function formatShortDate(value: string, includeYear = false) {
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    ...(includeYear ? { year: "numeric" as const } : {}),
-  });
-}
-
-function formatLongDate(value: string) {
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 export function InventoryDetailClient({
   data,
@@ -338,14 +324,6 @@ export function InventoryDetailClient({
                       />
                     </span>
                   </div>
-                  <div className="detail-row detail-row-block">
-                    <span className="detail-label">Availability</span>
-                    <p className="detail-notes">
-                      Availability is calculated per event. This item can be
-                      reserved for multiple events when approved event dates do
-                      not overlap.
-                    </p>
-                  </div>
                   <div className="detail-row">
                     <label className="detail-label" htmlFor="inventory-location">
                       Location
@@ -379,22 +357,6 @@ export function InventoryDetailClient({
                         )}
                     </span>
                   </div>
-                  <div className="detail-row detail-row-block">
-                    <label className="detail-label" htmlFor="inventory-notes">
-                      Notes
-                    </label>
-                    <span className="detail-row-control">
-                      <textarea
-                        id="inventory-notes"
-                        className="form-input"
-                        rows={3}
-                        value={draft.notes}
-                        onChange={(event) => updateDraft("notes", event.target.value)}
-                        maxLength={2000}
-                        disabled={saving}
-                      />
-                    </span>
-                  </div>
                   <div className="detail-row">
                     <span className="detail-label">Created by</span>
                     <span>{data.item.createdByName ?? "—"}</span>
@@ -402,7 +364,7 @@ export function InventoryDetailClient({
                   <div className="detail-row">
                     <span className="detail-label">Last Updated</span>
                     <span>
-                      {formatLongDate(data.item.updatedAt)}
+                      {formatAuditDate(data.item.updatedAt)}
                       {data.item.updatedByName && ` by ${data.item.updatedByName}`}
                     </span>
                   </div>
@@ -445,21 +407,9 @@ export function InventoryDetailClient({
                   <span className="detail-label">Total Quantity</span>
                   <span>{data.item.quantity}</span>
                 </div>
-                <div className="detail-row detail-row-block">
-                  <span className="detail-label">Availability</span>
-                  <p className="detail-notes">
-                    Availability is calculated per event. This item can be
-                    reserved for multiple events when approved event dates do not
-                    overlap.
-                  </p>
-                </div>
                 <div className="detail-row">
                   <span className="detail-label">Location</span>
                   <span>{data.item.currentLocation || "—"}</span>
-                </div>
-                <div className="detail-row detail-row-block">
-                  <span className="detail-label">Notes</span>
-                  <p className="detail-notes">{data.item.notes || "—"}</p>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Created by</span>
@@ -468,7 +418,7 @@ export function InventoryDetailClient({
                 <div className="detail-row">
                   <span className="detail-label">Last Updated</span>
                   <span>
-                    {formatLongDate(data.item.updatedAt)}
+                    {formatAuditDate(data.item.updatedAt)}
                     {data.item.updatedByName && ` by ${data.item.updatedByName}`}
                   </span>
                 </div>
@@ -601,27 +551,6 @@ export function InventoryDetailClient({
             </div>
           )}
 
-          <h3 className="section-title" style={{ marginTop: 28 }}>
-            Change History
-          </h3>
-          {data.auditLogs.length === 0 ? (
-            <p className="empty-hint">No history recorded.</p>
-          ) : (
-            <div className="audit-list">
-              {data.auditLogs.map((log) => (
-                <div key={log.id} className="audit-row">
-                  <span className="audit-action">
-                    {log.actionType.replace("_", " ")}
-                  </span>
-                  <span className="audit-meta">
-                    {log.performedByName} · {formatLongDate(log.timestamp)}
-                  </span>
-                  <p className="audit-summary">{log.summary}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
           {data.item.status === "ACTIVE" && (
             <div className="detail-side-action">
               <InventoryDetailActions
@@ -629,11 +558,6 @@ export function InventoryDetailClient({
                 itemTitle={data.item.title}
                 itemCurrentLocation={data.item.currentLocation || null}
                 itemTotalQuantity={data.item.quantity}
-                userId={userId}
-                activeReservations={data.activeReservations.map((reservation) => ({
-                  status: reservation.status,
-                  requestedById: reservation.requestedById,
-                }))}
                 availableEvents={data.availableEvents}
                 disabled={isEditing}
               />

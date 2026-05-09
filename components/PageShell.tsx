@@ -36,7 +36,7 @@ export function useInventoryBulkDockSlot() {
   return bulkDockSlot;
 }
 
-interface InventoryPageShellProps {
+interface PageShellProps {
   showPagination?: boolean;
   title: ReactNode;
   action?: ReactNode;
@@ -46,7 +46,7 @@ interface InventoryPageShellProps {
   stripLegacyPaginationParams?: boolean;
 }
 
-export function InventoryPageShell({
+export function PageShell({
   showPagination = false,
   title,
   action,
@@ -54,7 +54,7 @@ export function InventoryPageShell({
   table,
   pagination,
   stripLegacyPaginationParams = false,
-}: InventoryPageShellProps) {
+}: PageShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

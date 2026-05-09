@@ -3,8 +3,9 @@ import { InventoryReservationStatus } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SearchBar } from "@/components/SearchBar";
-import { InventoryPageShell } from "@/app/(app)/inventory/InventoryPageShell";
+import { PageShell } from "@/components/PageShell";
 import { getStorageLocationNames } from "@/lib/storage-locations";
+import { getTodayStart } from "@/lib/date-utils";
 import { NewReservationButton } from "./NewReservationButton";
 import { PendingReservationsTable } from "./PendingReservationsTable";
 
@@ -16,21 +17,14 @@ const RESERVATION_STATUS_ORDER: Record<string, number> = {
   COMPLETED: 4,
 };
 
-function getTodayStart() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
 export default async function ReservationsPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
   const session = await getServerSession(authOptions);
-  if (!session) return null;
-
-  const isAdmin = session.user.role === "ADMIN";
-  const userId = session.user.id;
+  const isAdmin = session?.user.role === "ADMIN";
+  const userId = session?.user.id ?? "";
   const params = await searchParams;
   const query = params.q ?? "";
   const todayStart = getTodayStart();
@@ -145,7 +139,7 @@ export default async function ReservationsPage({
     : "You do not have any inventory reservations yet.";
 
   return (
-    <InventoryPageShell
+    <PageShell
       stripLegacyPaginationParams
       title="My Reservations"
       action={<NewReservationButton availableEvents={serializedEvents} />}
