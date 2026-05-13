@@ -49,24 +49,26 @@ export function RequestGiftsForEventButton({
     [availableGifts, selectedGiftId],
   );
 
-  useEffect(() => {
-    if (!open) {
-      setSelectedGiftId("");
-      setQuantity("1");
-      setNotes("");
-      setAvailableQty(null);
-      setLoadingAvailability(false);
-      setLoadingSubmit(false);
-      setError("");
-      return;
-    }
+  function resetForm() {
+    setSelectedGiftId("");
+    setQuantity("1");
+    setNotes("");
+    setAvailableQty(null);
+    setLoadingAvailability(false);
+    setLoadingSubmit(false);
+    setError("");
+  }
 
-    if (!selectedGiftId) {
-      setAvailableQty(null);
-      return;
-    }
+  function closeModal() {
+    resetForm();
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (!open || !selectedGiftId) return;
 
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingAvailability(true);
     setError("");
 
@@ -86,7 +88,7 @@ export function RequestGiftsForEventButton({
     return () => {
       cancelled = true;
     };
-  }, [event.id, open, selectedGiftId]);
+  }, [open, selectedGiftId]);
 
   async function handleSubmit(formEvent: FormEvent) {
     formEvent.preventDefault();
@@ -101,7 +103,7 @@ export function RequestGiftsForEventButton({
         notes: notes || undefined,
       });
       toast(result.autoApproved ? "Gift request approved" : "Gift request pending approval");
-      setOpen(false);
+      closeModal();
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Unable to save request.");
@@ -129,7 +131,7 @@ export function RequestGiftsForEventButton({
 
       <Modal
         open={open}
-        onClose={loadingSubmit ? () => {} : () => setOpen(false)}
+        onClose={loadingSubmit ? () => {} : closeModal}
         title={`Add gifts to ${event.eventName}`}
       >
         <form onSubmit={handleSubmit} className="modal-form">
@@ -163,6 +165,7 @@ export function RequestGiftsForEventButton({
               onChange={(formEvent) => {
                 setSelectedGiftId(formEvent.target.value);
                 setQuantity("1");
+                setAvailableQty(null);
                 setError("");
               }}
               required

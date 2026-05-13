@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 import {
   INVENTORY_IMAGE_ACCEPT_ATTRIBUTE,
@@ -86,7 +87,13 @@ export function InlineItemImageField({
         {displayedImageUrl ? (
           <>
             <span className="inventory-image-upload-preview">
-              <img src={displayedImageUrl} alt="" className="inventory-image-upload-preview-img" />
+              <Image
+                src={displayedImageUrl}
+                alt=""
+                className="inventory-image-upload-preview-img"
+                fill
+                sizes="92px"
+              />
             </span>
             <span className="inventory-image-upload-copy inventory-image-upload-copy-left">
               <span className="inventory-image-upload-meta">

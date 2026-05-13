@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createUser } from "@/app/(app)/settings/user-actions";
 
 export function CreateUserForm() {
+  const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -119,7 +121,10 @@ export function CreateUserForm() {
         </p>
       )}
 
-      <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <button type="button" className="btn btn-outline" onClick={() => router.push("/settings")}>
+          Cancel
+        </button>
         <button type="submit" className="btn btn-dark" disabled={loading}>
           {loading ? "Creating…" : "Create User"}
         </button>

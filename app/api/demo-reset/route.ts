@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       },
     });
 
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         name: "Muse User",
         email: "user@muse.local",

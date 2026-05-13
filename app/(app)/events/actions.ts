@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
-import { requireSession, requireAdmin } from "@/lib/action-helpers";
+import { requireAdmin } from "@/lib/action-helpers";
 
 export async function createEvent(formData: {
   companyName: string;

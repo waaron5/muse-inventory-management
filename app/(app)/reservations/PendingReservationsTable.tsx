@@ -54,7 +54,7 @@ export function PendingReservationsTable({
   emptyMessage: string;
   returnLocationOptions: string[];
 }) {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loadingAction, setLoadingAction] = useState<"approve" | "return" | "remove" | null>(null);
   const [pendingBulkRemoveConfirm, setPendingBulkRemoveConfirm] = useState(false);
   const [returnOpen, setReturnOpen] = useState(false);
@@ -88,6 +88,9 @@ export function PendingReservationsTable({
   const returnableReservationIdSet = new Set(returnableReservationIds);
   const removableRejectedReservationIdSet = new Set(removableRejectedReservationIds);
   const actionableReservationIdSet = new Set(actionableReservationIds);
+  const selected = new Set(
+    [...selectedIds].filter((reservationId) => actionableReservationIdSet.has(reservationId)),
+  );
   const selectedPendingIds = [...selected].filter((id) => pendingReservationIdSet.has(id));
   const selectedReturnableIds = [...selected].filter((id) => returnableReservationIdSet.has(id));
   const selectedRejectedIds = [...selected].filter((id) =>
@@ -109,20 +112,7 @@ export function PendingReservationsTable({
   }
 
   useEffect(() => {
-    setSelected((prev) => {
-      const next = new Set(
-        [...prev].filter((reservationId) => actionableReservationIdSet.has(reservationId)),
-      );
-      if (next.size === prev.size) {
-        return prev;
-      }
-      return next;
-    });
-  }, [reservations, isAdmin, userId]);
-
-  useEffect(() => {
     setBulkSelectionActive(selected.size > 0);
-    setPendingBulkRemoveConfirm(false);
   }, [selected.size, setBulkSelectionActive]);
 
   useEffect(() => {
@@ -134,7 +124,8 @@ export function PendingReservationsTable({
   function toggleOne(id: string) {
     if (!actionableReservationIdSet.has(id)) return;
 
-    setSelected((prev) => {
+    setPendingBulkRemoveConfirm(false);
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -144,9 +135,11 @@ export function PendingReservationsTable({
 
   function toggleAll() {
     if (selected.size === actionableReservationIds.length) {
-      setSelected(new Set());
+      setPendingBulkRemoveConfirm(false);
+      setSelectedIds(new Set());
     } else {
-      setSelected(new Set(actionableReservationIds));
+      setPendingBulkRemoveConfirm(false);
+      setSelectedIds(new Set(actionableReservationIds));
     }
   }
 
@@ -163,7 +156,7 @@ export function PendingReservationsTable({
           results.approved > 0 ? "success" : "error",
         );
       }
-      setSelected(new Set());
+      setSelectedIds(new Set());
       router.refresh();
     } catch (err: unknown) {
       toast(err instanceof Error ? err.message : "Bulk approve failed", "error");
@@ -194,7 +187,7 @@ export function PendingReservationsTable({
           results.returned > 0 ? "success" : "error",
         );
       }
-      setSelected(new Set());
+      setSelectedIds(new Set());
       router.refresh();
     } catch (err: unknown) {
       setReturnError(err instanceof Error ? err.message : "Bulk return failed");
@@ -221,7 +214,7 @@ export function PendingReservationsTable({
           results.removed > 0 ? "success" : "error",
         );
       }
-      setSelected(new Set());
+      setSelectedIds(new Set());
       router.refresh();
     } catch (err: unknown) {
       toast(err instanceof Error ? err.message : "Bulk remove failed", "error");
@@ -384,7 +377,10 @@ export function PendingReservationsTable({
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
-                    onClick={() => setSelected(new Set())}
+                    onClick={() => {
+                      setPendingBulkRemoveConfirm(false);
+                      setSelectedIds(new Set());
+                    }}
                     disabled={busy}
                   >
                     Clear

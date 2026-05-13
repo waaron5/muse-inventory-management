@@ -16,7 +16,7 @@ import { getEventStatus } from "@/lib/availability";
 import { getGiftReservationStatusLabel } from "@/lib/gift-reservation-ui";
 import { getInventoryReservationStatusLabel } from "@/lib/inventory-reservation-ui";
 import { formatDateRange } from "@/lib/date-utils";
-import { getCompanyTheme, type CompanyColorTheme } from "@/lib/company-themes";
+import { getCompanyTheme } from "@/lib/company-themes";
 import { EventRowActions } from "./EventRowActions";
 import { EventViewSelect, type EventView } from "./EventViewSelect";
 import { ReserveInventoryForEventButton } from "./ReserveInventoryForEventButton";

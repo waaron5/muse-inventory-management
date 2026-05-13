@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { DetailTopBar } from "@/components/DetailTopBar";
 import { CreateUserForm } from "./CreateUserForm";
+import { UserRowActions } from "./UserRowActions";
 
 function getRoleLabel(role: string) {
   return role === "ADMIN" ? "Administrator" : "Team Member";
@@ -15,6 +16,7 @@ export default async function UsersPage() {
   if (session.user.role !== "ADMIN") redirect("/settings");
 
   const users = await prisma.user.findMany({
+    where: { isActive: true },
     select: {
       id: true,
       name: true,
@@ -90,6 +92,7 @@ export default async function UsersPage() {
                   >
                     Joined
                   </th>
+                  <th style={{ width: 40 }} />
                 </tr>
               </thead>
               <tbody>
@@ -108,6 +111,9 @@ export default async function UsersPage() {
                         day: "numeric",
                         year: "numeric",
                       })}
+                    </td>
+                    <td style={{ padding: "10px 0", textAlign: "right" }}>
+                      <UserRowActions user={u} currentUserId={session.user.id} />
                     </td>
                   </tr>
                 ))}

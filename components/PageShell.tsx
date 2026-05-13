@@ -65,7 +65,7 @@ export function PageShell({
         {action}
       </>
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [controls, action],
   );
   useSetTopBar(title, actionsContent);

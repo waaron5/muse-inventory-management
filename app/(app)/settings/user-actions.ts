@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { requireAdmin } from "@/lib/action-helpers";
+import { logAudit } from "@/lib/audit";
 
 export async function createUser(data: {
   firstName: string;
@@ -43,6 +44,39 @@ export async function createUser(data: {
       role: "USER",
       emailNotificationsEnabled: true,
     },
+  });
+
+  revalidatePath("/settings/users");
+  return { success: true };
+}
+
+export async function deactivateUser(
+  userId: string,
+): Promise<{ success: true } | { error: string }> {
+  let session;
+  try {
+    session = await requireAdmin();
+  } catch {
+    return { error: "You don't have permission to remove users." };
+  }
+
+  if (userId === session.user.id) {
+    return { error: "You cannot remove your own account." };
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !user.isActive) {
+    return { error: "User not found." };
+  }
+
+  await prisma.user.update({ where: { id: userId }, data: { isActive: false } });
+
+  await logAudit({
+    entityType: "USER",
+    entityId: userId,
+    actionType: "DELETED",
+    performedById: session.user.id,
+    summary: `Deactivated user ${user.email}`,
   });
 
   revalidatePath("/settings/users");

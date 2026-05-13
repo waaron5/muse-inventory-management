@@ -102,25 +102,19 @@ export function InventoryForm({ locationOptions, mode, item }: InventoryFormProp
         </button>
       </>
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [loading, uploadingImage, mode],
   );
 
   useSetTopBar(titleNode, actionsNode);
 
   useEffect(() => {
-    if (!selectedImageFile) {
-      setSelectedImagePreviewUrl(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(selectedImageFile);
-    setSelectedImagePreviewUrl(objectUrl);
-
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      if (selectedImagePreviewUrl) {
+        URL.revokeObjectURL(selectedImagePreviewUrl);
+      }
     };
-  }, [selectedImageFile]);
+  }, [selectedImagePreviewUrl]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -173,13 +167,21 @@ export function InventoryForm({ locationOptions, mode, item }: InventoryFormProp
             disabled={loading}
             onFileSelected={(file) => {
               setImageError("");
+              if (selectedImagePreviewUrl) {
+                URL.revokeObjectURL(selectedImagePreviewUrl);
+              }
               setSelectedImageFile(file);
+              setSelectedImagePreviewUrl(URL.createObjectURL(file));
               setRemoveExistingImage(false);
             }}
             onClear={() => {
               setImageError("");
+              if (selectedImagePreviewUrl) {
+                URL.revokeObjectURL(selectedImagePreviewUrl);
+              }
               if (selectedImageFile) {
                 setSelectedImageFile(null);
+                setSelectedImagePreviewUrl(null);
               } else {
                 setRemoveExistingImage(true);
               }

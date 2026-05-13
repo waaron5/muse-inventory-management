@@ -33,7 +33,7 @@ interface InventoryTableProps {
 }
 
 export function InventoryTable({ items, isAdmin, availableEvents }: InventoryTableProps) {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [reserveOpen, setReserveOpen] = useState(false);
   const bulkDockSlot = useInventoryBulkDockSlot();
   const setBulkSelectionActive = useSetBulkSelectionActive();
@@ -42,6 +42,7 @@ export function InventoryTable({ items, isAdmin, availableEvents }: InventoryTab
   const selectableItems = items.filter((item) => item.status === "ACTIVE");
   const selectableItemIds = selectableItems.map((item) => item.id);
   const selectableItemIdSet = new Set(selectableItemIds);
+  const selected = new Set([...selectedIds].filter((itemId) => selectableItemIdSet.has(itemId)));
   const showSelectionColumn = selectableItemIds.length > 0;
   const allSelected = selectableItemIds.length > 0 && selected.size === selectableItemIds.length;
   const someSelected = selected.size > 0 && selected.size < selectableItemIds.length;
@@ -53,16 +54,6 @@ export function InventoryTable({ items, isAdmin, availableEvents }: InventoryTab
     totalQuantity: item.quantity,
   }));
   const columnCount = showSelectionColumn ? 8 : 7;
-
-  useEffect(() => {
-    setSelected((prev) => {
-      const next = new Set([...prev].filter((itemId) => selectableItemIdSet.has(itemId)));
-      if (next.size === prev.size) {
-        return prev;
-      }
-      return next;
-    });
-  }, [items]);
 
   useEffect(() => {
     if (selectAllRef.current) {
@@ -83,7 +74,7 @@ export function InventoryTable({ items, isAdmin, availableEvents }: InventoryTab
   function toggleOne(itemId: string) {
     if (!selectableItemIdSet.has(itemId)) return;
 
-    setSelected((prev) => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(itemId)) {
         next.delete(itemId);
@@ -96,9 +87,9 @@ export function InventoryTable({ items, isAdmin, availableEvents }: InventoryTab
 
   function toggleAll() {
     if (allSelected) {
-      setSelected(new Set());
+      setSelectedIds(new Set());
     } else {
-      setSelected(new Set(selectableItemIds));
+      setSelectedIds(new Set(selectableItemIds));
     }
   }
 
@@ -256,7 +247,7 @@ export function InventoryTable({ items, isAdmin, availableEvents }: InventoryTab
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
-                    onClick={() => setSelected(new Set())}
+                    onClick={() => setSelectedIds(new Set())}
                   >
                     Clear
                   </button>
@@ -281,7 +272,7 @@ export function InventoryTable({ items, isAdmin, availableEvents }: InventoryTab
       <ReserveInventoryModal
         open={reserveOpen}
         onClose={() => setReserveOpen(false)}
-        onSubmitted={() => setSelected(new Set())}
+        onSubmitted={() => setSelectedIds(new Set())}
         availableEvents={availableEvents}
         initialSelectedItems={selectedReservationItems}
         title={`Reserve ${selected.size} ${selected.size === 1 ? "Item" : "Items"}`}

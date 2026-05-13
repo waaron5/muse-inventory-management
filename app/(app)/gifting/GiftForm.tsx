@@ -97,25 +97,19 @@ export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
         </button>
       </>
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [loading, uploadingImage, mode],
   );
 
   useSetTopBar(titleNode, actionsNode);
 
   useEffect(() => {
-    if (!selectedImageFile) {
-      setSelectedImagePreviewUrl(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(selectedImageFile);
-    setSelectedImagePreviewUrl(objectUrl);
-
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      if (selectedImagePreviewUrl) {
+        URL.revokeObjectURL(selectedImagePreviewUrl);
+      }
     };
-  }, [selectedImageFile]);
+  }, [selectedImagePreviewUrl]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -168,13 +162,21 @@ export function GiftForm({ locationOptions, mode, item }: GiftFormProps) {
             disabled={loading}
             onFileSelected={(file) => {
               setImageError("");
+              if (selectedImagePreviewUrl) {
+                URL.revokeObjectURL(selectedImagePreviewUrl);
+              }
               setSelectedImageFile(file);
+              setSelectedImagePreviewUrl(URL.createObjectURL(file));
               setRemoveExistingImage(false);
             }}
             onClear={() => {
               setImageError("");
+              if (selectedImagePreviewUrl) {
+                URL.revokeObjectURL(selectedImagePreviewUrl);
+              }
               if (selectedImageFile) {
                 setSelectedImageFile(null);
+                setSelectedImagePreviewUrl(null);
               } else {
                 setRemoveExistingImage(true);
               }

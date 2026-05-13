@@ -6,7 +6,7 @@ import { deleteManagedInventoryImage } from "@/lib/inventory-image-storage";
 import { requireStorageLocationName } from "@/lib/storage-locations";
 import { revalidatePath } from "next/cache";
 import { InventoryStatus } from "@prisma/client";
-import { requireSession, requireAdmin } from "@/lib/action-helpers";
+import { requireAdmin } from "@/lib/action-helpers";
 
 export async function createInventoryItem(formData: {
   title: string;

@@ -85,7 +85,7 @@ export function EventForm({ mode, event }: EventFormProps) {
         </button>
       </>
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [loading, mode, event?.id],
   );
 

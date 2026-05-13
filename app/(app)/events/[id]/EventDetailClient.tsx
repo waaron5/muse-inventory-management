@@ -20,7 +20,7 @@ import {
 import { deleteEvent, updateEvent } from "../actions";
 import { ReserveInventoryForEventButton } from "../ReserveInventoryForEventButton";
 import type { EventDetailData } from "./detail-data";
-import { formatLongDate, formatShortDate, formatAuditDate } from "@/lib/date-utils";
+import { formatLongDate, formatAuditDate } from "@/lib/date-utils";
 
 const EVENT_DETAIL_FORM_ID = "event-detail-edit-form";
 

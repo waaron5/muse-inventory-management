@@ -43,12 +43,12 @@
   --color-sidebar-toggle-hover-bg: rgba(255, 255, 255, 0.72);
   --color-sidebar-toggle-hover-border: rgba(209, 213, 219, 0.9);
   --color-sidebar-link-text: var(--gray-600);
-  --color-sidebar-link-hover-text: var(--gray-900);
-  --color-sidebar-link-hover-bg: rgba(255, 255, 255, 0.7);
-  --color-sidebar-link-hover-border: rgba(209, 213, 219, 0.85);
-  --color-sidebar-link-active-bg: #ffffff;
-  --color-sidebar-link-active-border: rgba(209, 213, 219, 0.92);
-  --color-sidebar-link-active-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  --color-sidebar-link-hover-text: var(--muse-cyan-dark);
+  --color-sidebar-link-hover-bg: rgba(2, 181, 225, 0.1);
+  --color-sidebar-link-hover-border: transparent;
+  --color-sidebar-link-active-bg: var(--muse-cyan-light);
+  --color-sidebar-link-active-border: transparent;
+  --color-sidebar-link-active-shadow: none;
   --color-avatar-indicator-bg: #ef4444;
   --color-avatar-indicator-ring: #ffffff;
   --color-avatar-bg-start: #f7f7f7;
@@ -503,6 +503,7 @@ select {
 }
 
 .inventory-image-upload-preview {
+  position: relative;
   width: 92px;
   height: 92px;
   border-radius: 12px;
@@ -1863,6 +1864,7 @@ select {
   border-radius: 8px;
 }
 .detail-image-frame {
+  position: relative;
   width: 120px;
   height: 120px;
   overflow: hidden;
@@ -2224,8 +2226,7 @@ select {
   grid-area: sidebar;
   z-index: 50;
   height: 100dvh;
-  width: 240px;
-  padding: 0 16px 24px;
+  padding: 0 20px 24px;
   border-right: 1px solid var(--color-sidebar-border);
   box-shadow: var(--surface-shadow-subtle-side);
   background: linear-gradient(
@@ -2260,7 +2261,7 @@ select {
   height: 64px;
   padding: 0;
   border-bottom: 1px solid var(--color-sidebar-divider);
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 
 .app-sidebar-account-summary {
@@ -2281,28 +2282,29 @@ select {
 .app-sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  padding-top: 6px;
   min-height: 0;
 }
 
 .app-sidebar-bottom {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   align-self: end;
 }
 
 .app-sidebar-account-nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   padding: 0;
 }
 
 .app-sidebar-account-link {
   position: relative;
   width: 100%;
-  min-height: 44px;
+  min-height: 38px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2310,19 +2312,14 @@ select {
   border-radius: 14px;
   background: transparent;
   color: var(--color-sidebar-link-text);
-  padding: 11px 14px;
+  padding: 9px 14px;
   font-family: inherit;
   font-size: var(--type-emphasis-size);
   line-height: var(--type-emphasis-line-height);
   font-weight: var(--type-emphasis-weight);
   text-align: left;
   text-decoration: none;
-  transition:
-    background 0.16s ease,
-    border-color 0.16s ease,
-    color 0.16s ease,
-    box-shadow 0.16s ease,
-    transform 0.16s ease;
+  transition: none;
   cursor: pointer;
 }
 
@@ -2355,7 +2352,7 @@ select {
 .app-sidebar-divider {
   border: none;
   border-top: 1px solid var(--color-sidebar-divider);
-  margin: 4px 0;
+  margin: 0;
 }
 
 .app-nav-link {
@@ -2364,8 +2361,8 @@ select {
   align-items: center;
   gap: 12px;
   width: 100%;
-  min-height: 44px;
-  padding: 11px 14px;
+  min-height: 38px;
+  padding: 9px 14px;
   border: 1px solid transparent;
   border-radius: 14px;
   color: var(--color-sidebar-link-text);
@@ -2373,12 +2370,7 @@ select {
   font-size: var(--type-emphasis-size);
   line-height: var(--type-emphasis-line-height);
   font-weight: var(--type-emphasis-weight);
-  transition:
-    background 0.16s ease,
-    border-color 0.16s ease,
-    color 0.16s ease,
-    box-shadow 0.16s ease,
-    transform 0.16s ease;
+  transition: none;
 }
 
 .app-nav-link:hover {
@@ -2626,7 +2618,7 @@ select {
 .app-shell {
   height: 100dvh;
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-columns: 256px minmax(0, 1fr);
   grid-template-rows: 64px minmax(0, 1fr);
   grid-template-areas:
     "sidebar topbar"

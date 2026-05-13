@@ -2,6 +2,7 @@
 
 import { type FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { DetailTopBar } from "@/components/DetailTopBar";
@@ -75,18 +76,12 @@ export function InventoryDetailClient({
     selectedImagePreviewUrl ?? (removeExistingImage ? null : existingImageUrl);
 
   useEffect(() => {
-    if (!selectedImageFile) {
-      setSelectedImagePreviewUrl(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(selectedImageFile);
-    setSelectedImagePreviewUrl(objectUrl);
-
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      if (selectedImagePreviewUrl) {
+        URL.revokeObjectURL(selectedImagePreviewUrl);
+      }
     };
-  }, [selectedImageFile]);
+  }, [selectedImagePreviewUrl]);
 
   useEffect(() => {
     if (isEditing) return;
@@ -95,6 +90,9 @@ export function InventoryDetailClient({
   }, [data.item.updatedAt, isEditing]);
 
   function resetDraft() {
+    if (selectedImagePreviewUrl) {
+      URL.revokeObjectURL(selectedImagePreviewUrl);
+    }
     setDraft(createDraft(data));
     setSelectedImageFile(null);
     setSelectedImagePreviewUrl(null);
@@ -227,13 +225,22 @@ export function InventoryDetailClient({
                     imageError={imageError}
                     disabled={saving}
                     onFileSelected={(file) => {
+                      setImageError("");
+                      if (selectedImagePreviewUrl) {
+                        URL.revokeObjectURL(selectedImagePreviewUrl);
+                      }
                       setSelectedImageFile(file);
+                      setSelectedImagePreviewUrl(URL.createObjectURL(file));
                       setRemoveExistingImage(false);
                     }}
                     onClear={() => {
                       setImageError("");
+                      if (selectedImagePreviewUrl) {
+                        URL.revokeObjectURL(selectedImagePreviewUrl);
+                      }
                       if (selectedImageFile) {
                         setSelectedImageFile(null);
+                        setSelectedImagePreviewUrl(null);
                         return;
                       }
                       setRemoveExistingImage(true);
@@ -348,10 +355,12 @@ export function InventoryDetailClient({
               <div className="detail-image-section">
                 {data.item.imageUrl ? (
                   <div className="detail-image-frame">
-                    <img
+                    <Image
                       src={data.item.imageUrl}
                       alt={data.item.title}
                       className="detail-image-img"
+                      fill
+                      sizes="120px"
                     />
                   </div>
                 ) : (

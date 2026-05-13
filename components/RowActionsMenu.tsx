@@ -26,13 +26,10 @@ export function RowActionsMenu({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [dropdownStyle, setDropdownStyle] = useState<CSSProperties | null>(null);
+  const menuOpen = open && !disabled;
 
   useEffect(() => {
-    if (disabled) setOpen(false);
-  }, [disabled]);
-
-  useEffect(() => {
-    if (!open) return;
+    if (!menuOpen) return;
 
     function onPointerDown(e: MouseEvent) {
       const target = e.target as Node;
@@ -52,13 +49,10 @@ export function RowActionsMenu({
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open]);
+  }, [menuOpen]);
 
   useLayoutEffect(() => {
-    if (!open) {
-      setDropdownStyle(null);
-      return;
-    }
+    if (!menuOpen) return;
 
     function updatePosition() {
       const trigger = triggerRef.current;
@@ -97,7 +91,7 @@ export function RowActionsMenu({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open]);
+  }, [menuOpen]);
 
   return (
     <>
@@ -107,16 +101,19 @@ export function RowActionsMenu({
           type="button"
           className="row-actions-trigger"
           aria-haspopup="menu"
-          aria-expanded={open}
+          aria-expanded={menuOpen}
           aria-label={triggerLabel}
           disabled={disabled}
-          onClick={() => setOpen((o) => !o)}
+          onClick={() => {
+            setDropdownStyle(null);
+            setOpen((o) => !o);
+          }}
         >
           <DotsIcon />
         </button>
       </div>
 
-      {open &&
+      {menuOpen &&
         typeof document !== "undefined" &&
         createPortal(
           <div

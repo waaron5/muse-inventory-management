@@ -137,7 +137,7 @@ export default async function ReservationsPage({
   return (
     <PageShell
       stripLegacyPaginationParams
-      title="My Reservations"
+      title={isAdmin ? "Reservations" : "My Reservations"}
       action={<NewReservationButton availableEvents={serializedEvents} />}
       controls={
         <div className="table-toolbar inventory-toolbar">

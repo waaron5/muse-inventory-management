@@ -151,6 +151,7 @@ export function ReserveInventoryModal({
   useEffect(() => {
     if (!open) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEventId(presetEvent?.id ?? "");
     setSearchOpen(false);
     setSearchQuery("");
@@ -159,10 +160,12 @@ export function ReserveInventoryModal({
     setSubmitError("");
     setSubmitting(false);
     setSelectedItems(buildSelectedItems(initialSelectedItems));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, presetEvent?.id, initialSelectedItemsKey]);
 
   useEffect(() => {
     if (!open || !canSearchInventory || !searchOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchResults([]);
       setSearchError("");
       setSearching(false);
@@ -194,6 +197,7 @@ export function ReserveInventoryModal({
     if (!open) return;
 
     if (!activeEventId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedItems((current) =>
         current.map((item) => ({
           ...item,

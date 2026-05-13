@@ -31,7 +31,7 @@ export function TopBarProvider({ children }: { children: ReactNode }) {
   // useState setters are stable — this memo object never changes reference.
   const setters = useMemo<TopBarSetters>(
     () => ({ setTitleSlot, setActionsSlot }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [],
   );
 

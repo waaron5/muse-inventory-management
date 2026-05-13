@@ -50,24 +50,26 @@ export function GiftUseModal({
     [availableEvents, selectedEventId],
   );
 
-  useEffect(() => {
-    if (!open) {
-      setSelectedEventId("");
-      setQuantity("1");
-      setNotes("");
-      setAvailableQty(null);
-      setLoadingAvailability(false);
-      setLoadingSubmit(false);
-      setError("");
-      return;
-    }
+  function resetForm() {
+    setSelectedEventId("");
+    setQuantity("1");
+    setNotes("");
+    setAvailableQty(null);
+    setLoadingAvailability(false);
+    setLoadingSubmit(false);
+    setError("");
+  }
 
-    if (!selectedEventId) {
-      setAvailableQty(null);
-      return;
-    }
+  function closeModal() {
+    resetForm();
+    onClose();
+  }
+
+  useEffect(() => {
+    if (!open || !selectedEventId) return;
 
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingAvailability(true);
 
     checkGiftAvailability(giftItem.id)
@@ -103,7 +105,7 @@ export function GiftUseModal({
         notes: notes || undefined,
       });
       toast(result.autoApproved ? "Gift request approved" : "Gift request pending approval");
-      onClose();
+      closeModal();
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Unable to save request.");
@@ -118,7 +120,7 @@ export function GiftUseModal({
   return (
     <Modal
       open={open}
-      onClose={loadingSubmit ? () => {} : onClose}
+      onClose={loadingSubmit ? () => {} : closeModal}
       title={title ?? `Use "${giftItem.title}"`}
     >
       <form onSubmit={handleSubmit} className="modal-form">
@@ -130,6 +132,7 @@ export function GiftUseModal({
             onChange={(event) => {
               setSelectedEventId(event.target.value);
               setQuantity("1");
+              setAvailableQty(null);
               setError("");
             }}
             required

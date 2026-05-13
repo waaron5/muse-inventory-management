@@ -37,16 +37,20 @@ export function Navbar({
   onToggleSidebar,
 }: NavbarProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const [notificationSeenAt, setNotificationSeenAt] = useState<string | null>(null);
   const displayName = user.name.trim() || user.email;
   const initials = getInitials(displayName);
   const notificationSeenStorageKey = `${NOTIFICATIONS_SEEN_STORAGE_KEY_PREFIX}:${user.id}`;
   const hasUnseenNotification = parseTimestamp(notificationAt) > parseTimestamp(notificationSeenAt);
-  const showNotificationsIndicator = notificationsHasAttention || hasUnseenNotification;
+  const showNotificationsIndicator =
+    mounted && (notificationsHasAttention || hasUnseenNotification);
   const titleSlot = useTopBarTitle();
   const actionsSlot = useTopBarActions();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
     try {
       setNotificationSeenAt(window.localStorage.getItem(notificationSeenStorageKey));
     } catch {
@@ -62,6 +66,7 @@ export function Navbar({
       window.localStorage.setItem(notificationSeenStorageKey, notificationAt);
     } catch {}
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNotificationSeenAt(notificationAt);
   }, [pathname, notificationAt, notificationSeenStorageKey]);
 
@@ -103,9 +108,6 @@ export function Navbar({
           <div className="app-sidebar-account-summary">
             <span className="app-account-trigger" aria-label={displayName}>
               <span className="app-account-avatar">{initials}</span>
-              {showNotificationsIndicator && (
-                <span className="app-account-avatar-indicator" aria-label="Unread notifications" />
-              )}
             </span>
             <span className="app-navbar-user-name">{displayName}</span>
           </div>
@@ -147,7 +149,9 @@ export function Navbar({
                     <GiftingIcon className="app-nav-icon" />
                   ) : null}
                   <span className="app-nav-link-label-wrap">
-                    <span className="app-nav-link-label">{label}</span>
+                    <span className="app-nav-link-label">
+                      {isReservationsIcon && user.role === "ADMIN" ? "Reservations" : label}
+                    </span>
                   </span>
                 </Link>
                 {isReservationsIcon && <hr className="app-sidebar-divider" />}
