@@ -7,5 +7,9 @@ export default async function NewEventPage() {
   const session = await getServerSession(authOptions);
   if (session?.user.role !== "ADMIN") redirect("/events");
 
-  return <EventForm mode="create" />;
+  return (
+    <div className="create-form-page">
+      <EventForm mode="create" />
+    </div>
+  );
 }

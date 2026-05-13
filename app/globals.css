@@ -396,7 +396,14 @@ select {
 
 /* --- Forms --- */
 .form-container {
+  width: 100%;
   max-width: 680px;
+}
+.create-form-page {
+  min-height: 100%;
+  width: 100%;
+  display: grid;
+  place-items: center;
 }
 .form-grid {
   display: grid;

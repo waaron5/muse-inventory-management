@@ -9,5 +9,9 @@ export default async function NewInventoryPage() {
   if (session?.user.role !== "ADMIN") redirect("/inventory");
   const locationOptions = await getStorageLocationNames();
 
-  return <InventoryForm locationOptions={locationOptions} mode="create" />;
+  return (
+    <div className="create-form-page">
+      <InventoryForm locationOptions={locationOptions} mode="create" />
+    </div>
+  );
 }

@@ -9,5 +9,9 @@ export default async function NewGiftPage() {
   if (session?.user.role !== "ADMIN") redirect("/gifting");
   const locationOptions = await getStorageLocationNames();
 
-  return <GiftForm locationOptions={locationOptions} mode="create" />;
+  return (
+    <div className="create-form-page">
+      <GiftForm locationOptions={locationOptions} mode="create" />
+    </div>
+  );
 }

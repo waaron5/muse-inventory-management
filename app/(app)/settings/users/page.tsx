@@ -13,7 +13,14 @@ function getRoleLabel(role: string) {
 export default async function UsersPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
-  if (session.user.role !== "ADMIN") redirect("/settings");
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true, isActive: true },
+  });
+
+  if (!currentUser?.isActive) redirect("/login");
+  if (currentUser.role !== "ADMIN") redirect("/settings");
 
   const users = await prisma.user.findMany({
     where: { isActive: true },
