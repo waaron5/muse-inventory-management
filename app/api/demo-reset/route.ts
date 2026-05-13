@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     // Re-seed users
     const adminHash = await bcrypt.hash("admin123", 12);
     const userHash = await bcrypt.hash("user123", 12);
+    const passwordSetAt = new Date();
 
     const admin = await prisma.user.create({
       data: {
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
         email: "admin@muse.local",
         passwordHash: adminHash,
         role: "ADMIN",
+        passwordSetAt,
       },
     });
 
@@ -52,6 +54,7 @@ export async function POST(request: Request) {
         email: "user@muse.local",
         passwordHash: userHash,
         role: "USER",
+        passwordSetAt,
       },
     });
 

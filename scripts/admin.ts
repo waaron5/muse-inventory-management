@@ -47,6 +47,7 @@ async function createAdmin() {
 
   try {
     const passwordHash = await bcrypt.hash(password, 12);
+    const passwordSetAt = new Date();
     const existingUser = await prisma.user.findUnique({ where: { email } });
 
     if (existingUser) {
@@ -57,6 +58,7 @@ async function createAdmin() {
           passwordHash,
           role: "ADMIN",
           isActive: true,
+          passwordSetAt,
         },
       });
       console.log(`Admin user updated: ${email}`);
@@ -70,6 +72,7 @@ async function createAdmin() {
         passwordHash,
         role: "ADMIN",
         isActive: true,
+        passwordSetAt,
       },
     });
     console.log(`Admin user created: ${email}`);

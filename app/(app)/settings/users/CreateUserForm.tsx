@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createUser } from "@/app/(app)/settings/user-actions";
+import { inviteUser } from "@/app/(app)/settings/user-actions";
+
+type InviteRole = "USER" | "ADMIN";
 
 export function CreateUserForm() {
   const router = useRouter();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<InviteRole>("USER");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -20,7 +20,7 @@ export function CreateUserForm() {
     setSuccess(false);
     setLoading(true);
 
-    const result = await createUser({ firstName, lastName, email, password });
+    const result = await inviteUser({ email, role });
 
     setLoading(false);
 
@@ -28,10 +28,9 @@ export function CreateUserForm() {
       setError(result.error);
     } else {
       setSuccess(true);
-      setFirstName("");
-      setLastName("");
       setEmail("");
-      setPassword("");
+      setRole("USER");
+      router.refresh();
     }
   }
 
@@ -39,40 +38,6 @@ export function CreateUserForm() {
     <form onSubmit={handleSubmit} className="inv-form">
       <div className="form-grid">
         <div className="form-field">
-          <label className="form-label" htmlFor="cu-first-name">
-            First Name *
-          </label>
-          <input
-            id="cu-first-name"
-            type="text"
-            className="form-input"
-            autoComplete="given-name"
-            required
-            maxLength={100}
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            placeholder="Jane"
-          />
-        </div>
-
-        <div className="form-field">
-          <label className="form-label" htmlFor="cu-last-name">
-            Last Name *
-          </label>
-          <input
-            id="cu-last-name"
-            type="text"
-            className="form-input"
-            autoComplete="family-name"
-            required
-            maxLength={100}
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            placeholder="Smith"
-          />
-        </div>
-
-        <div className="form-field form-field-wide">
           <label className="form-label" htmlFor="cu-email">
             Email *
           </label>
@@ -89,21 +54,20 @@ export function CreateUserForm() {
           />
         </div>
 
-        <div className="form-field form-field-wide">
-          <label className="form-label" htmlFor="cu-password">
-            Initial Password *
+        <div className="form-field">
+          <label className="form-label" htmlFor="cu-role">
+            Role *
           </label>
-          <input
-            id="cu-password"
-            type="password"
+          <select
+            id="cu-role"
             className="form-input"
-            autoComplete="new-password"
+            value={role}
+            onChange={(e) => setRole(e.target.value as InviteRole)}
             required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Min. 8 characters"
-          />
+          >
+            <option value="USER">Team Member</option>
+            <option value="ADMIN">Administrator</option>
+          </select>
         </div>
       </div>
 
@@ -117,7 +81,7 @@ export function CreateUserForm() {
             fontWeight: 500,
           }}
         >
-          User created successfully. Share their credentials with them to log in.
+          Invite sent. The user can create their profile and password from the email link.
         </p>
       )}
 
@@ -126,7 +90,7 @@ export function CreateUserForm() {
           Cancel
         </button>
         <button type="submit" className="btn btn-dark" disabled={loading}>
-          {loading ? "Creating…" : "Create User"}
+          {loading ? "Sending..." : "Send Invite"}
         </button>
       </div>
     </form>

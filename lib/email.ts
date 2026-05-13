@@ -39,14 +39,16 @@ export async function sendEmail({
   to: string | string[];
   subject: string;
   html: string;
-}): Promise<void> {
+}): Promise<boolean> {
   const resend = getResendClient();
-  if (!resend) return;
+  if (!resend) return false;
 
   try {
     await resend.emails.send({ from: FROM_EMAIL, to, subject, html });
+    return true;
   } catch (err) {
     console.error("[email] Failed to send:", err);
+    return false;
   }
 }
 
@@ -65,7 +67,11 @@ export async function getAdminEmailRecipients(): Promise<string[]> {
 
 // ─── Shared template wrapper ──────────────────────────────────────────────────
 
-function emailLayout(bodyContent: string): string {
+function emailLayout(bodyContent: string, footerContent?: string): string {
+  const footer =
+    footerContent ??
+    `You're receiving this because you have email notifications enabled. You can turn them off in your <a href="${APP_URL}/settings" style="color:#71717a;">account settings</a>.`;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -88,7 +94,7 @@ function emailLayout(bodyContent: string): string {
         </tr>
         <tr>
           <td style="padding:16px 28px 20px;border-top:1px solid #f4f4f5;">
-            <p style="margin:0;font-size:12px;color:#a1a1aa;">You're receiving this because you have email notifications enabled. You can turn them off in your <a href="${APP_URL}/settings" style="color:#71717a;">account settings</a>.</p>
+            <p style="margin:0;font-size:12px;color:#a1a1aa;">${footer}</p>
           </td>
         </tr>
       </table>
@@ -109,6 +115,23 @@ function bodyText(lines: string[]): string {
 }
 
 // ─── Templates ────────────────────────────────────────────────────────────────
+
+export function buildUserInviteEmail(p: { inviteUrl: string; roleLabel: string }): {
+  subject: string;
+  html: string;
+} {
+  return {
+    subject: "You've been invited to Muse",
+    html: emailLayout(
+      bodyText([
+        "You've been invited to Muse.",
+        `Your access level will be <strong>${p.roleLabel}</strong>. Use the secure link below to enter your name and create your password.`,
+        "This invite expires in 48 hours.",
+      ]) + ctaButton("Accept invite", p.inviteUrl),
+      "You're receiving this because an administrator invited you to Muse.",
+    ),
+  };
+}
 
 export function buildNewInventoryRequestEmail(p: {
   requesterName: string;

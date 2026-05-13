@@ -31,6 +31,7 @@ export default async function UsersPage() {
       lastName: true,
       email: true,
       role: true,
+      passwordSetAt: true,
       createdAt: true,
     },
     orderBy: { createdAt: "asc" },
@@ -48,7 +49,7 @@ export default async function UsersPage() {
             <div className="settings-card-head">
               <h2 className="section-title">Team Members</h2>
               <p className="settings-card-copy">
-                All users who can access Muse. Only admins can create new accounts.
+                All users who can access Muse. Pending users can finish setup from their invite.
               </p>
             </div>
 
@@ -97,6 +98,17 @@ export default async function UsersPage() {
                       fontSize: 12,
                     }}
                   >
+                    Status
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontWeight: 600,
+                      color: "var(--gray-500)",
+                      fontSize: 12,
+                    }}
+                  >
                     Joined
                   </th>
                   <th style={{ width: 40 }} />
@@ -106,11 +118,18 @@ export default async function UsersPage() {
                 {users.map((u) => (
                   <tr key={u.id} style={{ borderBottom: "1px solid var(--gray-100)" }}>
                     <td style={{ padding: "10px 0", color: "var(--gray-900)", fontWeight: 500 }}>
-                      {u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.name}
+                      {u.passwordSetAt
+                        ? u.firstName && u.lastName
+                          ? `${u.firstName} ${u.lastName}`
+                          : u.name
+                        : "Pending invite"}
                     </td>
                     <td style={{ padding: "10px 0", color: "var(--gray-600)" }}>{u.email}</td>
                     <td style={{ padding: "10px 0", color: "var(--gray-600)" }}>
                       {getRoleLabel(u.role)}
+                    </td>
+                    <td style={{ padding: "10px 0", color: "var(--gray-600)" }}>
+                      {u.passwordSetAt ? "Active" : "Invited"}
                     </td>
                     <td style={{ padding: "10px 0", color: "var(--gray-500)", fontSize: 13 }}>
                       {u.createdAt.toLocaleDateString("en-US", {
@@ -130,9 +149,9 @@ export default async function UsersPage() {
 
           <section className="detail-card settings-card">
             <div className="settings-card-head">
-              <h2 className="section-title">Create New User</h2>
+              <h2 className="section-title">Invite User</h2>
               <p className="settings-card-copy">
-                Add a team member. Share their email and initial password with them directly.
+                Send an invite link so a team member can create their profile and password.
               </p>
             </div>
             <CreateUserForm />

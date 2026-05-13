@@ -306,6 +306,7 @@ async function main() {
   // --- Users ---
   const adminHash = await bcrypt.hash("admin123", 12);
   const userHash = await bcrypt.hash("user123", 12);
+  const passwordSetAt = new Date();
 
   const admin = await prisma.user.create({
     data: {
@@ -313,6 +314,7 @@ async function main() {
       email: "admin@muse.local",
       passwordHash: adminHash,
       role: "ADMIN",
+      passwordSetAt,
     },
   });
 
@@ -322,6 +324,7 @@ async function main() {
       email: "user@muse.local",
       passwordHash: userHash,
       role: "USER",
+      passwordSetAt,
     },
   });
   console.log(`  Users: ${admin.email}, ${user.email}`);

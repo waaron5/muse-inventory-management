@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/Toast";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
-import { deactivateUser } from "@/app/(app)/settings/user-actions";
+import { deactivateUser, resendUserInvite } from "@/app/(app)/settings/user-actions";
 
 export function UserRowActions({
   user,
@@ -16,6 +16,7 @@ export function UserRowActions({
     firstName?: string | null;
     lastName?: string | null;
     name: string;
+    passwordSetAt?: Date | string | null;
   };
   currentUserId: string;
 }) {
@@ -43,18 +44,39 @@ export function UserRowActions({
     }
   }
 
+  async function handleResendInvite() {
+    setLoading(true);
+    const result = await resendUserInvite(user.id);
+    setLoading(false);
+
+    if ("error" in result) {
+      toast(result.error, "error");
+    } else {
+      toast(`Invite resent to ${user.email}`);
+      router.refresh();
+    }
+  }
+
+  const actions = [];
+  if (!user.passwordSetAt) {
+    actions.push({
+      label: loading ? "Sending..." : "Resend Invite",
+      onClick: handleResendInvite,
+      disabled: loading,
+    });
+  }
+  actions.push({
+    label: loading ? "Removing..." : "Remove",
+    onClick: handleRemove,
+    variant: "danger" as const,
+    disabled: loading,
+  });
+
   return (
     <RowActionsMenu
       triggerLabel={`Actions for ${displayName}`}
       disabled={loading}
-      actions={[
-        {
-          label: loading ? "Removing…" : "Remove",
-          onClick: handleRemove,
-          variant: "danger",
-          disabled: loading,
-        },
-      ]}
+      actions={actions}
     />
   );
 }

@@ -5,7 +5,7 @@
   --muse-cyan: #02b5e1;
   --muse-cyan-light: #e0f7fc;
   --muse-cyan-hover: #14c7f3;
-  --muse-cyan-dark: #027fa0;
+  --muse-cyan-dark: #015f78;
 
   /* Neutrals */
   --white: #ffffff;
@@ -3502,6 +3502,13 @@ select {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+.invite-helper {
+  margin: -12px 0 20px;
+  color: var(--gray-500);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
 }
 .login-error {
   background: var(--status-rejected-bg);
