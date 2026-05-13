@@ -2358,7 +2358,7 @@ select {
   display: flex;
   align-items: center;
   min-height: 56px;
-  padding: 16px 2px 0;
+  padding: 16px 14px 0;
   border-top: 1px solid var(--color-sidebar-divider);
 }
 
@@ -3224,6 +3224,10 @@ select {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.settings-card-head .section-title {
+  margin-bottom: 0;
 }
 
 .settings-card-copy {
