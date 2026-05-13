@@ -22,6 +22,7 @@ interface NavbarProps {
     name: string;
     email: string;
     role: string;
+    avatarUrl?: string | null;
   };
   notificationsHasAttention?: boolean;
   notificationAt?: string | null;
@@ -106,9 +107,25 @@ export function Navbar({
       >
         <div className="app-sidebar-brand">
           <div className="app-sidebar-account-summary">
-            <span className="app-account-trigger" aria-label={displayName}>
-              <span className="app-account-avatar">{initials}</span>
-            </span>
+            <Link
+              href="/settings"
+              className="app-account-trigger"
+              aria-label={`${displayName} — settings`}
+            >
+              <span className="app-account-avatar">
+                {user.avatarUrl ? (
+                  <Image
+                    src={user.avatarUrl}
+                    alt=""
+                    className="app-account-avatar-photo"
+                    fill
+                    sizes="40px"
+                  />
+                ) : (
+                  initials
+                )}
+              </span>
+            </Link>
             <span className="app-navbar-user-name">{displayName}</span>
           </div>
           <button

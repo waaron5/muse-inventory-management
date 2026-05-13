@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { deleteManagedAvatar, isManagedAvatarUrl } from "@/lib/avatar-image-storage";
 
 const PROFILE_NAME_MAX_LENGTH = 100;
 
@@ -61,6 +62,27 @@ export async function updateEmail(email: string): Promise<void> {
   await prisma.user.update({
     where: { id: session.user.id },
     data: { email: normalized },
+  });
+
+  revalidatePath("/settings");
+}
+
+export async function updateAvatarUrl(url: string | null): Promise<void> {
+  const session = await getServerSession(authOptions);
+  if (!session) throw new Error("Unauthorized");
+
+  const existing = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { avatarUrl: true },
+  });
+
+  if (existing?.avatarUrl && isManagedAvatarUrl(existing.avatarUrl)) {
+    await deleteManagedAvatar(existing.avatarUrl);
+  }
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { avatarUrl: url },
   });
 
   revalidatePath("/settings");

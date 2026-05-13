@@ -1,15 +1,17 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
+import Image from "next/image";
 import { useToast } from "@/components/Toast";
 import { EditIcon } from "@/components/DetailHeaderActions";
-import { updateEmail, updateProfileSettings } from "./actions";
+import { updateAvatarUrl, updateEmail, updateProfileSettings } from "./actions";
 
 interface ProfileSettingsClientProps {
   firstName: string;
   lastName: string;
   email: string;
   roleLabel: string;
+  avatarUrl: string | null;
 }
 
 type EditingField = "name" | "email" | null;
@@ -55,6 +57,7 @@ export function ProfileSettingsClient({
   lastName,
   email,
   roleLabel,
+  avatarUrl,
 }: ProfileSettingsClientProps) {
   const { toast } = useToast();
 
@@ -66,6 +69,18 @@ export function ProfileSettingsClient({
   const [editingField, setEditingField] = useState<EditingField>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(avatarUrl);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const initials =
+    initialFullName
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "ME";
 
   function startEdit(field: EditingField) {
     setDraftName(savedName);
@@ -77,6 +92,42 @@ export function ProfileSettingsClient({
   function cancelEdit() {
     setError("");
     setEditingField(null);
+  }
+
+  async function handleAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!e.target.files) return;
+    e.target.value = "";
+    if (!file) return;
+
+    setAvatarUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/avatar-image", { method: "POST", body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Upload failed.");
+      await updateAvatarUrl(data.imageUrl);
+      setCurrentAvatarUrl(data.imageUrl);
+      toast("Photo updated");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to upload photo.", "error");
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
+  async function handleRemoveAvatar() {
+    setAvatarUploading(true);
+    try {
+      await updateAvatarUrl(null);
+      setCurrentAvatarUrl(null);
+      toast("Photo removed");
+    } catch {
+      toast("Failed to remove photo.", "error");
+    } finally {
+      setAvatarUploading(false);
+    }
   }
 
   async function handleSaveName(event: FormEvent) {
@@ -124,114 +175,160 @@ export function ProfileSettingsClient({
   }
 
   return (
-    <div className="detail-fields">
-      <div className="detail-row">
-        <span className="detail-label">Full Name</span>
-        {editingField === "name" ? (
-          <form className="settings-field-inline-edit" onSubmit={handleSaveName}>
-            <div className="settings-inline-input-row">
-              <input
-                className="form-input"
-                value={draftName}
-                onChange={(e) => setDraftName(e.target.value)}
-                maxLength={200}
-                disabled={saving}
-                autoFocus
-                autoComplete="name"
-              />
-              <div className="settings-inline-actions">
-                <button
-                  type="submit"
-                  className="settings-inline-btn settings-inline-btn-save"
-                  disabled={saving}
-                  aria-label="Save name"
-                >
-                  <CheckIcon />
-                </button>
-                <button
-                  type="button"
-                  className="settings-inline-btn"
-                  onClick={cancelEdit}
-                  disabled={saving}
-                  aria-label="Cancel"
-                >
-                  <XIcon />
-                </button>
-              </div>
-            </div>
-            {error && <p className="form-error">{error}</p>}
-          </form>
-        ) : (
-          <span className="settings-field-value">
-            <span>{savedName || "—"}</span>
+    <>
+      <div className="settings-avatar-row">
+        <div className="settings-avatar-preview">
+          {currentAvatarUrl ? (
+            <Image
+              src={currentAvatarUrl}
+              alt=""
+              className="settings-avatar-preview-photo"
+              fill
+              sizes="72px"
+            />
+          ) : (
+            initials
+          )}
+        </div>
+        <div className="settings-avatar-controls">
+          <button
+            type="button"
+            className="settings-avatar-upload-btn"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={avatarUploading}
+          >
+            {avatarUploading ? "Uploading…" : currentAvatarUrl ? "Change photo" : "Upload photo"}
+          </button>
+          {currentAvatarUrl && (
             <button
               type="button"
-              className="settings-edit-trigger"
-              onClick={() => startEdit("name")}
-              aria-label="Edit name"
+              className="settings-avatar-remove-btn"
+              onClick={handleRemoveAvatar}
+              disabled={avatarUploading}
             >
-              <EditIcon />
+              Remove
             </button>
-          </span>
-        )}
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="sr-only"
+          onChange={handleAvatarFileChange}
+          aria-label="Upload profile photo"
+        />
       </div>
 
-      <div className="detail-row">
-        <span className="detail-label">Email</span>
-        {editingField === "email" ? (
-          <form className="settings-field-inline-edit" onSubmit={handleSaveEmail}>
-            <div className="settings-inline-input-row">
-              <input
-                className="form-input"
-                value={draftEmail}
-                onChange={(e) => setDraftEmail(e.target.value)}
-                type="email"
-                maxLength={200}
-                disabled={saving}
-                autoFocus
-                autoComplete="email"
-              />
-              <div className="settings-inline-actions">
-                <button
-                  type="submit"
-                  className="settings-inline-btn settings-inline-btn-save"
+      <div className="detail-fields">
+        <div className="detail-row">
+          <span className="detail-label">Full Name</span>
+          {editingField === "name" ? (
+            <form className="settings-field-inline-edit" onSubmit={handleSaveName}>
+              <div className="settings-inline-input-row">
+                <input
+                  className="form-input"
+                  value={draftName}
+                  onChange={(e) => setDraftName(e.target.value)}
+                  maxLength={200}
                   disabled={saving}
-                  aria-label="Save email"
-                >
-                  <CheckIcon />
-                </button>
-                <button
-                  type="button"
-                  className="settings-inline-btn"
-                  onClick={cancelEdit}
-                  disabled={saving}
-                  aria-label="Cancel"
-                >
-                  <XIcon />
-                </button>
+                  autoFocus
+                  autoComplete="name"
+                />
+                <div className="settings-inline-actions">
+                  <button
+                    type="submit"
+                    className="settings-inline-btn settings-inline-btn-save"
+                    disabled={saving}
+                    aria-label="Save name"
+                  >
+                    <CheckIcon />
+                  </button>
+                  <button
+                    type="button"
+                    className="settings-inline-btn"
+                    onClick={cancelEdit}
+                    disabled={saving}
+                    aria-label="Cancel"
+                  >
+                    <XIcon />
+                  </button>
+                </div>
               </div>
-            </div>
-            {error && <p className="form-error">{error}</p>}
-          </form>
-        ) : (
-          <span className="settings-field-value">
-            <span>{savedEmail}</span>
-            <button
-              type="button"
-              className="settings-edit-trigger"
-              onClick={() => startEdit("email")}
-              aria-label="Edit email"
-            >
-              <EditIcon />
-            </button>
-          </span>
-        )}
-      </div>
+              {error && <p className="form-error">{error}</p>}
+            </form>
+          ) : (
+            <span className="settings-field-value">
+              <span>{savedName || "—"}</span>
+              <button
+                type="button"
+                className="settings-edit-trigger"
+                onClick={() => startEdit("name")}
+                aria-label="Edit name"
+              >
+                <EditIcon />
+              </button>
+            </span>
+          )}
+        </div>
 
-      <div className="detail-row">
-        <span className="detail-label">Role</span>
-        <span>{roleLabel}</span>
+        <div className="detail-row">
+          <span className="detail-label">Email</span>
+          {editingField === "email" ? (
+            <form className="settings-field-inline-edit" onSubmit={handleSaveEmail}>
+              <div className="settings-inline-input-row">
+                <input
+                  className="form-input"
+                  value={draftEmail}
+                  onChange={(e) => setDraftEmail(e.target.value)}
+                  type="email"
+                  maxLength={200}
+                  disabled={saving}
+                  autoFocus
+                  autoComplete="email"
+                />
+                <div className="settings-inline-actions">
+                  <button
+                    type="submit"
+                    className="settings-inline-btn settings-inline-btn-save"
+                    disabled={saving}
+                    aria-label="Save email"
+                  >
+                    <CheckIcon />
+                  </button>
+                  <button
+                    type="button"
+                    className="settings-inline-btn"
+                    onClick={cancelEdit}
+                    disabled={saving}
+                    aria-label="Cancel"
+                  >
+                    <XIcon />
+                  </button>
+                </div>
+              </div>
+              {error && <p className="form-error">{error}</p>}
+            </form>
+          ) : (
+            <span className="settings-field-value">
+              <span>{savedEmail}</span>
+              <button
+                type="button"
+                className="settings-edit-trigger"
+                onClick={() => startEdit("email")}
+                aria-label="Edit email"
+              >
+                <EditIcon />
+              </button>
+            </span>
+          )}
+        </div>
+
+        <div className="detail-row">
+          <span className="detail-label">Role</span>
+          <span>{roleLabel}</span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

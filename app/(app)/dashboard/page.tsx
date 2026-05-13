@@ -1,6 +1,5 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { TopBarTitle } from "@/components/TopBarTitle";
 import { getDashboardNotifications } from "@/lib/notifications";
 import { NotificationCards } from "./NotificationCards";
 
@@ -17,7 +16,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="notifications-page">
-      <TopBarTitle title="Notifications" />
       <NotificationCards
         notifications={notifications.map((notification) => ({
           ...notification,

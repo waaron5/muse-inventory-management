@@ -43,6 +43,7 @@ export default async function SettingsPage() {
       email: true,
       role: true,
       emailNotificationsEnabled: true,
+      avatarUrl: true,
     },
   });
 
@@ -61,9 +62,6 @@ export default async function SettingsPage() {
           <section className="detail-card settings-card">
             <div className="settings-card-head">
               <h2 className="section-title">Profile</h2>
-              <p className="settings-card-copy">
-                Update your name and email. Role is set by your administrator.
-              </p>
             </div>
 
             <ProfileSettingsClient
@@ -71,15 +69,13 @@ export default async function SettingsPage() {
               lastName={profileNameParts.lastName}
               email={user.email}
               roleLabel={getRoleLabel(user.role)}
+              avatarUrl={user.avatarUrl ?? null}
             />
           </section>
 
           <section className="detail-card settings-card">
             <div className="settings-card-head">
               <h2 className="section-title">Notifications</h2>
-              <p className="settings-card-copy">
-                Choose how reservation updates should be surfaced in your workflow.
-              </p>
             </div>
 
             <NotificationPreferencesClient initialEmailEnabled={emailEnabled} />
@@ -90,9 +86,6 @@ export default async function SettingsPage() {
           <aside className="detail-side settings-team-card">
             <div className="settings-card-head">
               <h2 className="section-title">Team</h2>
-              <p className="settings-card-copy">
-                Review who has access to Muse and open the team management view.
-              </p>
             </div>
 
             <div className="settings-team-summary">

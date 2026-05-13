@@ -12,6 +12,7 @@ interface AppShellProps {
     name: string;
     email: string;
     role: string;
+    avatarUrl?: string | null;
   };
   notificationsHasAttention?: boolean;
   notificationAt?: string | null;

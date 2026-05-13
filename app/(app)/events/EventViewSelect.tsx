@@ -9,8 +9,7 @@ export function EventViewSelect({ value }: { value: EventView }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    const nextView = event.target.value as EventView;
+  function handleSelect(nextView: EventView) {
     const params = new URLSearchParams(searchParams.toString());
 
     if (nextView === "upcoming") {
@@ -25,13 +24,21 @@ export function EventViewSelect({ value }: { value: EventView }) {
   }
 
   return (
-    <label className="events-view-select-label">
-      <span className="sr-only">Event view</span>
-      <select className="events-view-select" value={value} onChange={handleChange}>
-        <option value="upcoming">Upcoming Events</option>
-        <option value="past">Past Events</option>
-      </select>
-      <span className="events-view-select-chevron" aria-hidden="true" />
-    </label>
+    <div className="events-view-toggle" role="group" aria-label="Event view">
+      <button
+        type="button"
+        className={`events-view-toggle-btn${value === "upcoming" ? " events-view-toggle-btn-active" : ""}`}
+        onClick={() => handleSelect("upcoming")}
+      >
+        Upcoming
+      </button>
+      <button
+        type="button"
+        className={`events-view-toggle-btn${value === "past" ? " events-view-toggle-btn-active" : ""}`}
+        onClick={() => handleSelect("past")}
+      >
+        Past
+      </button>
+    </div>
   );
 }

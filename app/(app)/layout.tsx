@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { ToastProvider } from "@/components/Toast";
 import { DemoBanner } from "@/components/DemoBanner";
 import { getNotificationIndicator } from "@/lib/notifications";
+import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -18,17 +19,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const userId = session.user.id;
   const isAdmin = session.user.role === "ADMIN";
-  const notificationIndicator = await getNotificationIndicator({
-    userId,
-    isAdmin,
-  });
+
+  const [notificationIndicator, dbUser] = await Promise.all([
+    getNotificationIndicator({ userId, isAdmin }),
+    prisma.user.findUnique({ where: { id: userId }, select: { avatarUrl: true } }),
+  ]);
 
   return (
     <SessionProvider>
       <ToastProvider>
         <DemoBanner />
         <AppShell
-          user={session.user}
+          user={{ ...session.user, avatarUrl: dbUser?.avatarUrl ?? null }}
           notificationsHasAttention={notificationIndicator.notificationsHasAttention}
           notificationAt={notificationIndicator.latestNotificationAt}
         >
