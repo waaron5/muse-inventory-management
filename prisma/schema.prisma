@@ -171,9 +171,9 @@ model Event {
   companyName String
   eventName   String
   plCode      String?
-  location    String
-  startDate   DateTime
-  endDate     DateTime
+  location    String?
+  startDate   DateTime?
+  endDate     DateTime?
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

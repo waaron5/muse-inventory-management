@@ -6,14 +6,15 @@ import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { CalendarIcon, LocationPinIcon } from "@/components/MetadataIcons";
 import { checkGiftAvailability, createGiftReservation } from "@/app/(app)/gifting/actions";
+import { formatDateRange } from "@/lib/date-utils";
 
 export interface GiftUseEventOption {
   id: string;
   eventName: string;
   companyName: string;
-  location: string;
-  startDate: string;
-  endDate: string;
+  location: string | null;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 interface GiftUseModalProps {
@@ -148,25 +149,20 @@ export function GiftUseModal({
 
         {selectedEvent && (
           <div className="event-info-box">
-            <span className="table-meta-inline">
-              <LocationPinIcon className="table-meta-icon" />
-              <span className="event-info-detail">{selectedEvent.location}</span>
-            </span>
-            <span className="table-meta-inline">
-              <CalendarIcon className="table-meta-icon" />
-              <span className="event-info-detail">
-                {new Date(selectedEvent.startDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}
-                {" – "}
-                {new Date(selectedEvent.endDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+            {selectedEvent.location ? (
+              <span className="table-meta-inline">
+                <LocationPinIcon className="table-meta-icon" />
+                <span className="event-info-detail">{selectedEvent.location}</span>
               </span>
-            </span>
+            ) : null}
+            {selectedEvent.startDate || selectedEvent.endDate ? (
+              <span className="table-meta-inline">
+                <CalendarIcon className="table-meta-icon" />
+                <span className="event-info-detail">
+                  {formatDateRange(selectedEvent.startDate, selectedEvent.endDate)}
+                </span>
+              </span>
+            ) : null}
             <span className="event-info-detail">
               {loadingAvailability
                 ? "Checking availability…"

@@ -47,7 +47,7 @@ export default async function InventoryPage({
       },
     }),
     prisma.event.findMany({
-      where: { endDate: { gte: todayStart } },
+      where: { OR: [{ endDate: { gte: todayStart } }, { endDate: null }] },
       orderBy: { startDate: "asc" },
       select: {
         id: true,
@@ -84,8 +84,8 @@ export default async function InventoryPage({
     eventName: event.eventName,
     companyName: event.companyName,
     location: event.location,
-    startDate: event.startDate.toISOString(),
-    endDate: event.endDate.toISOString(),
+    startDate: event.startDate?.toISOString() ?? null,
+    endDate: event.endDate?.toISOString() ?? null,
   }));
   return (
     <PageShell

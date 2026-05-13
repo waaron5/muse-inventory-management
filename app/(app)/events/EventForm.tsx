@@ -14,9 +14,9 @@ interface EventFormProps {
     companyName: string;
     eventName: string;
     plCode: string;
-    location: string;
-    startDate: string;
-    endDate: string;
+    location: string | null;
+    startDate: string | null;
+    endDate: string | null;
     notes: string;
   };
 }
@@ -120,7 +120,7 @@ export function EventForm({ mode, event }: EventFormProps) {
       <form id="event-form" onSubmit={handleSubmit} className="ev-form">
         <div className="form-grid">
           <div className="form-field">
-            <label className="form-label">Company Name *</label>
+            <label className="form-label">Client Name *</label>
             <input
               type="text"
               className="form-input"
@@ -155,35 +155,32 @@ export function EventForm({ mode, event }: EventFormProps) {
             />
           </div>
           <div className="form-field form-field-wide">
-            <label className="form-label">Location *</label>
+            <label className="form-label">Location</label>
             <input
               type="text"
               className="form-input"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              required
               maxLength={200}
               placeholder="e.g. Nashville, TN"
             />
           </div>
           <div className="form-field">
-            <label className="form-label">Start Date *</label>
+            <label className="form-label">Start Date</label>
             <input
               type="date"
               className="form-input"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              required
             />
           </div>
           <div className="form-field">
-            <label className="form-label">End Date *</label>
+            <label className="form-label">End Date</label>
             <input
               type="date"
               className="form-input"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              required
               min={startDate}
             />
           </div>

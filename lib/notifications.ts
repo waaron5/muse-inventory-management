@@ -50,8 +50,8 @@ export interface NotificationIndicator {
   latestNotificationAt: string | null;
 }
 
-function formatDate(date: Date) {
-  return formatAuditDate(date.toISOString());
+function formatDate(date: Date | null) {
+  return date ? formatAuditDate(date.toISOString()) : "—";
 }
 
 function getInventoryNotificationVariant(status: string): NotificationStatusVariant {
@@ -317,7 +317,7 @@ export async function getDashboardNotifications({
       ...awaitingReturns.map((reservation) => ({
         id: `inventory-return-${reservation.id}`,
         section: "attention" as const,
-        timestamp: reservation.event.endDate,
+        timestamp: reservation.event.endDate ?? reservation.updatedAt,
         href: "/reservations",
         category: "Inventory" as const,
         statusVariant: "pending" as const,
@@ -420,7 +420,7 @@ export async function getDashboardNotifications({
     ...returnReminders.map((reservation) => ({
       id: `inventory-reminder-${reservation.id}`,
       section: "attention" as const,
-      timestamp: reservation.event.endDate,
+      timestamp: reservation.event.endDate ?? reservation.updatedAt,
       href: "/reservations",
       category: "Inventory" as const,
       statusVariant: "pending" as const,

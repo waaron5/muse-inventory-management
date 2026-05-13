@@ -35,8 +35,8 @@ interface PendingReservation {
     id: string;
     eventName: string;
     companyName: string;
-    startDate: string;
-    endDate: string;
+    startDate: string | null;
+    endDate: string | null;
   };
   requestedBy: { id: string; name: string };
 }

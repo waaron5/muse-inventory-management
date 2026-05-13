@@ -7,9 +7,9 @@ interface AvailableEvent {
   id: string;
   eventName: string;
   companyName: string;
-  location: string;
-  startDate: string;
-  endDate: string;
+  location: string | null;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 interface Props {

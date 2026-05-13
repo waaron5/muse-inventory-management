@@ -20,7 +20,7 @@ import {
 import { deleteEvent, updateEvent } from "../actions";
 import { ReserveInventoryForEventButton } from "../ReserveInventoryForEventButton";
 import type { EventDetailData } from "./detail-data";
-import { formatLongDate, formatAuditDate } from "@/lib/date-utils";
+import { formatOptionalLongDate, formatAuditDate } from "@/lib/date-utils";
 
 const EVENT_DETAIL_FORM_ID = "event-detail-edit-form";
 
@@ -42,8 +42,8 @@ interface EventDraft {
   notes: string;
 }
 
-function inputDate(value: string) {
-  return value.split("T")[0] ?? "";
+function inputDate(value: string | null) {
+  return value?.split("T")[0] ?? "";
 }
 
 function createDraft(data: EventDetailData): EventDraft {
@@ -213,7 +213,7 @@ export function EventDetailClient({
                 </div>
                 <div className="detail-row">
                   <label className="detail-label" htmlFor="event-company">
-                    Company
+                    Client
                   </label>
                   <span className="detail-row-control">
                     <input
@@ -255,7 +255,6 @@ export function EventDetailClient({
                       className="form-input"
                       value={draft.startDate}
                       onChange={(event) => updateDraft("startDate", event.target.value)}
-                      required
                       disabled={saving}
                     />
                   </span>
@@ -271,8 +270,7 @@ export function EventDetailClient({
                       className="form-input"
                       value={draft.endDate}
                       onChange={(event) => updateDraft("endDate", event.target.value)}
-                      required
-                      min={draft.startDate}
+                      min={draft.startDate || undefined}
                       disabled={saving}
                     />
                   </span>
@@ -288,7 +286,6 @@ export function EventDetailClient({
                       className="form-input"
                       value={draft.location}
                       onChange={(event) => updateDraft("location", event.target.value)}
-                      required
                       maxLength={200}
                       disabled={saving}
                     />
@@ -337,7 +334,7 @@ export function EventDetailClient({
                 <span>{data.event.eventName}</span>
               </div>
               <div className="detail-row">
-                <span className="detail-label">Company</span>
+                <span className="detail-label">Client</span>
                 <span>{data.event.companyName}</span>
               </div>
               <div className="detail-row">
@@ -347,14 +344,14 @@ export function EventDetailClient({
               <div className="detail-row">
                 <span className="detail-label">Date Range</span>
                 <span>
-                  {formatLongDate(data.event.startDate)}
+                  {formatOptionalLongDate(data.event.startDate)}
                   {" – "}
-                  {formatLongDate(data.event.endDate)}
+                  {formatOptionalLongDate(data.event.endDate)}
                 </span>
               </div>
               <div className="detail-row">
                 <span className="detail-label">Location</span>
-                <span>{data.event.location}</span>
+                <span>{data.event.location || "—"}</span>
               </div>
               <div className="detail-row detail-row-block">
                 <span className="detail-label">Notes</span>

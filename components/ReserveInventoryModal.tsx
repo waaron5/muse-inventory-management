@@ -10,14 +10,15 @@ import {
   createInventoryReservationsBatch,
   searchReservableInventoryItems,
 } from "@/app/(app)/inventory/reservation-actions";
+import { formatDateRange } from "@/lib/date-utils";
 
 export interface ReserveInventoryEventOption {
   id: string;
   eventName: string;
   companyName: string;
-  location: string;
-  startDate: string;
-  endDate: string;
+  location: string | null;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 export interface ReserveInventoryInitialItem {
@@ -449,21 +450,14 @@ export function ReserveInventoryModal({
                 <span className="event-info-detail">{selectedEvent.location}</span>
               </span>
             ) : null}
-            <span className="table-meta-inline">
-              <CalendarIcon className="table-meta-icon" />
-              <span className="event-info-detail">
-                {new Date(selectedEvent.startDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}
-                {" – "}
-                {new Date(selectedEvent.endDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+            {selectedEvent.startDate || selectedEvent.endDate ? (
+              <span className="table-meta-inline">
+                <CalendarIcon className="table-meta-icon" />
+                <span className="event-info-detail">
+                  {formatDateRange(selectedEvent.startDate, selectedEvent.endDate)}
+                </span>
               </span>
-            </span>
+            ) : null}
             <span className="event-info-detail">
               Availability is based on this event. Pending requests do not hold stock until
               approved.

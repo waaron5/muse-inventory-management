@@ -9,9 +9,9 @@ export async function createEvent(formData: {
   companyName: string;
   eventName: string;
   plCode?: string;
-  location: string;
-  startDate: string;
-  endDate: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
   notes?: string;
 }) {
   const session = await requireAdmin();
@@ -21,9 +21,9 @@ export async function createEvent(formData: {
       companyName: formData.companyName,
       eventName: formData.eventName,
       plCode: formData.plCode?.trim() || null,
-      location: formData.location,
-      startDate: new Date(formData.startDate),
-      endDate: new Date(formData.endDate),
+      location: formData.location?.trim() || null,
+      startDate: formData.startDate ? new Date(formData.startDate) : null,
+      endDate: formData.endDate ? new Date(formData.endDate) : null,
       notes: formData.notes,
       createdById: session.user.id,
       updatedById: session.user.id,
@@ -63,9 +63,13 @@ export async function updateEvent(
       ...(formData.companyName !== undefined ? { companyName: formData.companyName } : {}),
       ...(formData.eventName !== undefined ? { eventName: formData.eventName } : {}),
       ...(formData.plCode !== undefined ? { plCode: formData.plCode.trim() || null } : {}),
-      ...(formData.location !== undefined ? { location: formData.location } : {}),
-      ...(formData.startDate ? { startDate: new Date(formData.startDate) } : {}),
-      ...(formData.endDate ? { endDate: new Date(formData.endDate) } : {}),
+      ...(formData.location !== undefined ? { location: formData.location.trim() || null } : {}),
+      ...(formData.startDate !== undefined
+        ? { startDate: formData.startDate ? new Date(formData.startDate) : null }
+        : {}),
+      ...(formData.endDate !== undefined
+        ? { endDate: formData.endDate ? new Date(formData.endDate) : null }
+        : {}),
       ...(formData.notes !== undefined ? { notes: formData.notes } : {}),
       updatedById: session.user.id,
     },

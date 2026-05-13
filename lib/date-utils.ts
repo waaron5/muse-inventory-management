@@ -11,7 +11,13 @@ export function formatLongDate(value: string) {
   });
 }
 
-export function formatShortDate(value: string, includeYear = false) {
+export function formatOptionalLongDate(value: string | null) {
+  return value ? formatLongDate(value) : "—";
+}
+
+export function formatShortDate(value: string | null, includeYear = false) {
+  if (!value) return "—";
+
   return new Date(value).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -29,9 +35,13 @@ export function formatAuditDate(value: string) {
 }
 
 // "Apr 22 – May 1, 2026" — accepts Date objects or ISO strings.
-export function formatDateRange(start: Date | string, end: Date | string) {
-  const startDate = typeof start === "string" ? new Date(start) : start;
-  const endDate = typeof end === "string" ? new Date(end) : end;
+export function formatDateRange(start: Date | string | null, end: Date | string | null) {
+  if (!start && !end) return "—";
+  if (!start && end) return `Ends ${formatDateRangePart(end, true)}`;
+  if (!end && start) return `Starts ${formatDateRangePart(start, true)}`;
+
+  const startDate = typeof start === "string" ? new Date(start) : start!;
+  const endDate = typeof end === "string" ? new Date(end) : end!;
   return `${startDate.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -40,4 +50,13 @@ export function formatDateRange(start: Date | string, end: Date | string) {
     day: "numeric",
     year: "numeric",
   })}`;
+}
+
+function formatDateRangePart(value: Date | string, includeYear = false) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(includeYear ? { year: "numeric" as const } : {}),
+  });
 }

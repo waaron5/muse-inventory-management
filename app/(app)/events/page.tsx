@@ -39,25 +39,28 @@ const RESERVATION_STATUS_ORDER = {
 function compareEventRows(
   a: {
     computedStatus: "past" | "current" | "future";
-    startDate: Date;
-    endDate: Date;
+    startDate: Date | null;
+    endDate: Date | null;
     eventName: string;
   },
   b: {
     computedStatus: "past" | "current" | "future";
-    startDate: Date;
-    endDate: Date;
+    startDate: Date | null;
+    endDate: Date | null;
     eventName: string;
   },
 ) {
   const statusDiff = EVENT_STATUS_ORDER[a.computedStatus] - EVENT_STATUS_ORDER[b.computedStatus];
   if (statusDiff !== 0) return statusDiff;
 
-  if (a.computedStatus === "past" && b.computedStatus === "past") {
+  if (a.computedStatus === "past" && b.computedStatus === "past" && a.endDate && b.endDate) {
     return b.endDate.getTime() - a.endDate.getTime();
   }
 
-  const startDiff = a.startDate.getTime() - b.startDate.getTime();
+  if (!a.startDate && b.startDate) return 1;
+  if (a.startDate && !b.startDate) return -1;
+
+  const startDiff = a.startDate && b.startDate ? a.startDate.getTime() - b.startDate.getTime() : 0;
   if (startDiff !== 0) return startDiff;
 
   return a.eventName.localeCompare(b.eventName);
@@ -220,7 +223,7 @@ export default async function EventsPage({
       }
       controls={
         <div className="table-toolbar">
-          <SearchBar placeholder="Search events, companies, P & L, locations..." />
+          <SearchBar placeholder="Search events, clients, P & L, locations..." />
           <EventViewSelect value={eventView} />
         </div>
       }
@@ -292,7 +295,7 @@ export default async function EventsPage({
                               <div className="event-detail-stack">
                                 <div className="table-meta-inline event-detail-line">
                                   <LocationPinIcon className="table-meta-icon" />
-                                  <span className="event-meta-text">{event.location}</span>
+                                  <span className="event-meta-text">{event.location ?? "—"}</span>
                                 </div>
                                 <div className="table-meta-inline event-detail-line">
                                   <CalendarIcon className="table-meta-icon" />
@@ -359,8 +362,8 @@ export default async function EventsPage({
                                         eventName: event.eventName,
                                         companyName: event.companyName,
                                         location: event.location,
-                                        startDate: event.startDate.toISOString(),
-                                        endDate: event.endDate.toISOString(),
+                                        startDate: event.startDate?.toISOString() ?? null,
+                                        endDate: event.endDate?.toISOString() ?? null,
                                       }}
                                       reservationState={{
                                         pendingCount: event.myPendingCount,
@@ -422,8 +425,8 @@ export default async function EventsPage({
                                         eventName: event.eventName,
                                         companyName: event.companyName,
                                         location: event.location,
-                                        startDate: event.startDate.toISOString(),
-                                        endDate: event.endDate.toISOString(),
+                                        startDate: event.startDate?.toISOString() ?? null,
+                                        endDate: event.endDate?.toISOString() ?? null,
                                       }}
                                       availableGifts={availableGiftOptions}
                                     />

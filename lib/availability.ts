@@ -4,7 +4,13 @@ import { prisma } from "./db";
  * Returns true if two date ranges overlap (inclusive of boundary dates).
  * Overlap condition: A.start <= B.end AND A.end >= B.start
  */
-export function datesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
+export function datesOverlap(
+  aStart: Date | null,
+  aEnd: Date | null,
+  bStart: Date | null,
+  bEnd: Date | null,
+): boolean {
+  if (!aStart || !aEnd || !bStart || !bEnd) return true;
   return aStart <= bEnd && aEnd >= bStart;
 }
 
@@ -16,8 +22,8 @@ export function datesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date)
  */
 export async function getInventoryAvailableQty(
   inventoryItemId: string,
-  eventStart: Date,
-  eventEnd: Date,
+  eventStart: Date | null,
+  eventEnd: Date | null,
   excludeReservationIds?: string | string[],
 ): Promise<number> {
   const item = await prisma.inventoryItem.findUnique({
@@ -98,7 +104,12 @@ export async function getGiftAvailableQty(
 /**
  * Infer event status from dates.
  */
-export function getEventStatus(startDate: Date, endDate: Date): "past" | "current" | "future" {
+export function getEventStatus(
+  startDate: Date | null,
+  endDate: Date | null,
+): "past" | "current" | "future" {
+  if (!startDate || !endDate) return "future";
+
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());

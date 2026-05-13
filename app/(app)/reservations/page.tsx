@@ -97,11 +97,7 @@ export default async function ReservationsPage({
       orderBy: { createdAt: "desc" },
     }),
     prisma.event.findMany({
-      where: {
-        endDate: {
-          gte: todayStart,
-        },
-      },
+      where: { OR: [{ endDate: { gte: todayStart } }, { endDate: null }] },
       select: {
         id: true,
         eventName: true,
@@ -126,8 +122,8 @@ export default async function ReservationsPage({
     eventName: event.eventName,
     companyName: event.companyName,
     location: event.location,
-    startDate: event.startDate.toISOString(),
-    endDate: event.endDate.toISOString(),
+    startDate: event.startDate?.toISOString() ?? null,
+    endDate: event.endDate?.toISOString() ?? null,
   }));
 
   const emptyMessage = isAdmin
@@ -161,8 +157,8 @@ export default async function ReservationsPage({
               id: r.event.id,
               eventName: r.event.eventName,
               companyName: r.event.companyName,
-              startDate: r.event.startDate.toISOString(),
-              endDate: r.event.endDate.toISOString(),
+              startDate: r.event.startDate?.toISOString() ?? null,
+              endDate: r.event.endDate?.toISOString() ?? null,
             },
             requestedBy: {
               id: r.requestedBy.id,

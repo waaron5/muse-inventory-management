@@ -100,7 +100,7 @@ export async function createInventoryReservationsBatch(formData: {
   });
 
   if (!event) throw new Error("Event not found");
-  if (event.endDate < getTodayStart()) {
+  if (event.endDate && event.endDate < getTodayStart()) {
     throw new Error("Cannot reserve inventory for a past event.");
   }
 

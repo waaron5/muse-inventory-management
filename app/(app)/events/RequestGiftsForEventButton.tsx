@@ -6,14 +6,15 @@ import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { CalendarIcon, LocationPinIcon } from "@/components/MetadataIcons";
 import { checkGiftAvailability, createGiftReservation } from "@/app/(app)/gifting/actions";
+import { formatDateRange } from "@/lib/date-utils";
 
 interface EventOption {
   id: string;
   eventName: string;
   companyName: string;
-  location: string;
-  startDate: string;
-  endDate: string;
+  location: string | null;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 interface GiftOption {
@@ -136,25 +137,20 @@ export function RequestGiftsForEventButton({
       >
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="event-info-box">
-            <span className="table-meta-inline">
-              <LocationPinIcon className="table-meta-icon" />
-              <span className="event-info-detail">{event.location}</span>
-            </span>
-            <span className="table-meta-inline">
-              <CalendarIcon className="table-meta-icon" />
-              <span className="event-info-detail">
-                {new Date(event.startDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}
-                {" – "}
-                {new Date(event.endDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+            {event.location ? (
+              <span className="table-meta-inline">
+                <LocationPinIcon className="table-meta-icon" />
+                <span className="event-info-detail">{event.location}</span>
               </span>
-            </span>
+            ) : null}
+            {event.startDate || event.endDate ? (
+              <span className="table-meta-inline">
+                <CalendarIcon className="table-meta-icon" />
+                <span className="event-info-detail">
+                  {formatDateRange(event.startDate, event.endDate)}
+                </span>
+              </span>
+            ) : null}
           </div>
 
           <div className="form-field">
