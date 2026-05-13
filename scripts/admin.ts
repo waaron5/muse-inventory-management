@@ -56,6 +56,7 @@ async function createAdmin() {
           name,
           passwordHash,
           role: "ADMIN",
+          isActive: true,
         },
       });
       console.log(`Admin user updated: ${email}`);
@@ -68,6 +69,7 @@ async function createAdmin() {
         email,
         passwordHash,
         role: "ADMIN",
+        isActive: true,
       },
     });
     console.log(`Admin user created: ${email}`);
