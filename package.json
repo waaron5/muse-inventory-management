@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "db": "tsx scripts/db.ts",
     "deps": "tsx scripts/deps.ts",
+    "admin": "tsx scripts/admin.ts",
     "seed": "tsx prisma/seed.ts",
     "demo": "tsx prisma/demo-seed.ts"
   },
