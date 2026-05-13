@@ -13,13 +13,5 @@ export default async function EditGiftPage({ params }: { params: Promise<{ id: s
   const data = await getGiftDetailData(id);
   if (!data) notFound();
 
-  return (
-    <GiftDetailClient
-      data={data}
-      isAdmin
-      userId={session.user.id}
-      initialEditing
-      returnToCanonicalOnExit
-    />
-  );
+  return <GiftDetailClient data={data} isAdmin userId={session.user.id} initialEditing />;
 }

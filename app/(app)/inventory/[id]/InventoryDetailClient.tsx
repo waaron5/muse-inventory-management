@@ -24,7 +24,6 @@ interface InventoryDetailClientProps {
   isAdmin: boolean;
   userId: string;
   initialEditing?: boolean;
-  returnToCanonicalOnExit?: boolean;
 }
 
 interface InventoryDraft {
@@ -56,11 +55,9 @@ export function InventoryDetailClient({
   isAdmin,
   userId,
   initialEditing = false,
-  returnToCanonicalOnExit = false,
 }: InventoryDetailClientProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const canonicalPath = `/inventory/${data.item.id}`;
   const [isEditing, setIsEditing] = useState(initialEditing && isAdmin);
   const [draft, setDraft] = useState<InventoryDraft>(() => createDraft(data));
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
@@ -113,9 +110,7 @@ export function InventoryDetailClient({
   function cancelEdit() {
     resetDraft();
     setIsEditing(false);
-    if (returnToCanonicalOnExit) {
-      router.replace(canonicalPath);
-    }
+    router.push("/inventory");
   }
 
   async function handleDelete() {
@@ -177,11 +172,7 @@ export function InventoryDetailClient({
 
       toast("Item updated");
       setIsEditing(false);
-      if (returnToCanonicalOnExit) {
-        router.replace(canonicalPath);
-      } else {
-        router.refresh();
-      }
+      router.push("/inventory");
     } catch (submitError: unknown) {
       setError(submitError instanceof Error ? submitError.message : "Something went wrong");
     } finally {

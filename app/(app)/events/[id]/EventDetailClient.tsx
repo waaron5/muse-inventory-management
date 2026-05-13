@@ -29,7 +29,6 @@ interface EventDetailClientProps {
   isAdmin: boolean;
   userId: string;
   initialEditing?: boolean;
-  returnToCanonicalOnExit?: boolean;
 }
 
 interface EventDraft {
@@ -63,11 +62,9 @@ export function EventDetailClient({
   isAdmin,
   userId,
   initialEditing = false,
-  returnToCanonicalOnExit = false,
 }: EventDetailClientProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const canonicalPath = `/events/${data.event.id}`;
   const [isEditing, setIsEditing] = useState(initialEditing && isAdmin);
   const [draft, setDraft] = useState<EventDraft>(() => createDraft(data));
   const [error, setError] = useState("");
@@ -97,9 +94,7 @@ export function EventDetailClient({
   function cancelEdit() {
     resetDraft();
     setIsEditing(false);
-    if (returnToCanonicalOnExit) {
-      router.replace(canonicalPath);
-    }
+    router.push("/events");
   }
 
   async function handleDelete() {
@@ -141,11 +136,7 @@ export function EventDetailClient({
 
       toast("Event updated");
       setIsEditing(false);
-      if (returnToCanonicalOnExit) {
-        router.replace(canonicalPath);
-      } else {
-        router.refresh();
-      }
+      router.push("/events");
     } catch (submitError: unknown) {
       setError(submitError instanceof Error ? submitError.message : "Something went wrong");
     } finally {

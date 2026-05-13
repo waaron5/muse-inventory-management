@@ -68,10 +68,7 @@ export function EventForm({ mode, event }: EventFormProps) {
   const actionsNode = useMemo(
     () => (
       <>
-        <Link
-          href={mode === "edit" ? `/events/${event?.id}` : "/events"}
-          className="btn btn-outline"
-        >
+        <Link href="/events" className="btn btn-outline">
           Cancel
         </Link>
         <button type="submit" form="event-form" className="btn btn-dark" disabled={loading}>
@@ -86,7 +83,7 @@ export function EventForm({ mode, event }: EventFormProps) {
       </>
     ),
 
-    [loading, mode, event?.id],
+    [loading, mode],
   );
 
   useSetTopBar(titleNode, actionsNode);
@@ -106,7 +103,7 @@ export function EventForm({ mode, event }: EventFormProps) {
       } else {
         await updateEvent(event!.id, formData);
         toast("Event updated");
-        router.push(`/events/${event!.id}`);
+        router.push("/events");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");

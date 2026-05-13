@@ -13,13 +13,5 @@ export default async function EditInventoryPage({ params }: { params: Promise<{ 
   const data = await getInventoryDetailData(id);
   if (!data) notFound();
 
-  return (
-    <InventoryDetailClient
-      data={data}
-      isAdmin
-      userId={session.user.id}
-      initialEditing
-      returnToCanonicalOnExit
-    />
-  );
+  return <InventoryDetailClient data={data} isAdmin userId={session.user.id} initialEditing />;
 }

@@ -27,7 +27,6 @@ interface GiftDetailClientProps {
   isAdmin: boolean;
   userId: string;
   initialEditing?: boolean;
-  returnToCanonicalOnExit?: boolean;
 }
 
 interface GiftDraft {
@@ -54,15 +53,9 @@ function createDraft(data: GiftDetailData): GiftDraft {
   };
 }
 
-export function GiftDetailClient({
-  data,
-  isAdmin,
-  initialEditing = false,
-  returnToCanonicalOnExit = false,
-}: GiftDetailClientProps) {
+export function GiftDetailClient({ data, isAdmin, initialEditing = false }: GiftDetailClientProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const canonicalPath = `/gifting/${data.item.id}`;
   const [isEditing, setIsEditing] = useState(initialEditing && isAdmin);
   const [draft, setDraft] = useState<GiftDraft>(() => createDraft(data));
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
@@ -115,9 +108,7 @@ export function GiftDetailClient({
   function cancelEdit() {
     resetDraft();
     setIsEditing(false);
-    if (returnToCanonicalOnExit) {
-      router.replace(canonicalPath);
-    }
+    router.push("/gifting");
   }
 
   async function handleDelete() {
@@ -179,11 +170,7 @@ export function GiftDetailClient({
 
       toast("Item updated");
       setIsEditing(false);
-      if (returnToCanonicalOnExit) {
-        router.replace(canonicalPath);
-      } else {
-        router.refresh();
-      }
+      router.push("/gifting");
     } catch (submitError: unknown) {
       setError(submitError instanceof Error ? submitError.message : "Something went wrong");
     } finally {

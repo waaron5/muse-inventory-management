@@ -13,13 +13,5 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   const data = await getEventDetailData(id, session.user.id);
   if (!data) notFound();
 
-  return (
-    <EventDetailClient
-      data={data}
-      isAdmin
-      userId={session.user.id}
-      initialEditing
-      returnToCanonicalOnExit
-    />
-  );
+  return <EventDetailClient data={data} isAdmin userId={session.user.id} initialEditing />;
 }
