@@ -175,8 +175,8 @@ export function ProfileSettingsClient({
   }
 
   return (
-    <>
-      <div className="settings-avatar-row">
+    <div className="settings-profile-layout">
+      <div className="settings-avatar-section">
         <div className="settings-avatar-preview">
           {currentAvatarUrl ? (
             <Image
@@ -184,7 +184,7 @@ export function ProfileSettingsClient({
               alt=""
               className="settings-avatar-preview-photo"
               fill
-              sizes="72px"
+              sizes="120px"
             />
           ) : (
             initials
@@ -329,6 +329,6 @@ export function ProfileSettingsClient({
           <span>{roleLabel}</span>
         </div>
       </div>
-    </>
+    </div>
   );
 }

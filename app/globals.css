@@ -2527,17 +2527,30 @@ select {
 }
 
 /* --- Settings avatar upload --- */
-.settings-avatar-row {
+.settings-profile-layout {
   display: flex;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.settings-profile-layout .detail-fields {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-avatar-section {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 4px 0 16px;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 4px 0;
 }
 
 .settings-avatar-preview {
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 120px;
+  height: 120px;
   border-radius: 999px;
   overflow: hidden;
   flex-shrink: 0;
@@ -2551,7 +2564,7 @@ select {
   );
   border: 1px solid var(--color-avatar-border);
   color: var(--color-avatar-text);
-  font-size: 20px;
+  font-size: 32px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;

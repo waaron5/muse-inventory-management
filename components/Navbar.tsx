@@ -117,6 +117,7 @@ export function Navbar({
                     className="app-account-avatar-photo"
                     fill
                     sizes="40px"
+                    priority
                   />
                 ) : (
                   initials
