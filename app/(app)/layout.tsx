@@ -31,7 +31,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <DemoBanner />
         <AppShell
           user={{ ...session.user, avatarUrl: dbUser?.avatarUrl ?? null }}
-          notificationsHasAttention={notificationIndicator.notificationsHasAttention}
           notificationAt={notificationIndicator.latestNotificationAt}
         >
           {children}

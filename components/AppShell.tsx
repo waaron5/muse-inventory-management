@@ -14,16 +14,10 @@ interface AppShellProps {
     role: string;
     avatarUrl?: string | null;
   };
-  notificationsHasAttention?: boolean;
   notificationAt?: string | null;
 }
 
-export function AppShell({
-  children,
-  user,
-  notificationsHasAttention = false,
-  notificationAt = null,
-}: AppShellProps) {
+export function AppShell({ children, user, notificationAt = null }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
@@ -32,7 +26,6 @@ export function AppShell({
         <div className={`app-shell${sidebarCollapsed ? " app-shell-collapsed" : ""}`}>
           <Navbar
             user={user}
-            notificationsHasAttention={notificationsHasAttention}
             notificationAt={notificationAt}
             sidebarCollapsed={sidebarCollapsed}
             onToggleSidebar={() => setSidebarCollapsed((collapsed) => !collapsed)}

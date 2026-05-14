@@ -24,7 +24,6 @@ interface NavbarProps {
     role: string;
     avatarUrl?: string | null;
   };
-  notificationsHasAttention?: boolean;
   notificationAt?: string | null;
   sidebarCollapsed: boolean;
   onToggleSidebar: () => void;
@@ -32,7 +31,6 @@ interface NavbarProps {
 
 export function Navbar({
   user,
-  notificationsHasAttention = false,
   notificationAt = null,
   sidebarCollapsed,
   onToggleSidebar,
@@ -44,8 +42,7 @@ export function Navbar({
   const initials = getInitials(displayName);
   const notificationSeenStorageKey = `${NOTIFICATIONS_SEEN_STORAGE_KEY_PREFIX}:${user.id}`;
   const hasUnseenNotification = parseTimestamp(notificationAt) > parseTimestamp(notificationSeenAt);
-  const showNotificationsIndicator =
-    mounted && (notificationsHasAttention || hasUnseenNotification);
+  const showNotificationsIndicator = mounted && hasUnseenNotification;
   const titleSlot = useTopBarTitle();
   const actionsSlot = useTopBarActions();
 
