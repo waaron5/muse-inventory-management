@@ -1009,7 +1009,7 @@ select {
   vertical-align: middle;
 }
 .inventory-table .col-image {
-  width: 64px;
+  width: 72px;
 }
 .inventory-table .col-item {
   width: 28%;
@@ -1146,7 +1146,6 @@ select {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  min-height: calc(1.55em * 2);
 }
 
 .inventory-details-empty {
@@ -1832,8 +1831,8 @@ select {
 /* Image cells */
 .item-image {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   display: block;
   overflow: hidden;
   border-radius: 4px;
@@ -1863,8 +1862,8 @@ select {
 }
 
 .image-placeholder {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   background: var(--gray-100);
   border: 1px solid var(--color-border);
   border-radius: 4px;
@@ -1948,8 +1947,21 @@ select {
   align-items: flex-start;
   gap: 24px;
 }
+.inventory-detail-card-with-media {
+  align-items: stretch;
+}
 .detail-image-section {
   flex-shrink: 0;
+}
+.inventory-detail-card-with-media .detail-image-section {
+  align-self: stretch;
+  display: flex;
+}
+.inventory-detail-image-frame,
+.inventory-detail-image-placeholder {
+  width: 280px;
+  height: 100%;
+  min-height: 280px;
 }
 .detail-image-edit-field {
   display: flex;
@@ -4690,6 +4702,12 @@ select {
   }
   .detail-card-with-media {
     flex-direction: column;
+  }
+  .inventory-detail-image-frame,
+  .inventory-detail-image-placeholder {
+    width: 100%;
+    height: 260px;
+    min-height: 260px;
   }
   .inventory-image-upload-box,
   .inventory-image-upload-box-filled {

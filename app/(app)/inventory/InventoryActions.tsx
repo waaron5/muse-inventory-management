@@ -8,7 +8,7 @@ import {
 } from "@/components/ReserveInventoryModal";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { useToast } from "@/components/Toast";
-import { retireInventoryItem, activateInventoryItem } from "./actions";
+import { retireInventoryItem, activateInventoryItem, deleteRetiredInventoryItem } from "./actions";
 
 interface Item {
   id: string;
@@ -66,6 +66,29 @@ export function InventoryActions({
     }
   }
 
+  async function handleDelete() {
+    if (item.status !== "RETIRED") return;
+
+    if (
+      !confirm(
+        `Permanently delete "${item.title}"? This will remove it from inventory and delete its reservation history. This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await deleteRetiredInventoryItem(item.id);
+      toast(`"${item.title}" deleted`);
+      router.refresh();
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Delete failed", "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <div className="inventory-row-actions">
@@ -99,6 +122,16 @@ export function InventoryActions({
                 variant: item.status === "ACTIVE" ? "danger" : "success",
                 disabled: loading,
               },
+              ...(item.status === "RETIRED"
+                ? [
+                    {
+                      label: loading ? "…" : "Delete",
+                      onClick: handleDelete,
+                      variant: "danger" as const,
+                      disabled: loading,
+                    },
+                  ]
+                : []),
             ]}
           />
         )}

@@ -8,11 +8,7 @@ export function InventoryImagePreview({ src, alt }: { src: string | null; alt: s
   const [open, setOpen] = useState(false);
 
   if (!src) {
-    return (
-      <div className="item-image">
-        <div className="image-placeholder" />
-      </div>
-    );
+    return <div className="item-image image-placeholder" />;
   }
 
   return (
@@ -25,7 +21,7 @@ export function InventoryImagePreview({ src, alt }: { src: string | null; alt: s
         title={`View larger image for ${alt}`}
       >
         <span className="item-image">
-          <Image src={src} alt={alt} className="item-image-img" fill sizes="40px" />
+          <Image src={src} alt={alt} className="item-image-img" fill sizes="48px" />
         </span>
       </button>
 

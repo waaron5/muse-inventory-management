@@ -187,6 +187,8 @@ export function InventoryDetailClient({
       formId={INVENTORY_DETAIL_FORM_ID}
       loading={saving}
       deleting={deleting}
+      hideDeleteWhenEditing
+      deleteLabel="Retire"
       onEdit={enterEditMode}
       onCancel={cancelEdit}
       onDelete={handleDelete}
@@ -342,20 +344,20 @@ export function InventoryDetailClient({
               </div>
             </form>
           ) : (
-            <div className="detail-card detail-card-with-media">
+            <div className="detail-card detail-card-with-media inventory-detail-card-with-media">
               <div className="detail-image-section">
                 {data.item.imageUrl ? (
-                  <div className="detail-image-frame">
+                  <div className="detail-image-frame inventory-detail-image-frame">
                     <Image
                       src={data.item.imageUrl}
                       alt={data.item.title}
                       className="detail-image-img"
                       fill
-                      sizes="120px"
+                      sizes="280px"
                     />
                   </div>
                 ) : (
-                  <div className="image-placeholder-lg" />
+                  <div className="image-placeholder-lg inventory-detail-image-placeholder" />
                 )}
               </div>
 

@@ -6,6 +6,8 @@ interface DetailHeaderActionsProps {
   formId: string;
   loading?: boolean;
   deleting?: boolean;
+  hideDeleteWhenEditing?: boolean;
+  deleteLabel?: string;
   onEdit: () => void;
   onCancel: () => void;
   onDelete: () => void;
@@ -17,6 +19,8 @@ export function DetailHeaderActions({
   formId,
   loading = false,
   deleting = false,
+  hideDeleteWhenEditing = false,
+  deleteLabel = "Delete",
   onEdit,
   onCancel,
   onDelete,
@@ -31,16 +35,18 @@ export function DetailHeaderActions({
           <button type="submit" form={formId} className="btn btn-dark" disabled={loading}>
             {loading ? "Saving..." : "Save Changes"}
           </button>
-          <button
-            type="button"
-            className="btn btn-outline-danger"
-            disabled
-            aria-label={`Delete ${title}`}
-            title={`Delete ${title}`}
-          >
-            <TrashIcon />
-            Delete
-          </button>
+          {!hideDeleteWhenEditing && (
+            <button
+              type="button"
+              className="btn btn-outline-danger"
+              disabled
+              aria-label={`${deleteLabel} ${title}`}
+              title={`${deleteLabel} ${title}`}
+            >
+              <TrashIcon />
+              {deleteLabel}
+            </button>
+          )}
         </>
       ) : (
         <>
@@ -59,11 +65,11 @@ export function DetailHeaderActions({
             className="btn btn-outline-danger"
             onClick={onDelete}
             disabled={deleting}
-            aria-label={`Delete ${title}`}
-            title={`Delete ${title}`}
+            aria-label={`${deleteLabel} ${title}`}
+            title={`${deleteLabel} ${title}`}
           >
             {deleting ? <span aria-hidden="true">...</span> : <TrashIcon />}
-            Delete
+            {deleteLabel}
           </button>
         </>
       )}

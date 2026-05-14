@@ -165,3 +165,67 @@ export async function activateInventoryItem(id: string) {
   revalidatePath(`/inventory/${id}`);
   return { success: true };
 }
+
+export async function deleteRetiredInventoryItem(id: string) {
+  const session = await requireAdmin();
+
+  const item = await prisma.inventoryItem.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      imageUrl: true,
+      _count: {
+        select: {
+          reservations: true,
+        },
+      },
+    },
+  });
+
+  if (!item) {
+    throw new Error("Item not found");
+  }
+
+  if (item.status !== InventoryStatus.RETIRED) {
+    throw new Error("Only retired inventory items can be deleted.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.inventoryReservation.deleteMany({
+      where: { inventoryItemId: id },
+    });
+
+    await tx.inventoryItem.delete({
+      where: { id },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        entityType: "INVENTORY_ITEM",
+        entityId: id,
+        actionType: "DELETED",
+        performedById: session.user.id,
+        summary: `Deleted retired inventory item "${item.title}"`,
+        metadataJson: JSON.stringify({
+          deletedReservationCount: item._count.reservations,
+        }),
+      },
+    });
+  });
+
+  if (item.imageUrl) {
+    try {
+      await deleteManagedInventoryImage(item.imageUrl);
+    } catch (error) {
+      console.error("Failed to remove deleted inventory image", error);
+    }
+  }
+
+  revalidatePath("/inventory");
+  revalidatePath(`/inventory/${id}`);
+  revalidatePath("/reservations");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
