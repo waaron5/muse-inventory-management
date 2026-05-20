@@ -30,22 +30,49 @@ function getProfileNameParts(user: {
   };
 }
 
+function getDisplayName(user: {
+  firstName: string | null;
+  lastName: string | null;
+  name: string;
+  passwordSetAt: Date | null;
+}) {
+  if (!user.passwordSetAt) return "Pending invite";
+  if (user.firstName && user.lastName) return `${user.firstName} ${user.lastName}`;
+  return user.name;
+}
+
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   if (!session) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      name: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      role: true,
-      emailNotificationsEnabled: true,
-      avatarUrl: true,
-    },
-  });
+  const [user, teamMembers] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        name: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        emailNotificationsEnabled: true,
+        avatarUrl: true,
+      },
+    }),
+    prisma.user.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        passwordSetAt: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
 
   if (!user) return null;
 
@@ -79,6 +106,102 @@ export default async function SettingsPage() {
             </div>
 
             <NotificationPreferencesClient initialEmailEnabled={emailEnabled} />
+          </section>
+
+          <section className="detail-card settings-card">
+            <div className="settings-card-head">
+              <h2 className="section-title">Team Members</h2>
+              <p className="settings-card-copy">
+                Everyone with access to Muse. Administrators can manage invitations and access.
+              </p>
+            </div>
+
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--gray-200)" }}>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontWeight: 600,
+                      color: "var(--gray-500)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Name
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontWeight: 600,
+                      color: "var(--gray-500)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Email
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontWeight: 600,
+                      color: "var(--gray-500)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Role
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontWeight: 600,
+                      color: "var(--gray-500)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Status
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontWeight: 600,
+                      color: "var(--gray-500)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Joined
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {teamMembers.map((teamMember) => (
+                  <tr key={teamMember.id} style={{ borderBottom: "1px solid var(--gray-100)" }}>
+                    <td style={{ padding: "10px 0", color: "var(--gray-900)", fontWeight: 500 }}>
+                      {getDisplayName(teamMember)}
+                    </td>
+                    <td style={{ padding: "10px 0", color: "var(--gray-600)" }}>
+                      {teamMember.email}
+                    </td>
+                    <td style={{ padding: "10px 0", color: "var(--gray-600)" }}>
+                      {getRoleLabel(teamMember.role)}
+                    </td>
+                    <td style={{ padding: "10px 0", color: "var(--gray-600)" }}>
+                      {teamMember.passwordSetAt ? "Active" : "Invited"}
+                    </td>
+                    <td style={{ padding: "10px 0", color: "var(--gray-500)", fontSize: 13 }}>
+                      {teamMember.createdAt.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </section>
         </div>
 

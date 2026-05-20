@@ -5046,7 +5046,10 @@ body {
 .demo-banner {
   background: linear-gradient(90deg, #f59e0b, #d97706);
   color: #fff;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   padding: 8px 16px;
   font-size: var(--type-label-size);
   line-height: var(--type-label-line-height);
@@ -5057,6 +5060,30 @@ body {
 .demo-banner strong {
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+.demo-banner-close {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+.demo-banner-close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+.demo-banner-close:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 .demo-credentials {
