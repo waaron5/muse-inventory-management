@@ -3541,6 +3541,51 @@ select {
   align-self: flex-start;
 }
 
+.settings-team-members-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--gray-100);
+}
+
+.settings-team-member-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.settings-team-member-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.settings-team-member-name {
+  color: var(--gray-900);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
+  font-weight: 600;
+}
+
+.settings-team-member-email {
+  color: var(--gray-500);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-line-height);
+  overflow-wrap: anywhere;
+}
+
+.settings-team-member-role {
+  flex: 0 0 auto;
+  color: var(--gray-600);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-line-height);
+  font-weight: 600;
+  text-align: right;
+}
+
 /* --- Pending / Approval sections (detail actions) --- */
 .action-bar,
 .actions-bar {
