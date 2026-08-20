@@ -112,6 +112,12 @@ export async function deleteEvent(id: string) {
     );
   }
 
+  await prisma.$transaction(async (tx) => {
+    await tx.inventoryReservation.deleteMany({ where: { eventId: id } });
+    await tx.giftReservation.deleteMany({ where: { eventId: id } });
+    await tx.event.delete({ where: { id } });
+  });
+
   await logAudit({
     entityType: "EVENT",
     entityId: id,
@@ -119,8 +125,6 @@ export async function deleteEvent(id: string) {
     performedById: session.user.id,
     summary: `Deleted event "${event.eventName}"`,
   });
-
-  await prisma.event.delete({ where: { id } });
 
   revalidatePath("/events");
   revalidatePath("/dashboard");
