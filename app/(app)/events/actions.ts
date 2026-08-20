@@ -91,22 +91,20 @@ export async function updateEvent(
 
 export async function deleteEvent(id: string) {
   const session = await requireAdmin();
-
-  const event = await prisma.event.findUnique({
-    where: { id },
-    include: {
-      _count: {
-        select: {
-          inventoryReservations: { where: { status: { in: ["PENDING", "APPROVED"] } } },
-          giftReservations: { where: { status: { in: ["PENDING", "APPROVED"] } } },
-        },
-      },
-    },
-  });
+  const event = await prisma.event.findUnique({ where: { id } });
 
   if (!event) throw new Error("Event not found");
 
-  const activeCount = event._count.inventoryReservations + event._count.giftReservations;
+  const [inventoryActiveCount, giftActiveCount] = await Promise.all([
+    prisma.inventoryReservation.count({
+      where: { eventId: id, status: { in: ["PENDING", "APPROVED"] } },
+    }),
+    prisma.giftReservation.count({
+      where: { eventId: id, status: { in: ["PENDING", "APPROVED"] } },
+    }),
+  ]);
+
+  const activeCount = inventoryActiveCount + giftActiveCount;
 
   if (activeCount > 0) {
     throw new Error(

@@ -46,10 +46,12 @@ async function createInviteForUser(userId: string) {
   return `${APP_URL}/invite/accept?token=${encodeURIComponent(token)}`;
 }
 
+type InviteUserResult = { success: true; message?: string } | { error: string };
+
 export async function inviteUser(data: {
   email: string;
   role: UserRole;
-}): Promise<{ success: true } | { error: string }> {
+}): Promise<InviteUserResult> {
   let session;
   try {
     session = await requireAdmin();
@@ -71,8 +73,33 @@ export async function inviteUser(data: {
   }
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
-  if (existingUser?.passwordSetAt) {
+  if (existingUser?.passwordSetAt && existingUser.isActive) {
     return { error: "A user with that email already has access." };
+  }
+
+  if (existingUser?.passwordSetAt && !existingUser.isActive) {
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        role,
+        isActive: true,
+      },
+    });
+
+    await logAudit({
+      entityType: "USER",
+      entityId: existingUser.id,
+      actionType: "ACTIVATED",
+      performedById: session.user.id,
+      summary: `Reactivated ${email} as ${getRoleLabel(role)}`,
+    });
+
+    revalidatePath("/settings");
+    revalidatePath("/settings/users");
+    return {
+      success: true,
+      message: `${email} has been reactivated as ${getRoleLabel(role)}. They can log in with their existing password.`,
+    };
   }
 
   const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString("base64url"), 12);
@@ -120,6 +147,7 @@ export async function inviteUser(data: {
     summary: `${existingUser ? "Resent invite to" : "Invited"} ${email} as ${getRoleLabel(role)}`,
   });
 
+  revalidatePath("/settings");
   revalidatePath("/settings/users");
   return { success: true };
 }

@@ -12,12 +12,12 @@ export function CreateUserForm() {
   const [role, setRole] = useState<InviteRole>("USER");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setSuccess(false);
+    setSuccessMessage("");
     setLoading(true);
 
     const result = await inviteUser({ email, role });
@@ -27,7 +27,10 @@ export function CreateUserForm() {
     if ("error" in result) {
       setError(result.error);
     } else {
-      setSuccess(true);
+      setSuccessMessage(
+        result.message ??
+          "Invite sent. The user can create their profile and password from the email link.",
+      );
       setEmail("");
       setRole("USER");
       router.refresh();
@@ -72,7 +75,7 @@ export function CreateUserForm() {
       </div>
 
       {error && <p className="form-error">{error}</p>}
-      {success && (
+      {successMessage && (
         <p
           style={{
             marginTop: 12,
@@ -81,7 +84,7 @@ export function CreateUserForm() {
             fontWeight: 500,
           }}
         >
-          Invite sent. The user can create their profile and password from the email link.
+          {successMessage}
         </p>
       )}
 
