@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["pdx1"],
+  "buildCommand": "pnpm db:migrate && pnpm build",
+  "crons": [
+    { "path": "/api/warm", "schedule": "*/5 * * * *" },
+    { "path": "/api/give-away", "schedule": "15 7 * * *" }
+  ]
+}

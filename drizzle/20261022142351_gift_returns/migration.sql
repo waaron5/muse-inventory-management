@@ -1,0 +1,1 @@
+ALTER TABLE "history_entry" ADD CONSTRAINT "history_entry_given_away_touches_no_location" CHECK ("kind" <> 'given-away' or ("line_id" is not null and "from_location_id" is null and "to_location_id" is null));

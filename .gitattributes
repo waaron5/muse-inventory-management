@@ -1,0 +1,2 @@
+# Keep installed third-party tooling in its upstream format, including the
+# Windows launcher's CRLF line endings.

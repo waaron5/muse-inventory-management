@@ -1,0 +1,336 @@
+@import "tailwindcss";
+
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+.count-stepper { appearance: textfield; }
+.count-stepper::-webkit-inner-spin-button,
+.count-stepper::-webkit-outer-spin-button { appearance: none; margin: 0; }
+
+
+/* `dark:` means our Dark: a saved choice, or the system's when there's none.
+   Components shouldn't need it, as Dark lives in the tokens below, but
+   shadcn's CSS uses it. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media screen and (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+/* Visual design system tokens. The rules for using them are in
+   docs/design-system.md; no colour lives anywhere else. Each colour is
+   light-dark(light, dark), picked by the page's color-scheme: the system's
+   (System, the default), or the Appearance saved in Settings, which
+   lib/appearance puts on <html> as data-theme before first paint. */
+:root {
+  color-scheme: light dark;
+  --motion-hover: 150ms;
+  --motion-enter: 110ms;
+  --motion-exit: 70ms;
+  --ease-enter: cubic-bezier(0, 0, 0.38, 0.9);
+  --ease-exit: cubic-bezier(0.2, 0, 1, 0.9);
+  --bg: light-dark(#ffffff, #161618);
+  /* Cool greys, from Dropbox's 2023 theme: the sidebar is its subtle
+     background, and the ladder flattens its blue-grey surfaces. */
+  --bg-subtle: light-dark(#f3f4f5, #1b1c1f);
+  /* The neutral ladder: at rest, hovered, and selected a step darker (the
+     active nav tab, an active chip, a menu's chosen option). No other greys. */
+  --fill: light-dark(#eeeff2, #27282c);
+  --hover: light-dark(#e6e7eb, #303136);
+  --row-hover: var(--fill);
+  --selected: light-dark(#dcdde3, #3b3c42);
+  --line: light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.12));
+  --ink: light-dark(#18181a, #ededee);
+  --text-subtle: light-dark(#62656b, #a4a6ab);
+  /* Muse cyan is the same in both. */
+  --cyan: #02b5e1;
+  --cyan-ink: light-dark(#00799c, #4fd0f0);
+  /* The main button: Muse cyan with white on top. */
+  --main: var(--cyan);
+  --main-hover: #00a2cb;
+  --on-main: #ffffff;
+  --alert-text: light-dark(#9b0032, #ff9dba);
+  --alert-surface: light-dark(#f5e5eb, #3d1423);
+  --warning-text: light-dark(#845909, #f3c766);
+  --warning-surface: light-dark(#fbe8ae, #3a2c0b);
+  --success-text: light-dark(#206f54, #7fd1ae);
+  --success-surface: light-dark(#e2ece8, #12302a);
+  --shadow-raised: 0 4px 12px light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.45));
+  --shadow-floating: 0 16px 32px light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.5));
+  --scrim: light-dark(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.65));
+  --avatar-ink: light-dark(#18181a, #ffffff);
+  /* Paper is paper: the Print list keeps these in Dark mode too. */
+  --paper: #ffffff;
+  --paper-ink: #18181a;
+  --paper-subtle: #66665f;
+  --paper-line: rgba(0, 0, 0, 0.14);
+
+  /* shadcn's names, pointed at the tokens above */
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: var(--bg);
+  --card-foreground: var(--ink);
+  --popover: var(--bg);
+  --popover-foreground: var(--ink);
+  --primary: var(--main);
+  --primary-foreground: var(--on-main);
+  --secondary: var(--fill);
+  --secondary-foreground: var(--ink);
+  --muted: var(--fill);
+  --muted-foreground: var(--text-subtle);
+  --accent: var(--hover);
+  --accent-foreground: var(--ink);
+  --destructive: var(--alert-text);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--cyan-ink);
+  --sidebar: var(--bg-subtle);
+  --sidebar-foreground: var(--ink);
+  --sidebar-accent: var(--selected);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--cyan-ink);
+}
+
+.avatar {
+  --avatar-surface: light-dark(hsl(var(--avatar-hue, 220) 55% 86%), hsl(var(--avatar-hue, 220) 35% 30%));
+  background: var(--avatar-surface);
+  color: var(--avatar-ink);
+}
+
+/* The Appearance chosen in Settings, and paper always printing light: the
+   doubled :root outranks [data-theme="dark"]. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+@media print {
+  :root:root {
+    color-scheme: light;
+  }
+}
+
+@theme inline {
+  --breakpoint-rail: 800px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-fill: var(--fill);
+  --color-hover: var(--hover);
+  --color-row-hover: var(--row-hover);
+  --color-selected: var(--selected);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-main: var(--main);
+  --color-main-hover: var(--main-hover);
+  --color-on-main: var(--on-main);
+  --color-scrim: var(--scrim);
+  --color-subtle: var(--text-subtle);
+  --color-cyan: var(--cyan);
+  --color-cyan-ink: var(--cyan-ink);
+  --color-alert: var(--alert-text);
+  --color-alert-surface: var(--alert-surface);
+  --color-warning: var(--warning-text);
+  --color-warning-surface: var(--warning-surface);
+  --color-success: var(--success-text);
+  --color-success-surface: var(--success-surface);
+  --color-paper: var(--paper);
+  --color-paper-ink: var(--paper-ink);
+  --color-paper-subtle: var(--paper-subtle);
+  --color-paper-line: var(--paper-line);
+
+  --shadow-raised: var(--shadow-raised);
+  --shadow-floating: var(--shadow-floating);
+
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Bigger type than the prototype (build note 8). */
+  body {
+    @apply bg-background text-foreground;
+    font-size: 16px;
+    line-height: 24px;
+  }
+  @media (min-width: 800px) {
+    body {
+      font-size: 15px;
+    }
+    /* The sidebar never moves: the page doesn't bounce past its top or end.
+       Phones keep their native bounce. */
+    html,
+    body {
+      overscroll-behavior-y: none;
+    }
+  }
+  :focus-visible {
+    outline: 3px solid var(--cyan-ink);
+    outline-offset: 1px;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  [role^="menuitem"]:not([data-disabled]),
+  [role="option"] {
+    cursor: pointer;
+  }
+}
+
+/* Only the three main lists fill the viewport. React Activity keeps previous
+   routes mounted with display:none, so a hidden list must not constrain the
+   current detail/form page. Printing is never limited to a screen height. */
+@media screen {
+  .app-shell:has(.list-page:not([style*="display: none"])) {
+    height: 100dvh;
+    overflow: hidden;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .app-content:has(.list-page:not([style*="display: none"])) {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .app-content:has(.list-page:not([style*="display: none"])) > header,
+  .list-page > :not([role="region"]) {
+    flex-shrink: 0;
+  }
+
+  .app-content:has(.list-page:not([style*="display: none"])) > main {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Small control feedback uses transforms only, so the layout stays still.
+   Reduced motion gets immediate state changes without decorative movement. */
+@media (prefers-reduced-motion: no-preference) {
+  .hover-label[data-state="delayed-open"],
+  .hover-label[data-state="instant-open"] {
+    animation: label-enter var(--motion-hover) var(--ease-enter);
+  }
+  .hover-label[data-state="closed"] {
+    animation: menu-exit var(--motion-exit) var(--ease-exit);
+    pointer-events: none;
+  }
+  .main-action .add-icon,
+  .account-chevrons > path {
+    transition: transform var(--motion-hover) var(--ease-enter);
+  }
+
+  .main-action .add-icon {
+    transform: scale(1);
+  }
+
+  .main-action:not(:disabled, [aria-disabled="true"]):focus-visible .add-icon {
+    transform: scale(1.2);
+  }
+
+  /* Lucide draws the lower chevron first, then the upper one. */
+  .account-trigger:is(:focus-visible, [data-state="open"]) .account-chevrons > path:first-child {
+    transform: translateY(3px);
+  }
+  .account-trigger:is(:focus-visible, [data-state="open"]) .account-chevrons > path:last-child {
+    transform: translateY(-3px);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .main-action:not(:disabled, [aria-disabled="true"]):hover .add-icon {
+      transform: scale(1.2);
+    }
+    .account-trigger:hover .account-chevrons > path:first-child {
+      transform: translateY(3px);
+    }
+    .account-trigger:hover .account-chevrons > path:last-child {
+      transform: translateY(-3px);
+    }
+  }
+
+  /* Radix keeps content mounted until its closing CSS animation finishes. */
+  .menu-fade[data-state="open"] {
+    animation: menu-enter var(--motion-enter) var(--ease-enter);
+  }
+  .menu-fade[data-state="closed"] {
+    animation: menu-exit var(--motion-exit) var(--ease-exit);
+    pointer-events: none;
+  }
+}
+
+@keyframes menu-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes label-enter {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes menu-exit {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* The Muse wordmark: ink "mus", cyan "e". */
+.logo {
+  display: block;
+  aspect-ratio: 264 / 64;
+  background: linear-gradient(90deg, var(--ink) 0 75.6%, var(--cyan) 75.6%);
+  mask: url("/muse-logo.png") center / contain no-repeat;
+}
+
+/* Client colours (build note 6), from v1's company themes: an accent for the
+   stripe and dot, a wash behind the Client's name on its Event's page, and an
+   ink for the name in its colour under an Event row's name. See lib/client-colour. */
+.client-yellow { --client-accent: light-dark(#bd8600, #facc15); --client-wash: light-dark(#fdf6d8, #332a0e); --client-ink: light-dark(#736440, #c2b48c); }
+.client-orange { --client-accent: light-dark(#ea580c, #fb923c); --client-wash: light-dark(#fff0e4, #3a2414); --client-ink: light-dark(#86604a, #c9a891); }
+.client-green { --client-accent: light-dark(#16a34a, #4ade80); --client-wash: light-dark(#e9f8ee, #13301f); --client-ink: light-dark(#4b6b56, #9cbaa6); }
+.client-violet { --client-accent: light-dark(#7c3aed, #a78bfa); --client-wash: light-dark(#f0eaff, #2b2344); --client-ink: light-dark(#6b5d82, #b6abc8); }
+.client-blue { --client-accent: light-dark(#1d4ed8, #3b82f6); --client-wash: light-dark(#e4ecff, #1c2749); --client-ink: light-dark(#526889, #a1b2cc); }
+.client-rose { --client-accent: light-dark(#e11d48, #fb7185); --client-wash: light-dark(#ffedf2, #3b1a25); --client-ink: light-dark(#865966, #c7a5af); }
