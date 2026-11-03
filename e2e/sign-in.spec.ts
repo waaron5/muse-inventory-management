@@ -16,6 +16,18 @@ test("refuses a second code within a minute", async ({ page }) => {
   await expect(page.getByText("Too many tries. Wait a while and try again.")).toBeVisible();
 });
 
+test("goes back to change the email, keeping what was typed", async ({ page }) => {
+  const email = await invite();
+
+  await page.goto("/sign-in");
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByText(`A code has been sent to ${email}.`)).toBeVisible();
+
+  await page.getByRole("button", { name: "Use a different email" }).click();
+  await expect(page.getByLabel("Email")).toHaveValue(email);
+});
+
 test("signs in by emailed code, asks a new person's name, and signs out", async ({ page }) => {
   const email = await invite();
 
@@ -25,8 +37,10 @@ test("signs in by emailed code, asks a new person's name, and signs out", async 
   await page.getByLabel("Email").fill(email);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByText(`A code has been sent to ${email}.`)).toBeVisible();
+  // With no Resend key, as here, the screen says where the code really went.
+  await expect(page.getByText("This copy can't send email: the code is in .outbox/mail.jsonl.")).toBeVisible();
+  // A full code signs in without pressing Sign in.
   await page.getByLabel("Code").fill(await codeEmailedTo(email));
-  await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page).toHaveURL(/\/welcome$/);
   await page.getByLabel("Your name").fill("Robin Ellis");

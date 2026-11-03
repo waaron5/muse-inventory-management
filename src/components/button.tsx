@@ -4,7 +4,8 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 // The buttons the screens share. A main button is Muse cyan and always
-// carries an icon; sections use the same treatment.
+// carries an icon; sections use the same treatment. Sign-in's card is the
+// one exception, with words only (components/entry.tsx).
 
 export const buttonLook = {
   main: "main-action bg-main text-on-main hover:bg-main-hover",

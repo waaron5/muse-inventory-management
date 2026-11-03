@@ -54,6 +54,19 @@
   --main: var(--cyan);
   --main-hover: #00a2cb;
   --on-main: #ffffff;
+  /* Muse purple, the bubble on museem.com, with white on top. Only sign-in
+     and the name prompt use it, and it's the same in both themes. */
+  --muse-purple: #935ba5;
+  --on-purple: #ffffff;
+  /* The floating sign-in card: no border, lifted by its shadow; in Dark,
+     where a shadow barely shows, by a lighter surface too. */
+  --entry-card: light-dark(#ffffff, #222327);
+  /* Close to the card all round, so it shows along the top too, and
+     deepest beneath it. */
+  --shadow-entry-card: 0 0 2px light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.6)),
+    0 2px 8px light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.5)),
+    0 6px 20px light-dark(rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.55));
+  --shadow-bubble: 10px 8px 28px light-dark(rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.5));
   --alert-text: light-dark(#9b0032, #ff9dba);
   --alert-surface: light-dark(#f5e5eb, #3d1423);
   --warning-text: light-dark(#845909, #f3c766);
@@ -168,9 +181,13 @@
   --color-paper-ink: var(--paper-ink);
   --color-paper-subtle: var(--paper-subtle);
   --color-paper-line: var(--paper-line);
+  --color-muse-purple: var(--muse-purple);
+  --color-on-purple: var(--on-purple);
+  --color-entry-card: var(--entry-card);
 
   --shadow-raised: var(--shadow-raised);
   --shadow-floating: var(--shadow-floating);
+  --shadow-entry-card: var(--shadow-entry-card);
 
   --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-heading: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
@@ -323,6 +340,74 @@
   aspect-ratio: 264 / 64;
   background: linear-gradient(90deg, var(--ink) 0 75.6%, var(--cyan) 75.6%);
   mask: url("/muse-logo.png") center / contain no-repeat;
+}
+
+/* Sign-in and the name prompt (layout in docs/design-system.md): a Muse
+   purple bubble bleeding off the screen's edge, the logo inside it, and the
+   floating card beside it. A phone, or any screen taller than it is wide,
+   stacks the bubble above the card; a wide one puts them side by side. */
+.entry {
+  /* How far down the bubble reaches when stacked; the card tucks in just above it. */
+  --foot: clamp(260px, 36dvh, 440px);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  padding: max(40px, env(safe-area-inset-top)) 16px max(40px, env(safe-area-inset-bottom));
+}
+/* A circle centred above and left of the screen, so its curve sweeps down
+   to the right beneath the logo. */
+.entry-bubble {
+  --r: max(110vw, 420px);
+  position: absolute;
+  z-index: -1;
+  left: calc(22vw - var(--r));
+  top: calc(var(--foot) - var(--r) * 2);
+  width: calc(var(--r) * 2);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--muse-purple);
+  box-shadow: var(--shadow-bubble);
+}
+.entry-brand {
+  display: flex;
+  min-height: calc(var(--foot) - 80px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-purple);
+}
+.entry-panel {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 24px;
+}
+@media (min-width: 900px) and (min-aspect-ratio: 1 / 1) {
+  .entry {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding-inline: 0;
+  }
+  /* Centred on the screen's left edge, reaching its foot there and the
+     middle of the screen near its top, as the Muse site's bubble does. */
+  .entry-bubble {
+    --r: max(50vw, 56dvh);
+    left: calc(var(--r) * -1);
+    top: calc(100dvh - var(--r) * 2);
+  }
+  .entry-brand {
+    min-height: 0;
+  }
+  .entry-panel {
+    justify-self: center;
+    margin-top: 0;
+    padding-inline: 32px;
+    max-width: 484px;
+  }
 }
 
 /* Client colours (build note 6), from v1's company themes: an accent for the

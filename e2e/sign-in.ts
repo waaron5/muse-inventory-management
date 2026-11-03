@@ -69,8 +69,8 @@ export async function signInFirstTime(page: Page, email: string, name: string) {
   await page.goto("/sign-in");
   await page.getByLabel("Email").fill(email);
   await page.getByRole("button", { name: "Sign in" }).click();
+  // A full code signs in by itself.
   await page.getByLabel("Code").fill(await codeEmailedTo(email));
-  await page.getByRole("button", { name: "Sign in" }).click();
   await page.getByLabel("Your name").fill(name);
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page).toHaveURL(/\/events$/);

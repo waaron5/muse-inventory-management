@@ -21,6 +21,8 @@ Every colour is a token in `src/app/globals.css`. Components never use a hex val
 | Lines | `border-line` | Hairlines everywhere, including every input's border, which turns `border-ink` on hover |
 | Text | `text-ink`, `text-subtle` | Active icons are ink, never cyan |
 | Paper | `bg-paper`, `text-paper-ink`, `text-paper-subtle`, `border-paper-line` | The Print list's sheets only. Paper stays white in Dark mode. |
+| Muse purple | `bg-muse-purple`, `text-on-purple` | The bubble on sign-in and the name prompt only, from museem.com (`#935ba5`), with the logo in white. The same in both themes. |
+| Entry card | `bg-entry-card`, `shadow-entry-card` | The floating card on sign-in and the name prompt: no border, lifted by its shadow, and a lighter surface in Dark. |
 | Links and focus | `text-cyan-ink`, the focus ring | |
 
 The greys are cool, from Dropbox's 2023 theme: the sidebar is `bg-subtle` (its subtle background), and the neutral ladder `bg-fill` → `bg-hover` → `bg-selected` flattens its blue-grey surfaces into opaque steps. There are no other greys. Rows use `bg-row-hover`, an alias of `bg-fill`, for hover and touch feedback. Other hover, press, highlight or open states use `bg-hover`, `bg-selected` or `bg-main-hover`. Destructive detail icons use `bg-alert-surface` with `text-alert` on hover. Underline tabs mark the current one with an ink underline. Text buttons, inactive tabs, sortable column headings and the Event row's Inventory and Gifts counts take a solid underline on hover, as `TextButton` does; underlines never animate.
@@ -34,8 +36,9 @@ Clients have a saved colour from the six-colour Client palette: rose, orange, ye
 Use these rather than restyling by hand:
 
 - `components/button.tsx`:
-  - `FormActions`: a right-aligned form footer with Cancel before the primary action. Shared by add, save and confirmation forms. Sign-in instead has one full-width main button under its field.
+  - `FormActions`: a right-aligned form footer with Cancel before the primary action. Shared by add, save and confirmation forms. Sign-in and the name prompt instead use `components/entry.tsx` (below).
   - `MainButton`: requires an `icon`.
+- `components/entry.tsx`, for sign-in and the first-sign-in name prompt only: `EntryCard` (the floating card), `EntryField` (a filled field with no border, its label inside as the placeholder until it's in use, then small above what's typed), `EntryButton` (one full-width Muse cyan button, words only, no icon) and `EntryLink` (the quiet text actions under it).
   - `TextButton`: an icon and text without a background, for quiet section actions.
   - `SecondaryButton`
   - `ButtonLink`: `look="main"` requires an `icon`.
@@ -113,8 +116,6 @@ Main buttons are worded **Add …**, never "New …": Add Event, Add Item, Add G
 | Make Admin, Make User | `UserCog` |
 | Deactivate | `UserX` |
 | Reactivate | `UserCheck` |
-| Sign in (both steps) | `LogIn` |
-| Continue | `ArrowRight` |
 | Send (a bug report) | `Send` |
 | Try again (the error page) | `RotateCw` |
 
@@ -148,7 +149,8 @@ The research and source links are in [Interface motion](research/interface-motio
 - **Main list right spacing:** rows leave an extra 32px before the scrollbar on desktop (64px total from the content edge), and 16px on phone. This gutter stays present even without a scrollbar.
 - **Centred secondary pages** use `PageColumn`: new and edit forms have a 560px maximum, Event/Inventory Item/Gift details, Settings cards and Activity have a 760px maximum. Titles, fields, photos, sections and lists share their page's column; loading placeholders use the same layout.
 - **Every centred column has a border:** a hairline `border-line` outline, `rounded-lg` corners and 32px padding, matching the main pages' outer spacing, without a shadow. The maximum widths include that border and padding. The full-width top row and the three main lists sit outside these panels.
-- **Sign-in and the first-sign-in name prompt** sit in the same bordered column (`PageColumn`, 480px compact), with the centred logo inside the border above the form, and no shell.
+- **Sign-in and the first-sign-in name prompt** take Muse's own look, from museem.com, with no shell: a Muse purple circle bleeding off the screen's top left, the Muse logo in white with "inventory" written in beneath it, stacked and centred in the circle, and the floating `EntryCard` (420px) beside it. On a screen at least 900px wide and wider than it is tall the two sit side by side, the circle reaching the screen's foot at its left edge; otherwise the circle sweeps across the top and the card tucks just under its curve. The card's buttons carry no icon. The email step says "No account? Ask an Admin to add you." under its button; the code step offers "Send a new code" and "Use a different email", and a full 6-digit code signs in by itself, typed, pasted or filled in from the email. The button reads "Sending code…" or "Signing in…" while it works. The logo here is `MuseWordmark`, a vector traced from museem.com's wordmark: white "mus" and the cyan "e". The card's shadow sits close all round, showing along its top too, deepest beneath.
+- **The sign-in code email** (`server/code-email.ts`) matches: a floating white card on `bg-subtle` grey, its top the purple bubble with the logo and "inventory" (a picture, `public/email/code-header.png`, as email can't draw SVG or the script font), then "Your sign-in code" and the code in a filled box like sign-in's fields. Email can't read the tokens, so its colours are copied from them; a plain-text part goes with it.
 - **The Print list's screen view** uses a centred 960px maximum for its controls and paper preview. Printing removes the column's maximum width, margins, border, corners and padding so US Letter sheets still start at the page's top left at full size.
 - **The top row stays full width**, outside every centred column: the way back at the left, search and the page's main action at the right. Users' Invite, Locations' Add Location and the Print list's Print action sit here on desktop and remain beside their titles on phone.
 - **Settings** is one page with an overarching Settings heading at the content's left edge, below the full-width top row and above the navigation and cards. From 1024px the heading stays fixed with the navigation while the cards scroll; below that it stays in normal document flow. Its five separate bordered cards are: My profile, Users, Clients, Locations and Categories. Preserve the existing row/form layouts. Invite, Add Client, Add Location and Add Category sit at the right of their card's heading row. Clients and Categories have a 224px search box just before that button (on phone, its own full-width row beneath the heading); it narrows the card's rows by name as you type, saying "Nothing matches." when none do. A card shows its first 8 rows, then `ViewMoreButton` ("View 12 more") for the rest.

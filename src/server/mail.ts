@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/nextjs";
 import { Resend } from "resend";
 import type { SendCodeEmail } from "./auth/create-auth";
 import type { SendBugMail } from "./bug-report";
+import { codeEmail } from "./code-email";
 
 /** Where mail lands when there is no Resend key: read by the Playwright smoke. */
 export const LOCAL_OUTBOX = path.join(process.cwd(), ".outbox", "mail.jsonl");
@@ -16,14 +17,28 @@ const DEFAULT_FROM = "Muse Inventory <no-reply@inventory.museem.com>";
 type Mail = {
   subject: string;
   text: string;
+  html?: string;
   replyTo?: string;
   attachments?: { filename: string; content: Buffer }[];
 };
+/** Where a mail went: Resend took it, it only reached the local outbox, or it didn't go. */
+export type Delivery = "emailed" | "outbox" | "failed";
 // `logged` is kept beside the mail in the local outbox only.
-type Transport = (to: string, mail: Mail, logged?: Record<string, string>) => Promise<boolean>;
+type Transport = (to: string, mail: Mail, logged?: Record<string, string>) => Promise<Delivery>;
 
-/** Sends sign-in codes through Resend, or to the console and a local outbox. */
-export function codeMailerFromEnv(): SendCodeEmail {
+/**
+ * Whether mail here only reaches the local outbox: a laptop with no Resend key.
+ * Screens say so, or a code or invite would seem to have been emailed.
+ */
+export function mailGoesToOutbox(): boolean {
+  return !process.env.RESEND_API_KEY && !process.env.VERCEL;
+}
+
+/**
+ * Sends sign-in codes through Resend, or to the console and a local outbox.
+ * The email's header picture is served from `appURL`.
+ */
+export function codeMailerFromEnv(appURL: string): SendCodeEmail {
   const send = transportFromEnv("a sign-in code");
   if (!send) {
     return async () => {
@@ -33,14 +48,14 @@ export function codeMailerFromEnv(): SendCodeEmail {
   // Whether it went is never surfaced to the person: a failure only for
   // invited addresses would tell which ones exist.
   return async (to, code) => {
-    await send(to, codeEmail(code), { code });
+    await send(to, codeEmail(code, appURL), { code });
   };
 }
 
-/** Tells someone they've been invited, and where to sign in; says whether it went. */
-export function inviteMailerFromEnv(appURL: string): (to: string) => Promise<boolean> {
+/** Tells someone they've been invited, and where to sign in; says where it went. */
+export function inviteMailerFromEnv(appURL: string): (to: string) => Promise<Delivery> {
   const send = transportFromEnv("an invite");
-  return async (to) => (send ? send(to, inviteEmail(appURL)) : false);
+  return async (to) => (send ? send(to, inviteEmail(appURL)) : "failed");
 }
 
 /**
@@ -55,11 +70,12 @@ export function bugReportMailerFromEnv(): SendBugMail {
       Sentry.captureException(new Error("A bug report can't be sent: RESEND_API_KEY or MAINTAINER_EMAIL is not set."));
       return false;
     }
-    return send(to, mail, {
+    const delivery = await send(to, mail, {
       text: mail.text,
       replyTo: mail.replyTo,
       attachments: mail.attachments.map((a) => a.filename).join(", "),
     });
+    return delivery !== "failed";
   };
 }
 
@@ -72,10 +88,10 @@ function transportFromEnv(what: string): Transport | null {
     const from = process.env.MAIL_FROM || DEFAULT_FROM;
     return async (to, mail) => {
       const { error } = await resend.emails.send({ from, to, ...mail });
-      if (!error) return true;
+      if (!error) return "emailed";
       Sentry.captureException(new Error(`Resend refused ${what}: ${error.name}`));
       console.error(JSON.stringify({ at: "mail", error: error.name, message: error.message }));
-      return false;
+      return "failed";
     };
   }
   if (process.env.VERCEL) return null;
@@ -86,18 +102,7 @@ function transportFromEnv(what: string): Transport | null {
       LOCAL_OUTBOX,
       `${JSON.stringify({ to, subject: mail.subject, ...logged, at: new Date().toISOString() })}\n`,
     );
-    return true;
-  };
-}
-
-function codeEmail(code: string): Mail {
-  return {
-    subject: `${code} is your Muse Inventory code`,
-    text: [
-      `Your Muse Inventory sign-in code is ${code}.`,
-      "",
-      "It works for 5 minutes. If you didn't ask for it, you can ignore this email.",
-    ].join("\n"),
+    return "outbox";
   };
 }
 

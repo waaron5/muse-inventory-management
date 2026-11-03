@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { appURL, currentActor } from "@/server/auth";
 import { flash } from "@/server/flash";
 import { commands, CommandError, type Role } from "@/server/commands";
-import { inviteMailerFromEnv } from "@/server/mail";
+import { type Delivery, inviteMailerFromEnv } from "@/server/mail";
 
 /** What a Users sheet shows: a refusal and what was typed, or done. */
 export type UsersFormState = {
@@ -15,6 +15,13 @@ export type UsersFormState = {
 };
 
 const sendInvite = inviteMailerFromEnv(appURL);
+
+// A laptop without a Resend key only writes to the outbox, so it never says "emailed".
+const INVITED: Record<Delivery, string> = {
+  emailed: "Invite emailed",
+  outbox: "Invited, not emailed: it's in .outbox/mail.jsonl",
+  failed: "Invited",
+};
 
 export async function invite(_state: UsersFormState, form: FormData): Promise<UsersFormState> {
   const actor = await currentActor();
@@ -27,10 +34,10 @@ export async function invite(_state: UsersFormState, form: FormData): Promise<Us
     if (error instanceof CommandError) return { error: error.message };
     throw error;
   }
-  const emailed = await sendInvite(email);
-  await flash(emailed ? "Invite emailed" : "Invited");
+  const delivery = await sendInvite(email);
+  await flash(INVITED[delivery]);
   refresh();
-  return emailed ? { done: true } : { done: true, notEmailed: { email, appURL } };
+  return delivery === "failed" ? { done: true, notEmailed: { email, appURL } } : { done: true };
 }
 
 export async function changeRole(_state: UsersFormState, form: FormData): Promise<UsersFormState> {

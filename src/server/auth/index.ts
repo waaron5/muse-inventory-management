@@ -19,7 +19,7 @@ export const auth = createAuth({
   db,
   secret: authSecret(),
   baseURL: appURL,
-  sendCodeEmail: codeMailerFromEnv(),
+  sendCodeEmail: codeMailerFromEnv(appURL),
 });
 
 // A fixed secret is fine on a laptop; anywhere on Vercel it must be set.

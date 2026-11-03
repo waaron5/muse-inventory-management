@@ -1,25 +1,21 @@
 "use client";
 
-import { ArrowRight, Check, Pencil } from "lucide-react";
+import { Check, Pencil } from "lucide-react";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { type NameState, saveName } from "@/app/(app)/settings/actions";
 import { cn } from "@/lib/utils";
-import { FormActions, MainButton } from "./button";
-import { failsInline, Field, fieldClass, FormError } from "./form";
+import { EntryButton, EntryField } from "./entry";
+import { failsInline, fieldClass, FormError } from "./form";
 
 /** Your name, asked at first sign-in before carrying on to Events. */
 export function NameForm() {
   const [state, action, pending] = useActionState(failsInline(saveName), {});
   return (
     <form action={action} className="flex flex-col gap-4">
-      <Field label="Your name" name="name" autoComplete="name" required autoFocus />
+      <EntryField label="Your name" name="name" autoComplete="name" required autoFocus />
       <input type="hidden" name="then" value="events" />
       <FormError message={state.error} />
-      <FormActions>
-        <MainButton icon={ArrowRight} disabled={pending}>
-          Continue
-        </MainButton>
-      </FormActions>
+      <EntryButton disabled={pending}>Continue</EntryButton>
     </form>
   );
 }

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { type PageError, noteError, pageErrorOf } from "@/lib/last-error";
 import { digestOf } from "@/lib/sentry";
+import { cn } from "@/lib/utils";
 import { BugReportSheet } from "./bug-report";
 import { MainButton, SecondaryButton } from "./button";
 import { PageTitle } from "./page-header";
@@ -16,7 +17,17 @@ import { PageColumn } from "./page-column";
  * and Report this, which opens Report a bug with this error attached. Off
  * when nobody can be signed in to send it (sign-in).
  */
-export function ErrorScreen({ error, retry, report = true }: { error: unknown; retry: () => void; report?: boolean }) {
+export function ErrorScreen({
+  error,
+  retry,
+  report = true,
+  className,
+}: {
+  error: unknown;
+  retry: () => void;
+  report?: boolean;
+  className?: string;
+}) {
   const router = useRouter();
   const met = useRef<PageError>(undefined);
   const [reporting, setReporting] = useState<PageError | false>(false);
@@ -34,7 +45,7 @@ export function ErrorScreen({ error, retry, report = true }: { error: unknown; r
   }
 
   return (
-    <PageColumn width="compact" className="flex flex-col gap-6">
+    <PageColumn width="compact" className={cn("flex flex-col gap-6", className)}>
       <PageTitle>Something went wrong.</PageTitle>
       <div className="flex flex-wrap gap-3">
         <MainButton icon={RotateCw} onClick={retry}>

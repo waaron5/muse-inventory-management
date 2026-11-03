@@ -20,8 +20,10 @@ function offenders(pattern: RegExp, allowed: (match: string, file: string) => bo
 
 describe("the design system", () => {
   it("keeps raw colours out of components", () => {
-    // The browser's theme-color is metadata, not CSS, so it can't read a token.
-    expect(offenders(/#[0-9a-fA-F]{3,8}\b/g, (_, file) => file === join("app", "layout.tsx"))).toEqual([]);
+    // The browser's theme-color is metadata, not CSS, so it can't read a token;
+    // nor can an email, so the sign-in code email copies its colours.
+    const allowed = new Set([join("app", "layout.tsx"), join("server", "code-email.ts")]);
+    expect(offenders(/#[0-9a-fA-F]{3,8}\b/g, (_, file) => allowed.has(file))).toEqual([]);
   });
 
   it("uses tokens, not Tailwind's palette", () => {
@@ -99,6 +101,10 @@ describe.each<Theme>(["light", "dark"])("%s mode", (theme) => {
     ["warning-text", "bg"],
     ["success-text", "success-surface"],
     ["success-text", "bg"],
+    // The sign-in card, its filled fields, and the logo's bubble.
+    ["ink", "entry-card"],
+    ["text-subtle", "entry-card"],
+    ["on-purple", "muse-purple"],
     ["paper-ink", "paper"],
     ["paper-subtle", "paper"],
   ];
@@ -121,8 +127,19 @@ describe.each<Theme>(["light", "dark"])("%s mode", (theme) => {
 });
 
 describe("Dark mode", () => {
-  // Muse cyan is the same in both themes, and paper stays white (docs/design-system.md).
-  const sameInBoth = new Set(["cyan", "main", "main-hover", "on-main", "paper", "paper-ink", "paper-subtle", "paper-line"]);
+  // Muse cyan and purple are the same in both themes, and paper stays white (docs/design-system.md).
+  const sameInBoth = new Set([
+    "cyan",
+    "main",
+    "main-hover",
+    "on-main",
+    "muse-purple",
+    "on-purple",
+    "paper",
+    "paper-ink",
+    "paper-subtle",
+    "paper-line",
+  ]);
 
   it("gives every colour token a dark value", () => {
     const literal = [...tokens].filter(([name, value]) => /^(?:#|rgba?\()/.test(value) && !sameInBoth.has(name));
