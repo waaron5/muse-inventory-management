@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { type ReactNode, Suspense } from "react";
+import { isDemo } from "@/lib/demo";
 import { SearchButton } from "../global-search";
 import { Account } from "./account";
 import { Flash } from "./flash";
@@ -28,6 +29,11 @@ export function Shell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="app-content min-w-0">
+        {isDemo() && (
+          <p className="bg-fill px-4 py-1.5 text-center text-[13px] leading-5 text-subtle print:hidden">
+            Demo: fictional data, resets nightly
+          </p>
+        )}
         <header className="sticky top-0 z-10 border-b border-line bg-background pr-[max(16px,env(safe-area-inset-right))] pl-[max(16px,env(safe-area-inset-left))] pt-[env(safe-area-inset-top)] print:hidden rail:hidden">
           <div className="flex h-[52px] items-center">
             <Link href="/events" aria-label="Muse, go to Events" className="logo mr-auto w-[84px]" />

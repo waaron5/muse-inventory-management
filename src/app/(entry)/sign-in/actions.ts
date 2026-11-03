@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { signInByCode } from "@/server/auth";
+import { signInByCode, signInToTheDemo } from "@/server/auth";
 
 export type SignInState = { step: "email" | "code"; email: string; error?: string };
 
@@ -24,4 +24,10 @@ export async function signInStep(state: SignInState, form: FormData): Promise<Si
   if (!result.ok) return { ...state, error: result.message };
   // An action's redirect skips the proxy, so the name prompt is chosen here too.
   redirect(result.needsName ? "/welcome" : "/events");
+}
+
+/** The demo's one button (ADR 0016): signed in as its Admin, straight to Events. */
+export async function signInToDemo(): Promise<{ error?: string }> {
+  await signInToTheDemo();
+  redirect("/events");
 }

@@ -62,6 +62,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "playwright-report/**",
     "test-results/**",
+    // Installed third-party agent tools keep their upstream code unchanged.
+    ".claude/**",
+    ".github/skills/**/scripts/**",
   ]),
 ]);
 

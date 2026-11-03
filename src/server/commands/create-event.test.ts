@@ -36,7 +36,7 @@ describe("createEvent", () => {
 
   it("files an Event under a Client picked from the list", async () => {
     const actor = await addUser(db);
-    const first = await createEvent(db, actor, { name: "Gala", client: { name: "Riverside Community" } });
+    const first = await createEvent(db, actor, { name: "Gala", client: { name: "Riverside Community Church" } });
     const picked = (await loadEventScreen(db, first.id))!.client;
 
     const { id } = await createEvent(db, actor, { name: "Conference", client: { id: picked.id } });

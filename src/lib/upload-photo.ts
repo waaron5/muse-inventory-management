@@ -1,3 +1,4 @@
+import { DEMO_HOST, offInTheDemo } from "./demo";
 import { photoEdge, photoPath } from "./photos";
 
 // A failure whose own words are for the person: one the browser can't open.
@@ -17,6 +18,8 @@ export const photoAccept = "image/*,.heic,.heif";
  * isn't kept.
  */
 export async function uploadPhoto(file: File) {
+  // The server refuses it too; this only says why (ADR 0016).
+  if (process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL === DEMO_HOST) throw new UploadRefused(offInTheDemo("Photo uploads"));
   const picture = await decode(file);
   const key = crypto.randomUUID();
   try {

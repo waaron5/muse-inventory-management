@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { isDemo, offInTheDemo } from "@/lib/demo";
 import { currentSession } from "@/server/auth";
 import { type BugReportState, sendBugReport } from "@/server/bug-report";
 import { bugReportMailerFromEnv } from "@/server/mail";
@@ -14,6 +15,8 @@ const appVersion = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local";
 export async function reportBug(form: FormData): Promise<BugReportState> {
   const session = await currentSession();
   if (!session) return { error: "Sign in again to continue." };
+  // A stranger's report would reach the maintainer's inbox (ADR 0016).
+  if (isDemo()) return { error: offInTheDemo("Bug reports") };
   const text = (key: string) => String(form.get(key) ?? "");
   const screenshot = form.get("screenshot");
   return sendBugReport(

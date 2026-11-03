@@ -4,7 +4,7 @@ import { LogIn } from "lucide-react";
 import { useActionState } from "react";
 import { MainButton } from "@/components/button";
 import { failsInline, Field, FormError } from "@/components/form";
-import { signInStep } from "./actions";
+import { signInStep, signInToDemo } from "./actions";
 
 export function SignInForm() {
   const [state, action, pending] = useActionState(failsInline(signInStep), { step: "email", email: "" });
@@ -54,6 +54,20 @@ export function SignInForm() {
       </MainButton>
       <input type="hidden" name="email" value={state.email} />
       <p className="text-subtle">No code? Check your junk folder, or ask an Admin to add you.</p>
+    </form>
+  );
+}
+
+/** The demo's sign-in (ADR 0016): no email, one button, as its fictional Admin. */
+export function DemoSignInForm() {
+  const [state, action, pending] = useActionState(failsInline(signInToDemo), {});
+  return (
+    <form action={action} className="flex flex-col gap-4">
+      <p>A working demo of Muse Inventory, with made-up clients, events and stock. You sign in as an Admin, and everything resets each night.</p>
+      <FormError message={state.error} />
+      <MainButton icon={LogIn} disabled={pending} className="w-full">
+        Sign in to the demo
+      </MainButton>
     </form>
   );
 }

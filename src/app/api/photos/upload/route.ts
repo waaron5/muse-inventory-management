@@ -1,10 +1,13 @@
 import { type HandleUploadBody, handleUpload } from "@vercel/blob/client";
+import { isDemo, offInTheDemo } from "@/lib/demo";
 import { photoPathPattern } from "@/lib/photos";
 import { currentSession } from "@/server/auth";
 
 // The browser uploads photos straight to Blob storage, already made JPEG. This
 // hands it a token for one copy of one new photo; a command then records it.
 export async function POST(request: Request) {
+  // The demo keeps no photos from strangers (ADR 0016).
+  if (isDemo()) return Response.json({ error: offInTheDemo("Photo uploads") }, { status: 400 });
   const body = (await request.json()) as HandleUploadBody;
   try {
     const result = await handleUpload({

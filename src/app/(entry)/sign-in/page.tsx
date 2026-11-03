@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { SignInForm } from "./sign-in-form";
+import { isDemo } from "@/lib/demo";
+import { DemoSignInForm, SignInForm } from "./sign-in-form";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -7,7 +8,7 @@ export default function SignInPage() {
   return (
     <>
       <h1 className="sr-only">Sign in</h1>
-      <SignInForm />
+      {isDemo() ? <DemoSignInForm /> : <SignInForm />}
     </>
   );
 }

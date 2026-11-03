@@ -1,6 +1,7 @@
 name: CI
 
-# CI runs as two jobs, and only on pull requests: main only ever takes a branch
+# Runner minutes are capped and rounded up per job, and each job pays about two
+# minutes of setup, so CI runs as two jobs, and only on pull requests: main only ever takes a branch
 # that already passed.
 on:
   pull_request:

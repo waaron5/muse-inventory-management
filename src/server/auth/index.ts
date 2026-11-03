@@ -3,10 +3,12 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { db } from "@/db";
+import { isDemo } from "@/lib/demo";
 import { codeMailerFromEnv } from "../mail";
+import { DEMO_ADMIN, ensureDemoAdmin } from "../demo/seed";
 import { createAuth } from "./create-auth";
 import { readSession } from "./session";
-import { limitedSignIn } from "./sign-in";
+import { limitedSignIn, signIn } from "./sign-in";
 import { createSignInLimits } from "./sign-in-limits";
 
 /** Where the app is served, as invite emails name it. */
@@ -59,6 +61,19 @@ export const signInByCode = {
   send: async (email: string) => withinLimits.send(email, await clientIp()),
   verify: async (email: string, code: string) => withinLimits.verify(email, code, await clientIp()),
 };
+
+/**
+ * The demo's one-click sign-in (ADR 0016), as its fictional Admin, put back
+ * first in case a visitor changed them. It makes the code itself rather than
+ * emailing it, so it only ever runs in the demo.
+ */
+export async function signInToTheDemo() {
+  if (!isDemo()) throw new Error("Demo sign-in is off outside the demo.");
+  await ensureDemoAdmin(db);
+  const code = await auth.api.createVerificationOTP({ body: { email: DEMO_ADMIN.email, type: "sign-in" } });
+  const result = await signIn(auth, DEMO_ADMIN.email, code);
+  if (!result.ok) throw new Error(result.message);
+}
 
 /** Clears finished sign-in counts. */
 export const forgetEndedSignInCounts = () => limits.forgetEnded();

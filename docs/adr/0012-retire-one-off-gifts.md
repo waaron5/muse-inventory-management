@@ -9,4 +9,4 @@ An Event's Gifts are now added only by searching the catalog. Its Inventory has 
 ## Consequences
 
 - The `addOneOffGift` command is removed. The `one-off-gift` Line kind stays, so One-off Gifts already made still show under their Event's Gifts, can have their count changed or be removed, print under "One-off Gifts", and are never Given Away from Stock.
-- `docs/design-system.md` and `CONTEXT.md` describe the two Inventory actions and the retired One-off Gift.
+- `docs/design-system.md`, `PRODUCT.md` and `CONTEXT.md` describe the two Inventory actions and the retired One-off Gift.
