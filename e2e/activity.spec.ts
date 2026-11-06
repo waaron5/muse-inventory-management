@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
+import { Client } from "pg";
+import { e2eDatabaseURL } from "../playwright.config";
 import { signInAsNewPerson } from "./sign-in";
 
 test("a change shows in Activity under Today, by who made it, and the type tabs and person chip filter it", async ({ page }) => {
@@ -37,4 +39,35 @@ test("a change shows in Activity under Today, by who made it, and the type tabs 
   await expect(page).toHaveURL(/type=stock/);
   await expect(page).toHaveURL(/person=/);
   await expect(entry).toBeVisible();
+});
+
+test("a change made through an AI Connection shows its person with a \"via AI\" mark naming the app; one made on screen has none", async ({ page, isMobile }) => {
+  const id = randomUUID();
+  const tag = id.slice(0, 8);
+  const bea = `Bea ${tag}`;
+  const client = new Client({ connectionString: e2eDatabaseURL });
+  await client.connect();
+  try {
+    await client.query(`insert into "user" (id, name, email) values ($1, $2, $3)`, [id, bea, `${id}@example.com`]);
+    await client.query(
+      `insert into activity (by_user_id, area, sentence, via_ai_client_id, via_ai_app) values ($1, 'stock', $2, 'claude', 'Claude'), ($1, 'stock', $3, null, null)`,
+      [id, JSON.stringify([`added Location Loft ${tag}`]), JSON.stringify([`added Location Shed ${tag}`])],
+    );
+  } finally {
+    await client.end();
+  }
+  await signInAsNewPerson(page, `Viewer ${tag}`);
+  await page.goto("/activity");
+  const main = page.getByRole("main");
+
+  const throughAi = main.getByRole("listitem").filter({ hasText: `added Location Loft ${tag}` });
+  await expect(throughAi).toContainText(`${bea} via AI added Location Loft ${tag}`);
+  const mark = throughAi.getByRole("button", { name: `Done through ${bea}'s Claude` });
+  // A phone has no hover: a tap shows it.
+  await (isMobile ? mark.click() : mark.hover());
+  await expect(page.getByRole("tooltip")).toHaveText(`Done through ${bea}'s Claude`);
+
+  const onScreen = main.getByRole("listitem").filter({ hasText: `added Location Shed ${tag}` });
+  await expect(onScreen).toContainText(`${bea} added Location Shed ${tag}`);
+  await expect(onScreen.getByRole("button")).toHaveCount(0);
 });

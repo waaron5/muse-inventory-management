@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Avatar } from "@/components/avatar";
 import { SelectChip } from "@/components/filter-chip";
+import { ViaAi } from "@/components/via-ai";
 import { ViewMoreLink } from "@/components/view-more";
 import { type ActivityArea, activityAreaLabel, activityAreas } from "@/lib/activity";
 import { formatDayHeading, formatTime } from "@/lib/format";
@@ -97,6 +98,11 @@ export async function ActivityList({
                     )}
                     <p className="min-w-0 flex-1">
                       <span className="font-medium">{entry.by ? entry.by.name : "Automatic"}</span>{" "}
+                      {entry.by && entry.viaAi && (
+                        <>
+                          <ViaAi person={entry.by.name} app={entry.viaAi} />{" "}
+                        </>
+                      )}
                       {entry.sentence.map((part, i) => <Part key={i} part={part} />)}
                     </p>
                     <time dateTime={entry.recordedAt.toISOString()} className="shrink-0 text-[14px] text-subtle tabular-nums">

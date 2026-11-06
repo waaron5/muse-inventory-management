@@ -16,6 +16,10 @@ export const createCategory = defineCommand({
   name: "createCategory",
   input: z.object({ name: categoryName }),
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Adds a Category of Inventory Item. Check the categories tool first: it may already be there.",
+  },
   run: async (tx, _actor, input, record) => {
     const [created] = await tx.insert(category).values(input).returning({ id: category.id, name: category.name });
     await record("catalog", said`added Category ${ref.category(created.id, created.name)}`);
@@ -27,6 +31,10 @@ export const renameCategory = defineCommand({
   name: "renameCategory",
   input: z.object({ categoryId: aCategory, name: categoryName }),
   allow: ["admin"],
+  ai: {
+    description:
+      "Renames a Category. Admins only.",
+  },
   run: async (tx, _actor, { categoryId, name }, record) => {
     const current = await lockCategory(tx, categoryId);
     await tx.update(category).set({ name }).where(eq(category.id, categoryId));
@@ -38,6 +46,7 @@ export const deleteCategory = defineCommand({
   name: "deleteCategory",
   input: z.object({ id: aCategory }),
   allow: ["admin"],
+  ai: false,
   run: async (tx, _actor, { id }, record) => {
     const found = await lockCategory(tx, id);
     // The foreign key clears references, including those on Archived items.

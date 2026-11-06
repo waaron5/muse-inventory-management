@@ -15,6 +15,7 @@ export const deleteItem = defineCommand({
   name: "deleteItem",
   input: target,
   allow: ["admin"],
+  ai: false,
   run: async (tx, actor, { id }, record) => {
     const [found] = await tx.select().from(item).where(eq(item.id, id)).for("update");
     if (!found) throw new CommandError("invalid", "That item no longer exists.");
@@ -41,6 +42,7 @@ export const deleteLocation = defineCommand({
   name: "deleteLocation",
   input: target,
   allow: ["admin"],
+  ai: false,
   run: async (tx, actor, { id }, record) => {
     if (id === UNASSIGNED_LOCATION) throw new CommandError("invalid", "Unassigned Stock needs a Location.");
     const [found] = await tx.select().from(location).where(eq(location.id, id)).for("update");
@@ -68,6 +70,7 @@ export const deleteClient = defineCommand({
   name: "deleteClient",
   input: target,
   allow: ["admin"],
+  ai: false,
   run: async (tx, _actor, { id }, record) => {
     const [found] = await tx.select().from(client).where(eq(client.id, id)).for("update");
     if (!found) throw new CommandError("invalid", "That Client no longer exists.");

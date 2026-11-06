@@ -10,6 +10,7 @@ export const setOwnName = defineCommand({
     name: z.string().trim().min(1, "Enter your name.").max(100, "Keep your name under 100 characters."),
   }),
   allow: ["admin", "user"],
+  ai: false,
   // Your own profile isn't Muse's data, so it isn't Activity.
   activity: false,
   run: async (tx, actor, input) => {

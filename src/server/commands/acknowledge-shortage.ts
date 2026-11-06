@@ -22,6 +22,7 @@ export const acknowledgeShortage = defineCommand({
     shortBy: z.int(),
   }),
   allow: ["admin"],
+  ai: false,
   run: async (tx, actor, { eventId, itemId, note, shortBy }, record) => {
     const today = todayInMuse();
     const [[thing], holds, counts] = await Promise.all([

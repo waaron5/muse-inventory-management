@@ -15,6 +15,10 @@ export const editEvent = defineCommand({
   name: "editEvent",
   input: z.object({ id: z.uuid("That Event no longer exists."), ...eventFields }),
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Changes an Event's details. Only the fields given change; send an empty string to clear one. New dates move what it holds, and any Shortage they cause is flagged; its dates can't be cleared while it holds Inventory.",
+  },
   run: async (tx, _actor, { id, client, ...fields }, record) => {
     const [current] = await tx
       .select({

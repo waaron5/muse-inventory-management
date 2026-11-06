@@ -16,6 +16,10 @@ export const reserve = defineCommand({
     count: z.int("Enter a whole number.").min(1, "Reserve at least 1."),
   }),
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Reserves an Inventory Item or Gift for an Event, at once. Reserving one the Event already has adds to its Line. More than is Available still saves: the Shortage is flagged, and this says so. Inventory can only be reserved for an Event with dates. For a list, call this once for each, then say which went through and which didn't.",
+  },
   run: async (tx, actor, { eventId, itemId, count }, record) => {
     // Held while this saves, so the Event's dates can't be cleared under it.
     const [found] = await tx

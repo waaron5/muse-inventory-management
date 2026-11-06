@@ -32,6 +32,7 @@ export default defineConfig({
       RESEND_API_KEY: "",
       MAINTAINER_EMAIL: "maintainer@example.com",
       CRON_SECRET: e2eCronSecret,
+      AI_CONNECTIONS: "1",
     },
   },
 });

@@ -9,6 +9,7 @@ export const setOwnAvatarColour = defineCommand({
   name: "setOwnAvatarColour",
   input: z.object({ colour: z.int().min(0).max(avatarColourChoices.length - 1).nullable() }),
   allow: ["admin", "user"],
+  ai: false,
   // Your own profile isn't Muse's data, so it isn't Activity.
   activity: false,
   run: async (tx, actor, { colour }) => {

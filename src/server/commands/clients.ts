@@ -18,6 +18,10 @@ export const createClient = defineCommand({
   name: "createClient",
   input: z.object({ name: clientName("Give the Client a name.") }),
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Adds a Client: the company or person Events are for. Search first: a Client may already be there under a similar name.",
+  },
   run: async (tx, _actor, { name }, record) => {
     const [created] = await tx.insert(client).values({ name, colour: clientColour(name) }).onConflictDoNothing().returning({ id: client.id });
     if (!created) throw new CommandError("invalid", "That Client already exists.");
@@ -31,6 +35,10 @@ export const setClientColour = defineCommand({
   name: "setClientColour",
   input: z.object({ clientId: aClient, colour: z.string().pipe(z.enum(clientColours, { error: "Pick a Client colour." })) }),
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Sets the colour a Client's Events are marked with.",
+  },
   run: async (tx, _actor, { clientId, colour }, record) => {
     const current = await lockClient(tx, clientId);
     await tx.update(client).set({ colour }).where(eq(client.id, clientId));
@@ -42,6 +50,10 @@ export const renameClient = defineCommand({
   name: "renameClient",
   input: z.object({ clientId: aClient, name: clientName("Give the Client a name.") }),
   allow: ["admin"],
+  ai: {
+    description:
+      "Renames a Client. Admins only.",
+  },
   run: async (tx, _actor, { clientId, name }, record) => {
     const current = await lockClient(tx, clientId);
     // Names are unique ignoring case, so two the same are one Client twice.
@@ -65,6 +77,7 @@ export const mergeClients = defineCommand({
   name: "mergeClients",
   input: z.object({ clientId: aClient, intoClientId: aClient }),
   allow: ["admin"],
+  ai: false,
   run: async (tx, _actor, { clientId, intoClientId }, record) => {
     if (clientId === intoClientId) {
       const { name } = await lockClient(tx, clientId);
@@ -85,6 +98,10 @@ export const archiveClient = defineCommand({
   name: "archiveClient",
   input: z.object({ clientId: aClient }),
   allow: ["admin"],
+  ai: {
+    description:
+      "Archives a Client: it's no longer offered for new Events, and its Events keep it. Admins only.",
+  },
   run: async (tx, _actor, { clientId }, record) => {
     const found = await lockClient(tx, clientId);
     if (found.archived) throw new CommandError("invalid", `${found.name} is already Archived.`);
@@ -97,6 +114,10 @@ export const unarchiveClient = defineCommand({
   name: "unarchiveClient",
   input: z.object({ clientId: aClient }),
   allow: ["admin"],
+  ai: {
+    description:
+      "Unarchives a Client, offering it for Events again. Admins only.",
+  },
   run: async (tx, _actor, { clientId }, record) => {
     const found = await lockClient(tx, clientId);
     if (!found.archived) throw new CommandError("invalid", `${found.name} isn't Archived.`);

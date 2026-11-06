@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 import { buttonClass } from "./button";
 
-// The parts of sign-in and the first-sign-in name prompt: a floating card,
+// The parts of sign-in, the first-sign-in name prompt and the Allow screen: a floating card, a heading,
 // filled fields whose label sits inside until something's typed, and one
 // full-width cyan button with no icon.
 
@@ -10,6 +10,11 @@ export function EntryCard({ className, ...props }: ComponentProps<"div">) {
   return (
     <div className={cn("flex flex-col rounded-[24px] bg-entry-card p-6 shadow-entry-card", className)} {...props} />
   );
+}
+
+/** The card's heading: the question or ask it puts to the person. */
+export function EntryHeading({ className, ...props }: ComponentProps<"h1">) {
+  return <h1 className={cn("font-heading text-[24px] leading-[32px] font-semibold tracking-[-0.01em] text-balance", className)} {...props} />;
 }
 
 /** A filled field; its label reads as the placeholder, then moves up once it's in use. */

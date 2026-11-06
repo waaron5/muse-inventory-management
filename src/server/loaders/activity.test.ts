@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "@/db/types";
-import { addUser, countRoundTrips, testCategoryId, testDb } from "@/test/db";
+import { addAiConnection, addUser, countRoundTrips, testCategoryId, testDb } from "@/test/db";
 import { deleteEvent } from "../commands/cancel-event";
 import { createClient, renameClient } from "../commands/clients";
 import { createEvent } from "../commands/create-event";
@@ -41,6 +41,20 @@ async function setUp() {
 const event = { name: "Gala", client: { name: "Acme" }, startsOn: "2030-06-10", endsOn: "2030-06-12" };
 
 describe("loadActivityScreen", () => {
+  it("names the app of a change made through an AI Connection, and none for one made on screen", async () => {
+    const { bea, chairs } = await setUp();
+    const beasClaude = await addAiConnection(db, bea.userId, { name: "Claude" });
+    const gala = await createEvent(db, beasClaude, event);
+    await reserve(db, bea, { eventId: gala.id, itemId: chairs.id, count: 6 });
+
+    const { entries } = await loadActivityScreen(db, { show: 2 });
+
+    expect(entries.map((e) => [e.by?.name, read(e), e.viaAi])).toEqual([
+      ["Bea", "reserved 6 Chairs for Gala", null],
+      ["Bea", "created Gala for Acme", "Claude"],
+    ]);
+  });
+
   it("lists every change newest first, with who made it and the names as they were", async () => {
     const { aaron, bea, chairs, garage } = await setUp();
     const gala = await createEvent(db, bea, event);

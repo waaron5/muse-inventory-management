@@ -28,6 +28,7 @@ export const setItemPhoto = defineCommand({
   name: "setItemPhoto",
   input: z.object({ itemId: z.uuid("That item no longer exists."), photo: photoKey }),
   allow: ["admin"],
+  ai: false,
   run: async (tx, _actor, { itemId, photo }, record) => {
     const [found] = await tx.select({ photo: item.photo, name: item.name, kind: item.kind }).from(item).where(eq(item.id, itemId)).for("update");
     if (!found) throw new CommandError("invalid", "That item no longer exists.");
@@ -49,6 +50,7 @@ export const addPastUsePhoto = defineCommand({
     note: optionalText(1000, "Keep the note under 1,000 characters."),
   }),
   allow: ["admin", "user"],
+  ai: false,
   run: async (tx, actor, { itemId, photo, eventId, note }, record) => {
     const [found] = await tx.select({ name: item.name, kind: item.kind }).from(item).where(eq(item.id, itemId));
     if (!found) throw new CommandError("invalid", "That item no longer exists.");
@@ -72,6 +74,7 @@ export const deletePastUsePhoto = defineCommand({
   name: "deletePastUsePhoto",
   input: z.object({ id: z.uuid("That photo was already deleted.") }),
   allow: ["admin", "user"],
+  ai: false,
   run: async (tx, actor, { id }, record) => {
     const [found] = await tx
       .select({ photo: pastUsePhoto.photo, byUserId: pastUsePhoto.byUserId, itemId: item.id, name: item.name, kind: item.kind })

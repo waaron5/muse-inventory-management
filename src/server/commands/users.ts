@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { session, user } from "@/db/schema";
+import { oauthAccessToken, oauthConsent, oauthRefreshToken, session, user } from "@/db/schema";
 import type { Tx } from "@/db/types";
 import { CommandError } from "../errors";
 import { ref, said } from "./activity";
@@ -23,6 +23,10 @@ export const inviteUser = defineCommand({
       .refine((email) => email.endsWith("@museem.com"), "Use an email ending in @museem.com."),
   }),
   allow: ["admin"],
+  ai: {
+    description:
+      "Invites someone to Muse Inventory by their @museem.com email address, as a User, and emails them how to sign in. Admins only.",
+  },
   run: async (tx, _actor, input, record) => {
     const [invited] = await tx
       .insert(user)
@@ -47,6 +51,7 @@ export const changeRole = defineCommand({
   name: "changeRole",
   input: z.object({ ...someone, role }),
   allow: ["admin"],
+  ai: false,
   run: async (tx, actor, input, record) => {
     refuseSelf(actor.userId, input.userId);
     if (input.role === "user") await keepAnAdminBesides(tx, input.userId);
@@ -60,12 +65,17 @@ export const deactivateUser = defineCommand({
   name: "deactivateUser",
   input: z.object(someone),
   allow: ["admin"],
+  ai: false,
   run: async (tx, actor, input, record) => {
     refuseSelf(actor.userId, input.userId);
     await keepAnAdminBesides(tx, input.userId);
     const person = await lockPerson(tx, input.userId);
     await tx.update(user).set({ banned: true, updatedAt: new Date() }).where(eq(user.id, input.userId));
     await tx.delete(session).where(eq(session.userId, input.userId));
+    // Their AI Connections end too, and don't come back if they're reactivated (ADR 0017).
+    await tx.delete(oauthAccessToken).where(eq(oauthAccessToken.userId, input.userId));
+    await tx.delete(oauthRefreshToken).where(eq(oauthRefreshToken.userId, input.userId));
+    await tx.delete(oauthConsent).where(eq(oauthConsent.userId, input.userId));
     await record("people", said`deactivated ${person.ref}`);
   },
 });
@@ -75,6 +85,7 @@ export const reactivateUser = defineCommand({
   name: "reactivateUser",
   input: z.object(someone),
   allow: ["admin"],
+  ai: false,
   run: async (tx, _actor, input, record) => {
     const person = await lockPerson(tx, input.userId);
     await tx.update(user).set({ banned: false, updatedAt: new Date() }).where(eq(user.id, input.userId));
@@ -86,6 +97,7 @@ export const deleteUser = defineCommand({
   name: "deleteUser",
   input: z.object(someone),
   allow: ["admin"],
+  ai: false,
   run: async (tx, actor, { userId }, record) => {
     refuseSelf(actor.userId, userId);
     await keepAnAdminBesides(tx, userId);

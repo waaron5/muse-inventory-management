@@ -35,6 +35,10 @@ export const addBorrowedItem = defineCommand({
     count: howMany("Borrow at least 1."),
   }),
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Adds a Borrowed Item to an Event: something borrowed for it from outside Muse, typed by name, with how many and who lent it. It never enters the catalog. For an Inventory Item or Gift, use reserve. For a list, call this once for each, then say which went through and which didn't.",
+  },
   run: async (tx, actor, { eventId, name, lender, count }, record) => {
     const to = await addable(tx, eventId);
     const [added] = await tx

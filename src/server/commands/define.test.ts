@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
-import { activity, location, session } from "@/db/schema";
+import { activity, location, oauthAccessToken, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
-import { addUser, testDb } from "@/test/db";
+import { addAiConnection, addUser, testDb } from "@/test/db";
 import { defineCommand } from "./define";
 
 let db: Db;
@@ -13,6 +13,7 @@ beforeAll(async () => {
 
 const adminOnly = defineCommand({
   name: "adminOnly",
+  ai: false,
   input: z.object({ name: z.string() }),
   allow: ["admin"],
   run: async (tx, actor, input, record) => {
@@ -24,6 +25,7 @@ const adminOnly = defineCommand({
 
 const forgetsActivity = defineCommand({
   name: "forgetsActivity",
+  ai: false,
   input: z.object({ name: z.string() }),
   allow: ["admin", "user"],
   run: async (tx, _actor, input) => {
@@ -33,6 +35,7 @@ const forgetsActivity = defineCommand({
 
 const changesNothing = defineCommand({
   name: "changesNothing",
+  ai: false,
   input: z.object({}),
   allow: ["admin", "user"],
   run: async (_tx, _actor, _input, record) => {
@@ -42,6 +45,7 @@ const changesNothing = defineCommand({
 
 const failsHalfway = defineCommand({
   name: "failsHalfway",
+  ai: false,
   input: z.object({ name: z.string() }),
   allow: ["admin", "user"],
   run: async (tx, _actor, input) => {
@@ -134,5 +138,74 @@ describe("defineCommand", () => {
       "History write failed",
     );
     expect(await db.$count(location)).toBe(before);
+  });
+
+  it("records a change made through an AI Connection as its person's, with the app", async () => {
+    const admin = await addUser(db, { role: "admin" });
+    const viaClaude = await addAiConnection(db, admin.userId, { name: "Claude", clientId: "claude-app" });
+
+    await adminOnly(db, viaClaude, { name: "Loft" });
+    await adminOnly(db, admin, { name: "Garage" });
+
+    expect(
+      await db
+        .select({ sentence: activity.sentence, viaAiClientId: activity.viaAiClientId, viaAiApp: activity.viaAiApp })
+        .from(activity)
+        .where(eq(activity.byUserId, admin.userId))
+        .orderBy(activity.recordedAt),
+    ).toEqual([
+      { sentence: ["added Location Loft"], viaAiClientId: "claude-app", viaAiApp: "Claude" },
+      { sentence: ["added Location Garage"], viaAiClientId: null, viaAiApp: null },
+    ]);
+  });
+
+  it("names an app that gave no name \"AI app\" in its Activity", async () => {
+    const admin = await addUser(db, { role: "admin" });
+    const viaUnnamed = await addAiConnection(db, admin.userId, { name: null });
+
+    await adminOnly(db, viaUnnamed, { name: "Attic" });
+
+    expect(await db.select({ viaAiApp: activity.viaAiApp }).from(activity).where(eq(activity.byUserId, admin.userId))).toEqual([{ viaAiApp: "AI app" }]);
+  });
+
+  it("checks an AI Connection's role in the database, as a session's", async () => {
+    const person = await addUser(db, { role: "user" });
+    const viaAi = await addAiConnection(db, person.userId);
+
+    await expect(adminOnly(db, viaAi, { name: "Warehouse" })).rejects.toMatchObject({
+      code: "not-allowed",
+      message: "Only an Admin can do this.",
+    });
+  });
+
+  it("refuses an AI Connection whose token was revoked or has expired, or whose person was deactivated", async () => {
+    const revoked = await addUser(db, { role: "admin" });
+    const revokedAi = await addAiConnection(db, revoked.userId);
+    await db.update(oauthAccessToken).set({ revoked: new Date() }).where(eq(oauthAccessToken.id, revokedAi.aiTokenId));
+
+    const expired = await addUser(db, { role: "admin" });
+    const expiredAi = await addAiConnection(db, expired.userId);
+    await db.update(oauthAccessToken).set({ expiresAt: new Date(Date.now() - 1000) }).where(eq(oauthAccessToken.id, expiredAi.aiTokenId));
+
+    const deactivated = await addUser(db, { role: "admin" });
+    const deactivatedAi = await addAiConnection(db, deactivated.userId);
+    await db.update(user).set({ banned: true }).where(eq(user.id, deactivated.userId));
+
+    const someoneElse = await addUser(db, { role: "admin" });
+    const borrowed = { userId: someoneElse.userId, aiTokenId: (await addAiConnection(db, revoked.userId)).aiTokenId };
+
+    for (const actor of [revokedAi, expiredAi, deactivatedAi, borrowed]) {
+      await expect(adminOnly(db, actor, { name: "Warehouse" })).rejects.toMatchObject({ code: "not-signed-in" });
+    }
+  });
+
+  it("gives the change's Activity with its result", async () => {
+    const actor = await addUser(db, { role: "admin" });
+
+    await expect(adminOnly.withActivity(db, actor, { name: "Shed" })).resolves.toEqual({
+      output: { userId: actor.userId, role: "admin" },
+      activity: { area: "stock", sentence: ["added Location Shed"] },
+    });
+    await expect(changesNothing.withActivity(db, actor, {})).resolves.toEqual({ output: undefined, activity: null });
   });
 });

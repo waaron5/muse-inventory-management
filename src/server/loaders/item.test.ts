@@ -9,7 +9,7 @@ import { createInventoryItem } from "../commands/create-inventory-item";
 import { createLocation } from "../commands/create-location";
 import { addPastUsePhoto } from "../commands/photos";
 import { reserve } from "../commands/reserve";
-import { loadGiftScreen, loadItemScreen } from "./item";
+import { loadCatalogItem, loadGiftScreen, loadItemScreen } from "./item";
 
 describe("loadItemScreen", () => {
   it("finds nothing for an id that isn't an item", async () => {
@@ -28,6 +28,17 @@ describe("loadItemScreen", () => {
     expect(await loadItemScreen(db, jacket.id)).toBeNull();
     expect(await loadGiftScreen(db, chair.id)).toBeNull();
     expect((await loadGiftScreen(db, jacket.id))?.item.name).toBe("Nano Puff jacket – M");
+  });
+
+  it("loads either kind for an AI Connection, saying which, within 2 sequential round trips", async () => {
+    const db = await testDb();
+    const admin = await addUser(db, { role: "admin" });
+    const chair = await createInventoryItem(db, admin, { categoryId: testCategoryId, name: "Folding chair" });
+    const jacket = await createGift(db, admin, { name: "Nano Puff jacket – M" });
+
+    expect(await loadCatalogItem(db, chair.id)).toMatchObject({ item: { kind: "inventory", categoryName: "Furniture" } });
+    expect(await loadCatalogItem(db, jacket.id)).toMatchObject({ item: { kind: "gift" }, categories: [] });
+    expect(await countRoundTrips(db, () => loadCatalogItem(db, jacket.id))).toBeLessThanOrEqual(2);
   });
 
   it("lists the Locations an item can move to, never Unassigned", async () => {

@@ -9,6 +9,10 @@ export const createLocation = defineCommand({
   name: "createLocation",
   input: z.object({ name: locationName }),
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Adds a Location: somewhere items are kept. Check the locations tool first: it may already be there.",
+  },
   run: async (tx, _actor, input, record) => {
     const [created] = await tx
       .insert(location)

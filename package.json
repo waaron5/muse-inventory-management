@@ -16,7 +16,11 @@
     "publish:public": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/publish-public.ts"
   },
   "dependencies": {
+    "@better-auth/cimd": "1.7.18",
     "@better-auth/drizzle-adapter": "1.7.18",
+    "@better-auth/mcp": "1.7.18",
+    "@better-auth/oauth-provider": "1.7.18",
+    "@modelcontextprotocol/server": "2.4.0",
     "@phosphor-icons/react": "2.1.10",
     "@sentry/nextjs": "11.8.0",
     "@vercel/blob": "^2.8.2",
@@ -43,6 +47,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.10",
+    "@modelcontextprotocol/client": "2.4.0",
     "@neon/config": "^1.9.2",
     "@neon/env": "^1.6.3",
     "@playwright/test": "^1.64.1",

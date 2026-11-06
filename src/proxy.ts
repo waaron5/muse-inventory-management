@@ -3,16 +3,19 @@ import { checkAtTheDoor } from "@/server/auth";
 
 /**
  * Every screen except sign-in requires a session. Someone signed in without a
- * name yet is asked for one first.
+ * name yet is asked for one first, except when connecting an AI app, whose
+ * request would be lost on the way.
  */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { user, setCookie } = await checkAtTheDoor(request.headers);
 
   const goTo = (to: string) => withCookies(NextResponse.redirect(new URL(to, request.url)), setCookie);
-  if (pathname === "/sign-in") return user ? goTo("/events") : NextResponse.next();
+  // An AI app can ask for its person to sign in again, already signed in or not.
+  const connecting = request.nextUrl.searchParams.has("sig");
+  if (pathname === "/sign-in") return user && !connecting ? goTo("/events") : NextResponse.next();
   if (!user) return goTo("/sign-in");
-  if (!user.name && pathname !== "/welcome") return goTo("/welcome");
+  if (!user.name && pathname !== "/welcome" && pathname !== "/connect") return goTo("/welcome");
 
   // Hand renewed cookies to this request's render as well as to the browser,
   // so the page reads the fresh cache instead of the database again.
@@ -22,7 +25,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api/|_next/|favicon.ico|.*\\.[a-z0-9]+$).*)"],
+  // `/mcp` and `.well-known` answer AI apps, which carry tokens, not sessions.
+  matcher: ["/((?!api/|_next/|mcp$|\\.well-known/|favicon.ico|.*\\.[a-z0-9]+$).*)"],
 };
 
 function withCookies(response: NextResponse, setCookie: string[]) {

@@ -36,6 +36,10 @@ export const cancelEvent = defineCommand({
   name: "cancelEvent",
   input: anEvent,
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Cancels an Event. Its Lines wait as they were, holding nothing, until it's reinstated. Nothing is deleted.",
+  },
   run: async (tx, _actor, { id }, record) => {
     const found = await lockEvent(tx, id);
     if (found.cancelled) throw new CommandError("invalid", "This Event is already Cancelled.");
@@ -49,6 +53,10 @@ export const reinstateEvent = defineCommand({
   name: "reinstateEvent",
   input: anEvent,
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Reinstates a Cancelled Event: its Lines hold again, and any Shortage they cause is flagged.",
+  },
   run: async (tx, _actor, { id }, record) => {
     const found = await lockEvent(tx, id);
     if (!found.cancelled) throw new CommandError("invalid", "This Event isn't Cancelled.");
@@ -62,6 +70,7 @@ export const deleteEvent = defineCommand({
   name: "deleteEvent",
   input: anEvent,
   allow: ["admin"],
+  ai: false,
   run: async (tx, _actor, { id }, record) => {
     const found = await lockEvent(tx, id);
     await remember(tx, { id, kind: "event", name: found.name });

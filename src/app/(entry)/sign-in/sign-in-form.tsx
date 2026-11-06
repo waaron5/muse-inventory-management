@@ -3,13 +3,13 @@
 import { useActionState, useRef } from "react";
 import { EntryButton, EntryCard, EntryField, EntryLink } from "@/components/entry";
 import { failsInline, FormError } from "@/components/form";
-import { signInStep, signInToDemo } from "./actions";
+import { type SignInState, signInStep, signInToDemo } from "./actions";
 
 const CODE_LENGTH = 6;
 
 /** `toOutbox`: this copy has no Resend key, so codes go to the local outbox, not email. */
 export function SignInForm({ toOutbox = false }: { toOutbox?: boolean }) {
-  const [state, action, pending] = useActionState(failsInline(signInStep), { step: "email", email: "" });
+  const [state, action, pending] = useActionState(failsInline(withConnecting), { step: "email", email: "" });
   const signIn = useRef<HTMLButtonElement>(null);
 
   if (state.step === "email") {
@@ -83,6 +83,16 @@ export function SignInForm({ toOutbox = false }: { toOutbox?: boolean }) {
       </p>
     </EntryCard>
   );
+}
+
+/**
+ * Sign-in reached while connecting an AI app carries the app's signed request
+ * in its address; it goes along, so signing in carries on to the Allow screen.
+ * Read when sent, so the page itself stays the same for everyone.
+ */
+function withConnecting(state: SignInState, form: FormData) {
+  form.set("connecting", window.location.search);
+  return signInStep(state, form);
 }
 
 /** The demo's sign-in (ADR 0016): no email, one button, as its fictional Admin. */

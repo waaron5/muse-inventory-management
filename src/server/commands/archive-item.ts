@@ -18,6 +18,10 @@ export const archiveItem = defineCommand({
   name: "archiveItem",
   input: anItem,
   allow: ["admin"],
+  ai: {
+    description:
+      "Archives an Inventory Item or Gift: retires it from use, keeping its History, until it's Unarchived. Only once it has no Stock and nothing reserved. Admins only.",
+  },
   run: async (tx, _actor, { id }, record) => {
     const found = await lockItem(tx, id);
     if (found.archived) throw new CommandError("invalid", `${found.name} is already Archived.`);
@@ -40,6 +44,10 @@ export const unarchiveItem = defineCommand({
   name: "unarchiveItem",
   input: anItem,
   allow: ["admin"],
+  ai: {
+    description:
+      "Unarchives an Inventory Item or Gift, putting it back in use. Admins only.",
+  },
   run: async (tx, _actor, { id }, record) => {
     const found = await lockItem(tx, id);
     if (!found.archived) throw new CommandError("invalid", `${found.name} isn't Archived.`);

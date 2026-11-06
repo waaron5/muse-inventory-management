@@ -13,10 +13,10 @@ import { categoryIdField, requireCategory } from "./categories";
 
 // Saving a new Count writes a Recount Adjustment, and a new Location a
 // Transfer of all of it, in the same transaction.
-export const editInventoryItem = editCatalogItem("inventory", "editInventoryItem");
-export const editGift = editCatalogItem("gift", "editGift");
+export const editInventoryItem = editCatalogItem("inventory", "editInventoryItem", "Changes an Inventory Item. Only the fields given change; send an empty string to clear an optional one. A new locationId moves all of its Stock there (a Transfer), and a new count is a Recount. Admins only.");
+export const editGift = editCatalogItem("gift", "editGift", "Changes a Gift. Only the fields given change; send an empty string to clear an optional one. A new locationId moves all of its Stock there (a Transfer), and a new count is a Recount. Admins only.");
 
-function editCatalogItem(kind: "inventory" | "gift", name: string) {
+function editCatalogItem(kind: "inventory" | "gift", name: string, description: string) {
   return defineCommand({
     name,
     input: z.object({ id: z.uuid("That item no longer exists."), ...itemFields,
@@ -33,6 +33,7 @@ function editCatalogItem(kind: "inventory" | "gift", name: string) {
       message: kind === "inventory" ? "Select a Category that's still in use." : "Gifts have no Category.",
     }),
     allow: ["admin"],
+    ai: { description },
     run: async (tx, actor, { id, unitPrice, stock: asked, ...fields }, record) => {
       if (fields.categoryId) await requireCategory(tx, fields.categoryId);
       const [current] = await tx

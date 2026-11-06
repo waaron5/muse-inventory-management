@@ -21,10 +21,17 @@ const startingStock = z
   .optional();
 
 // Admins build the catalog; Inventory Items also require a Category.
-export const createInventoryItem = createCatalogItem("inventory", "createInventoryItem");
+export const createInventoryItem = createCatalogItem(
+  "inventory",
+  "createInventoryItem",
+  "Adds an Inventory Item to the catalog: a name and Category (its id from the categories tool), with an optional SKU, Unit Price in dollars (\"24.99\"), Description, and where it's kept and how many (startingStock). Without startingStock it sits Unassigned with none. Its photo is added in the app. Admins only. For a list, call this once for each, then say which went through and which didn't.",
+);
 
-/** Adds an Inventory Item or a Gift at its Location, with its Starting Stock entering History. */
-export function createCatalogItem(kind: "inventory" | "gift", name: string) {
+/**
+ * Adds an Inventory Item or a Gift at its Location, with its Starting Stock
+ * entering History; `description` is what an AI is told it does.
+ */
+export function createCatalogItem(kind: "inventory" | "gift", name: string, description: string) {
   return defineCommand({
     name,
     input: z.object({
@@ -38,6 +45,7 @@ export function createCatalogItem(kind: "inventory" | "gift", name: string) {
       message: kind === "inventory" ? "Select a Category that's still in use." : "Gifts have no Category.",
     }),
     allow: ["admin"],
+    ai: { description },
     run: async (tx, actor, { unitPrice, startingStock, categoryId, ...input }, record) => {
       if (categoryId) await requireCategory(tx, categoryId);
       const at = startingStock ?? { locationId: UNASSIGNED_LOCATION, count: 0 };

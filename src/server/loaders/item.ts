@@ -28,14 +28,17 @@ export const loadItemScreen = defineLoader("item", (db, id: string, now?: Date) 
   loadItem(db, id, "inventory", now),
 );
 export const loadGiftScreen = defineLoader("gift", (db, id: string, now?: Date) => loadItem(db, id, "gift", now));
+/** Either page's data, for an id that may be an Inventory Item or a Gift (an AI Connection's item). */
+export const loadCatalogItem = defineLoader("catalogItem", (db, id: string, now?: Date) => loadItem(db, id, undefined, now));
 
-async function loadItem(db: ReadDb, id: string, kind: "inventory" | "gift", now = new Date()) {
+async function loadItem(db: ReadDb, id: string, asked: "inventory" | "gift" | undefined, now = new Date()) {
   if (!z.uuid().safeParse(id).success) return null;
   const today = todayInMuse(now);
   const [[found], stockRows, history, pastUses, wentToEvents, locations, upcomingEvents, acknowledgements, categories] = await Promise.all([
     db
       .select({
         id: item.id,
+        kind: item.kind,
         name: item.name,
         sku: item.sku,
         unitPriceCents: item.unitPriceCents,
@@ -47,7 +50,7 @@ async function loadItem(db: ReadDb, id: string, kind: "inventory" | "gift", now 
       })
       .from(item)
       .leftJoin(category, eq(category.id, item.categoryId))
-      .where(and(eq(item.id, id), eq(item.kind, kind))),
+      .where(and(eq(item.id, id), asked ? eq(item.kind, asked) : undefined)),
     db
       .select({ locationId: stock.locationId, locationName: location.name, count: stock.count })
       .from(stock)
@@ -116,9 +119,10 @@ async function loadItem(db: ReadDb, id: string, kind: "inventory" | "gift", now 
       .orderBy(sql`${firstDay} asc nulls first`, asc(event.name))
       .limit(MAX_EVENTS),
     acknowledgementsOf(db, eq(shortageAcknowledgement.itemId, id)),
-    kind === "inventory" ? db.select({ id: category.id, name: category.name }).from(category).orderBy(asc(sql`lower(${category.name})`)) : [],
+    asked !== "gift" ? db.select({ id: category.id, name: category.name }).from(category).orderBy(asc(sql`lower(${category.name})`)) : [],
   ]);
   if (!found) return null;
+  const kind = found.kind;
 
   // An Inventory Item can only be reserved for an Event with a Hold Window.
   const candidates = upcomingEvents
@@ -135,7 +139,8 @@ async function loadItem(db: ReadDb, id: string, kind: "inventory" | "gift", now 
   );
   return {
     item: found,
-    categories,
+    // Gifts have no Category.
+    categories: kind === "inventory" ? categories : [],
     count,
     // Where it sits (ADR 0014).
     location: stockRows[0] ? { id: stockRows[0].locationId, name: stockRows[0].locationName } : null,

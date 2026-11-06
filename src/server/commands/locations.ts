@@ -21,6 +21,10 @@ export const renameLocation = defineCommand({
   name: "renameLocation",
   input: z.object({ locationId: aLocation, name: locationName }),
   allow: ["admin"],
+  ai: {
+    description:
+      "Renames a Location. Admins only.",
+  },
   run: async (tx, _actor, { locationId, name }, record) => {
     const current = await lockLocation(tx, locationId);
     await tx.update(location).set({ name }).where(eq(location.id, locationId));

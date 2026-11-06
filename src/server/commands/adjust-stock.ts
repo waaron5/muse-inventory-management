@@ -56,6 +56,10 @@ export const adjustStock = defineCommand({
     "Pick a reason.",
   ),
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Changes an item's Stock at its Location outside any Event, always with a reason. purchased and found add count; lost and damaged take count away; recount sets it to countedTo, what was counted; given-away hands out a Gift outside any Event, with a note of who it went to. Anyone can record found or given-away; the rest are an Admin's. happenedOn is the day it happened, today when left out, never a day still to come. For a list, call this once for each, then say which went through and which didn't.",
+  },
   run: async (tx, actor, input, record) => {
     if (!(anyone as readonly string[]).includes(input.reason) && actor.role !== "admin") {
       throw new CommandError("not-allowed", "Only an Admin can do this.");

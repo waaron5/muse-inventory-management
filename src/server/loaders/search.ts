@@ -53,7 +53,7 @@ export const loadSearch = defineLoader("search", async (db, q: string) => {
 
 export type SearchResults = Awaited<ReturnType<typeof loadSearch>>;
 
-// A search term matched anywhere, taken literally.
-function contains(term: string) {
+/** A search term matched anywhere, taken literally. */
+export function contains(term: string) {
   return `%${term.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 }

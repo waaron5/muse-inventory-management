@@ -48,6 +48,10 @@ export const changeReserved = defineCommand({
     count: z.int("Enter a whole number.").min(0, "Reserve at least 1, or remove the Line."),
   }),
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Changes how many a Line on an Event reserves (its lineId from the event tool). More than is Available still saves, and the Shortage is flagged. Once a Gift Line is Given Away, its count is how many went: changing it gives away the difference from Stock, or puts leftovers back. For a list, call this once for each, then say which went through and which didn't.",
+  },
   run: async (tx, actor, { lineId, count }, record) => {
     const found = await changeable(tx, lineId);
     // Locked, so two changes at once are served in turn and the second sees what the first gave away.
@@ -153,6 +157,10 @@ export const removeLine = defineCommand({
   name: "removeLine",
   input: z.object({ lineId: z.uuid("That Line was removed.") }),
   allow: ["admin", "user"],
+  ai: {
+    description:
+      "Removes a Line (a Reservation or a Borrowed Item) from an Event, by its lineId from the event tool. Only an Admin can remove a Line with History, such as a Gift already Given Away. For a list, call this once for each, then say which went through and which didn't.",
+  },
   run: async (tx, actor, { lineId }, record) => {
     const { event: from } = await changeable(tx, lineId);
     if (actor.role !== "admin" && await tx.$count(historyEntry, eq(historyEntry.lineId, lineId)) > 0) {

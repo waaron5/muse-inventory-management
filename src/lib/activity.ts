@@ -22,3 +22,8 @@ export type ActivityRef = {
 };
 
 export type ActivityPart = string | ActivityRef;
+
+/** A sentence as it reads, without its links: "reserved 6 Chairs for Gala". */
+export function sentenceText(sentence: readonly (string | { name: string })[]) {
+  return sentence.map((part) => (typeof part === "string" ? part : part.name)).join("");
+}

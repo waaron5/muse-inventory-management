@@ -32,7 +32,7 @@ export const loadActivityScreen = defineLoader("activity", async (db, filters: A
   );
   const [rows, people] = await Promise.all([
     db
-      .select({ id: activity.id, byUserId: activity.byUserId, name: byName, colour: byColour, sentence: activity.sentence, recordedAt: activity.recordedAt })
+      .select({ id: activity.id, byUserId: activity.byUserId, name: byName, colour: byColour, sentence: activity.sentence, viaAi: activity.viaAiApp, recordedAt: activity.recordedAt })
       .from(activity)
       .leftJoin(user, eq(user.id, activity.byUserId))
       .where(where)
@@ -63,6 +63,8 @@ export const loadActivityScreen = defineLoader("activity", async (db, filters: A
       // Nobody: the daily giveaway (ADR 0010).
       by: r.byUserId ? { id: r.byUserId, name: r.name ?? "Someone", colour: r.colour ?? undefined } : null,
       sentence: r.sentence.map(showing),
+      // The AI app it was done through, as it was named then (ADR 0017); null on screen.
+      viaAi: r.viaAi,
       recordedAt: r.recordedAt,
     })),
     more: rows.length > show,

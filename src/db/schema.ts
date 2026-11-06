@@ -106,6 +106,168 @@ export const signInCount = pgTable(
   (t) => [primaryKey({ columns: [t.key, t.windowStart] })],
 );
 
+// AI Connections (ADR 0017): Better Auth's OAuth provider tables, shaped as its
+// MCP plugin asks. An AI app is an OAuth client; a person's Allow is their
+// consent; its access and refresh tokens are stored only as keyed hashes.
+export const oauthClient = pgTable(
+  "oauth_client",
+  {
+    id: text().primaryKey(),
+    clientId: text().notNull().unique(),
+    clientSecret: text(),
+    clientDiscoveryId: text(),
+    disabled: boolean().default(false),
+    skipConsent: boolean(),
+    enableEndSession: boolean(),
+    subjectType: text(),
+    scopes: text().array(),
+    clientCredentialsScopes: text().array().default([]),
+    userId: text().references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }),
+    updatedAt: timestamp({ withTimezone: true }),
+    name: text(),
+    uri: text(),
+    icon: text(),
+    contacts: text().array(),
+    tos: text(),
+    policy: text(),
+    softwareId: text(),
+    softwareVersion: text(),
+    softwareStatement: text(),
+    redirectUris: text().array().notNull(),
+    postLogoutRedirectUris: text().array(),
+    backchannelLogoutUri: text(),
+    backchannelLogoutSessionRequired: boolean(),
+    tokenEndpointAuthMethod: text(),
+    applicationType: text(),
+    jwks: text(),
+    jwksUri: text(),
+    grantTypes: text().array(),
+    responseTypes: text().array(),
+    requirePKCE: boolean("require_pkce"),
+    dpopBoundAccessTokens: boolean().default(false),
+    referenceId: text(),
+    metadata: jsonb(),
+  },
+  (t) => [index().on(t.userId)],
+);
+
+export const oauthResource = pgTable("oauth_resource", {
+  id: text().primaryKey(),
+  identifier: text().notNull().unique(),
+  name: text().notNull(),
+  accessTokenTtl: integer(),
+  refreshTokenTtl: integer(),
+  signingAlgorithm: text(),
+  signingKeyId: text(),
+  allowedScopes: text().array(),
+  customClaims: jsonb(),
+  dpopBoundAccessTokensRequired: boolean().default(false),
+  disabled: boolean().default(false),
+  createdAt: timestamp({ withTimezone: true }),
+  updatedAt: timestamp({ withTimezone: true }),
+  policyVersion: integer().default(1),
+  metadata: jsonb(),
+});
+
+export const oauthClientResource = pgTable(
+  "oauth_client_resource",
+  {
+    id: text().primaryKey(),
+    clientId: text()
+      .notNull()
+      .references(() => oauthClient.clientId, { onDelete: "cascade" }),
+    resourceId: text()
+      .notNull()
+      .references(() => oauthResource.identifier, { onDelete: "cascade" }),
+    metadata: jsonb(),
+    createdAt: timestamp({ withTimezone: true }),
+  },
+  (t) => [index().on(t.clientId), index().on(t.resourceId)],
+);
+
+export const oauthRefreshToken = pgTable(
+  "oauth_refresh_token",
+  {
+    id: text().primaryKey(),
+    token: text().notNull().unique(),
+    clientId: text()
+      .notNull()
+      .references(() => oauthClient.clientId, { onDelete: "cascade" }),
+    sessionId: text().references(() => session.id, { onDelete: "set null" }),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    referenceId: text(),
+    authorizationCodeId: text(),
+    resources: text().array(),
+    requestedUserInfoClaims: text().array(),
+    expiresAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }),
+    revoked: timestamp({ withTimezone: true }),
+    rotatedAt: timestamp({ withTimezone: true }),
+    rotationReplayResponse: text(),
+    rotationReplayExpiresAt: timestamp({ withTimezone: true }),
+    authTime: timestamp({ withTimezone: true }),
+    confirmation: jsonb(),
+    scopes: text().array().notNull(),
+  },
+  (t) => [index().on(t.clientId), index().on(t.sessionId), index().on(t.userId), index().on(t.authorizationCodeId)],
+);
+
+export const oauthAccessToken = pgTable(
+  "oauth_access_token",
+  {
+    id: text().primaryKey(),
+    token: text().unique(),
+    clientId: text()
+      .notNull()
+      .references(() => oauthClient.clientId, { onDelete: "cascade" }),
+    sessionId: text().references(() => session.id, { onDelete: "set null" }),
+    userId: text().references(() => user.id, { onDelete: "cascade" }),
+    referenceId: text(),
+    authorizationCodeId: text(),
+    resources: text().array(),
+    requestedUserInfoClaims: text().array(),
+    refreshId: text().references(() => oauthRefreshToken.id, { onDelete: "cascade" }),
+    expiresAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }),
+    revoked: timestamp({ withTimezone: true }),
+    confirmation: jsonb(),
+    scopes: text().array().notNull(),
+  },
+  (t) => [
+    index().on(t.clientId),
+    index().on(t.sessionId),
+    index().on(t.userId),
+    index().on(t.authorizationCodeId),
+    index().on(t.refreshId),
+  ],
+);
+
+export const oauthConsent = pgTable(
+  "oauth_consent",
+  {
+    id: text().primaryKey(),
+    clientId: text()
+      .notNull()
+      .references(() => oauthClient.clientId, { onDelete: "cascade" }),
+    userId: text().references(() => user.id, { onDelete: "cascade" }),
+    referenceId: text(),
+    resources: text().array(),
+    requestedUserInfoClaims: text().array(),
+    scopes: text().array().notNull(),
+    createdAt: timestamp({ withTimezone: true }),
+    updatedAt: timestamp({ withTimezone: true }),
+  },
+  (t) => [index().on(t.clientId), index().on(t.userId)],
+);
+
+export const oauthClientAssertion = pgTable("oauth_client_assertion", {
+  id: text().primaryKey(),
+  expiresAt: timestamp({ withTimezone: true }).notNull(),
+});
+
 export const location = pgTable("location", {
   id: uuid().primaryKey().defaultRandom(),
   name: text().notNull(),
@@ -426,6 +588,10 @@ export const activity = pgTable(
     byUserId: text(),
     area: text({ enum: activityAreas }).notNull(),
     sentence: jsonb().$type<ActivityPart[]>().notNull(),
+    // Made through an AI Connection (ADR 0017): its app's client id, and the
+    // app's name as it was then. Blank for a change made on screen.
+    viaAiClientId: text(),
+    viaAiApp: text(),
     // The clock's own time, so entries written in one transaction keep their order.
     recordedAt: timestamp({ withTimezone: true }).notNull().default(sql`clock_timestamp()`),
   },

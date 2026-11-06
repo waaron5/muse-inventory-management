@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { continueConnecting } from "@/server/ai";
 import { signInByCode, signInToTheDemo } from "@/server/auth";
 
 export type SignInState = { step: "email" | "code"; email: string; error?: string; resent?: boolean };
@@ -35,8 +36,10 @@ export async function signInStep(state: SignInState, form: FormData): Promise<Si
   const code = String(form.get("code") ?? "").replace(/\s/g, "");
   const result = await signInByCode.verify(state.email, code);
   if (!result.ok) return { ...state, error: result.message, resent: false };
-  // An action's redirect skips the proxy, so the name prompt is chosen here too.
-  redirect(result.needsName ? "/welcome" : "/events");
+  // On the way to connecting an AI app, its Allow screen is next. Otherwise, as
+  // an action's redirect skips the proxy, the name prompt is chosen here too.
+  const connecting = await continueConnecting(String(form.get("connecting") ?? ""));
+  redirect(connecting ?? (result.needsName ? "/welcome" : "/events"));
 }
 
 /** The demo's one button (ADR 0016): signed in as its Admin, straight to Events. */
