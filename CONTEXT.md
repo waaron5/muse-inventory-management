@@ -65,7 +65,7 @@ How many of one Inventory Item or Gift Muse has in all: its Stock at its Locatio
 _Avoid_: Owned, total quantity, quantity (unqualified)
 
 **Activity**:
-Every change anyone made to Muse's data, newest first, each as one short sentence after who made it ("Aaron added 6 Chairs to BRL Cove 26") with when; edits say only what changed, as it is now. Automatic giveaways are by "Automatic". Changing your own name or profile colour isn't Activity. It began when the feature launched, is kept forever and never edited, and keeps the names it mentions as they were. Everyone can see it. Distinct from History, which is only Stock and lives on each item.
+Every change anyone made to Muse's data, newest first, each as one short sentence after who made it ("Aaron added 6 Chairs to BRL Cove 26") with when; edits say only what changed, as it is now. Automatic giveaways are by "Automatic". A change made through an AI Connection is still the person's, marked "via AI". Changing your own name or profile colour isn't Activity. It began when the feature launched, is kept forever and never edited, and keeps the names it mentions as they were. Everyone can see it. Distinct from History, which is only Stock and lives on each item.
 _Avoid_: Audit log, activity feed, change log, History (for this)
 
 **History**:
@@ -136,3 +136,7 @@ A Muse team member who, beyond everything a User can do, keeps the catalog, corr
 **User**:
 A Muse team member without admin rights. A User sees everything an Admin sees, and can plan Events (Clients, Events, Reservations, Borrowed Items), change a past Gift Line's count, create Locations and Categories, and record Found and Given away Adjustments. Roles limit what someone can change, never what they can see.
 _Avoid_: Staff, member, viewer
+
+**AI Connection**:
+A person's own AI app (Claude, ChatGPT, Grok) linked to Muse Inventory and acting as them: it sees what they see and can change what their role allows, except permanent deletion, managing people beyond inviting, merging Clients, Acknowledging Shortages and photos, which stay in the app. Each person connects their own, and can disconnect it in Settings; deactivating them ends it.
+_Avoid_: Agent, bot, assistant, integration

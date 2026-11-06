@@ -16,13 +16,13 @@
     "publish:public": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/publish-public.ts"
   },
   "dependencies": {
-    "@better-auth/drizzle-adapter": "1.7.11",
+    "@better-auth/drizzle-adapter": "1.7.18",
     "@phosphor-icons/react": "2.1.10",
     "@sentry/nextjs": "11.8.0",
     "@vercel/blob": "^2.8.2",
     "@vercel/functions": "^3.10.1",
     "@vercel/speed-insights": "^2.0.0",
-    "better-auth": "^1.7.11",
+    "better-auth": "^1.7.18",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
     "drizzle-orm": "1.0.0-rc.4",
