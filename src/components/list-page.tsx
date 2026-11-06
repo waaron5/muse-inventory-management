@@ -23,7 +23,11 @@ export function ListScrollArea({ label, children }: { label: string; children: R
   );
 }
 
-/** A compact final column keeps the control at the row's edge. */
+/** A gutter before the menu, with the control at the row's edge. */
+export function RowMenuHeading() {
+  return <th className="w-20 py-2"><span className="sr-only">More</span></th>;
+}
+
 export function RowMenuCell({ children }: { children: ReactNode }) {
   return (
     <td className="py-2 pr-3 pl-1">

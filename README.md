@@ -1,6 +1,6 @@
 # Muse Inventory
 
-Inventory and event planning for [Muse Events Management](https://museem.com), a corporate event planner. It keeps track of what Muse owns, where it is, and what each Event needs. It replaces a set of spreadsheets and manual tracking.
+Inventory and event planning for [Muse Event Management](https://museem.com), a corporate event planner. It keeps track of what Muse owns, where it is and what each Event needs, and replaces a set of spreadsheets and one person's memory.
 
 **[Try the live demo](https://muse-inventory-demo.vercel.app)**: one click signs you in as an Admin. The data is fictional and resets every night.
 

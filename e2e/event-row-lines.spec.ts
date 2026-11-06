@@ -55,6 +55,11 @@ test("P&L stays readable as event columns fold, with row navigation and panels i
     expect(await region.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
     if (width >= 800) {
       const row = page.getByRole("row", { name: new RegExp(`^${names.summit}`) });
+      const gifts = await row.getByRole("button", { name: /^Gifts:/ }).boundingBox();
+      const menu = await row.getByRole("button", { name: /^More for/ }).boundingBox();
+      expect(gifts).not.toBeNull();
+      expect(menu).not.toBeNull();
+      expect(menu!.x - (gifts!.x + gifts!.width)).toBeGreaterThanOrEqual(24);
       const header = region.getByRole("columnheader", { name: "P&L", exact: true });
       // The Venue stays under the dates at every width.
       await expect(row.getByTitle(names.venue)).toBeVisible();

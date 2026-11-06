@@ -5,7 +5,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { Badge } from "@/components/badge";
 import { DatesChip, SelectChip, ToggleChip } from "@/components/filter-chip";
 import { LinkedRow } from "@/components/linked-row";
-import { ListScrollArea, RowMenuCell } from "@/components/list-page";
+import { ListScrollArea, RowMenuCell, RowMenuHeading } from "@/components/list-page";
 import { formatPrice, formatShort, formatShortDays } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { currentSession } from "@/server/auth";
@@ -126,9 +126,7 @@ export async function CatalogList({
                   {kind === "inventory" && !availableFor && <th className="w-32 px-3 py-2 font-medium">Next reserved</th>}
                   {kind === "gift" && <th className="w-24 px-3 py-2 text-right font-medium @max-[700px]:hidden">Reserved</th>}
                   {kind === "gift" && <th className="w-30 px-3 py-2 font-medium">Status</th>}
-                  <th className="w-14 py-2">
-                    <span className="sr-only">More</span>
-                  </th>
+                  <RowMenuHeading />
                 </tr>
               </thead>
               <tbody>

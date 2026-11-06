@@ -2,7 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Badge } from "@/components/badge";
 import { MonthChip, SelectChip } from "@/components/filter-chip";
-import { ListScrollArea } from "@/components/list-page";
+import { ListScrollArea, RowMenuHeading } from "@/components/list-page";
 import { RowText } from "@/components/row-list";
 import { formatMonth, formatRowDays, formatShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -120,9 +120,7 @@ export async function EventsList({
                   {/* The right padding clears the count's arrow, so the word lines up with the number. */}
                   <th className="w-28 py-2 pr-[34px] pl-3 text-right font-medium">Inventory</th>
                   <th className="w-28 py-2 pr-[34px] pl-3 text-right font-medium">Gifts</th>
-                  <th className="w-14 py-2">
-                    <span className="sr-only">More</span>
-                  </th>
+                  <RowMenuHeading />
                 </tr>
               </thead>
               {months.map(({ month, events }) => (
