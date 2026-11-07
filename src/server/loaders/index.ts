@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/db";
 import { type ActivityFilters, loadActivityScreen } from "./activity";
+import { loadAiConnections } from "./ai-connections";
 import { loadClientsScreen } from "./clients";
 import { loadCategoriesScreen } from "./categories";
 import { loadEventScreen } from "./event";
@@ -14,6 +15,7 @@ import { loadSearch } from "./search";
 import { loadAvatarColour, loadProfileColour, loadUsersScreen } from "./users";
 
 export type { ActivityFilters, ActivityShown } from "./activity";
+export type { AiConnectionShown } from "./ai-connections";
 export { ACTIVITY_PAGE } from "./activity";
 export type { EventLinesData } from "./event";
 export type { EventsFilters, EventsTab } from "./events";
@@ -24,6 +26,7 @@ export type { SearchResults } from "./search";
 /** The screen loaders, bound to the app's database. */
 export const loaders = {
   activity: (filters: ActivityFilters) => loadActivityScreen(db, filters),
+  aiConnections: (userId: string) => loadAiConnections(db, userId),
   categories: () => loadCategoriesScreen(db),
   events: (filters: EventsFilters) => loadEventsScreen(db, filters),
   event: (id: string) => loadEventScreen(db, id),

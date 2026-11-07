@@ -82,6 +82,7 @@ export async function addAiConnection(db: Db, userId: string, app: { name?: stri
     userId,
     resources: ["https://inventory.museem.com/mcp"],
     scopes: [],
+    createdAt: new Date(),
     expiresAt: new Date(Date.now() + 60 * 60 * 1000),
   });
   return { userId, aiTokenId };

@@ -1,6 +1,7 @@
 import { acknowledgeShortage } from "./acknowledge-shortage";
 import { addBorrowedItem } from "./add-line";
 import { adjustStock } from "./adjust-stock";
+import { disconnectAiConnection } from "./ai-connections";
 import { archiveItem, unarchiveItem } from "./archive-item";
 import { cancelEvent, deleteEvent, reinstateEvent } from "./cancel-event";
 import { createCategory, deleteCategory, renameCategory } from "./categories";
@@ -49,6 +50,7 @@ export const allCommands = {
   deleteLocation,
   deletePastUsePhoto,
   deleteUser,
+  disconnectAiConnection,
   editEvent,
   editGift,
   editInventoryItem,

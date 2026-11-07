@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import type { Settled } from "@/components/confirm";
 import { commands, CommandError } from "@/server/commands";
 import { flash } from "@/server/flash";
 import { currentActor, refreshSession, signOutHere } from "@/server/auth";
@@ -38,6 +39,20 @@ export async function saveName(_state: NameState, form: FormData): Promise<NameS
   await flash("Name saved");
   refresh();
   return { saved: true };
+}
+
+/** Cuts one of the signed-in person's own AI Connections: never anyone else's. */
+export async function disconnectAiConnection(_state: Settled, form: FormData): Promise<Settled> {
+  const actor = await currentActor();
+  try {
+    await commands.disconnectAiConnection(actor, { clientId: String(form.get("clientId") ?? "") });
+  } catch (error) {
+    if (error instanceof CommandError) return { error: error.message };
+    throw error;
+  }
+  await flash("AI Connection disconnected");
+  refresh();
+  return { done: true };
 }
 
 export async function signOut() {

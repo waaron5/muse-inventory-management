@@ -84,7 +84,8 @@ test("secondary columns centre beside the sidebar while top rows and main lists 
       await page.goto("/settings");
       const cards = page.locator(".page-column").filter({ visible: true });
       await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
-      await expect(cards).toHaveCount(5);
+      // My profile, Users, Clients, Locations, Categories, and AI Connections (on in e2e).
+      await expect(cards).toHaveCount(6);
       expect((await cards.first().boundingBox())!.x).toBe(16);
       expect((await cards.first().boundingBox())!.width).toBe(668);
     }

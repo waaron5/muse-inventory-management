@@ -1,4 +1,4 @@
-import { MUSE_TIME_ZONE } from "./time-zone";
+import { MUSE_TIME_ZONE, todayInMuse } from "./time-zone";
 
 const dollars = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const wholeDollars = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -91,6 +91,16 @@ export function formatDayHeading(day: string, today: string) {
   if (daysAgo === 0) return "Today";
   if (daysAgo === 1) return "Yesterday";
   return (year === y ? weekday : weekdayWithYear).format(at);
+}
+
+/** The day something happened, in Muse's time zone, to follow a word: "today", "yesterday", or "Oct 2, 2026". */
+export function formatOn(at: Date, now = new Date()) {
+  const day = todayInMuse(at);
+  const [y, m, d] = todayInMuse(now).split("-").map(Number);
+  const daysAgo = Math.round((Date.UTC(y, m - 1, d) - Date.parse(`${day}T00:00:00Z`)) / 86_400_000);
+  if (daysAgo === 0) return "today";
+  if (daysAgo === 1) return "yesterday";
+  return formatDay(day);
 }
 
 /** A Shortage as it reads on screen: "Short by 2". */

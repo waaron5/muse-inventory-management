@@ -6,19 +6,20 @@ import {
   type OAuthTokens,
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { beforeAll, describe, expect, it } from "vitest";
-import { activity, user } from "@/db/schema";
+import { activity, oauthAccessToken, oauthRefreshToken, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { testAuth } from "@/test/auth";
-import { addUser, testCategoryId, testDb } from "@/test/db";
+import { addSession, addUser, testCategoryId, testDb } from "@/test/db";
 import type { Auth } from "../auth/create-auth";
 import { sendCode, signIn } from "../auth/sign-in";
 import { createEvent } from "../commands/create-event";
 import { createInventoryItem } from "../commands/create-inventory-item";
 import { createLocation } from "../commands/create-location";
-import { deactivateUser } from "../commands/users";
+import { disconnectAiConnection } from "../commands/ai-connections";
+import { deactivateUser, deleteUser } from "../commands/users";
 import { answerConnectRequest, continueAfterSignIn, readConnectRequest } from "./connect";
 import { aiEndpoints } from "./endpoints";
 
@@ -96,9 +97,10 @@ describe("AI Connections", () => {
     return allowScreen;
   }
 
-  /** Connects an app all the way: the person presses Allow, and the app gets its tokens. */
-  async function connect(cookie: Headers) {
+  /** Connects an app all the way: the person presses Allow, and the app gets its tokens. Optionally the app another person registered. */
+  async function connect(cookie: Headers, sameAppAs?: AiApp) {
     const aiApp = new AiApp();
+    aiApp.information = sameAppAs?.information;
     const allowScreen = await startConnecting(aiApp, cookie);
     const back = new URL(await answerConnectRequest(auth, cookie, allowScreen.search, true));
     expect(`${back.origin}${back.pathname}`).toBe(CALLBACK);
@@ -116,6 +118,33 @@ describe("AI Connections", () => {
     const client = new Client({ name: "test", version: "1.0.0" });
     await client.connect(new StreamableHTTPClientTransport(new URL(MCP), { authProvider: aiApp, fetch: app }));
     return client;
+  }
+
+  /** The app renews its access with its refresh token, as it does each hour it's in use; whether that worked. */
+  async function refresh(aiApp: AiApp) {
+    const response = await app(`${APP}/api/auth/oauth2/token`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: aiApp.saved!.refresh_token!,
+        client_id: aiApp.information!.client_id,
+        resource: MCP,
+      }),
+    });
+    if (response.ok) aiApp.saved = await response.json();
+    return response.ok;
+  }
+
+  /** Time passes for someone's AI Connections: every token they hold was issued, and expires, that much earlier. */
+  async function daysPass(userId: string, days: number) {
+    const earlier = sql`interval '1 day' * ${days}`;
+    await db.update(oauthAccessToken)
+      .set({ createdAt: sql`${oauthAccessToken.createdAt} - ${earlier}`, expiresAt: sql`${oauthAccessToken.expiresAt} - ${earlier}` })
+      .where(eq(oauthAccessToken.userId, userId));
+    await db.update(oauthRefreshToken)
+      .set({ createdAt: sql`${oauthRefreshToken.createdAt} - ${earlier}`, expiresAt: sql`${oauthRefreshToken.expiresAt} - ${earlier}` })
+      .where(eq(oauthRefreshToken.userId, userId));
   }
 
   const callMcp = (token: string) =>
@@ -232,17 +261,77 @@ describe("AI Connections", () => {
     await deactivateUser(db, admin, { userId: person.id });
 
     expect((await callMcp(aiApp.saved!.access_token)).status).toBe(401);
-    const refreshed = await app(`${APP}/api/auth/oauth2/token`, {
-      method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: aiApp.saved!.refresh_token!,
-        client_id: aiApp.information!.client_id,
-        resource: MCP,
-      }),
-    });
-    expect(refreshed.ok).toBe(false);
+    expect(await refresh(aiApp)).toBe(false);
+  });
+
+  it("refuses an AI Connection on its next call once its person Disconnects it, and only that one", async () => {
+    const person = await signedInPerson();
+    const claude = await connect(person.cookie);
+    const grok = await connect(person.cookie);
+    // Through a Client ID Metadata Document, everyone's Claude is the same app.
+    const someoneElse = await signedInPerson();
+    const theirClaude = await connect(someoneElse.cookie, claude);
+
+    await disconnectAiConnection(db, await addSession(db, person.id), { clientId: claude.information!.client_id });
+
+    expect((await callMcp(claude.saved!.access_token)).status).toBe(401);
+    expect(await refresh(claude)).toBe(false);
+    expect((await callMcp(grok.saved!.access_token)).status).toBe(200);
+    expect((await callMcp(theirClaude.saved!.access_token)).status).toBe(200);
+    // Connecting again asks for Allow again.
+    claude.saved = undefined;
+    await startConnecting(claude, person.cookie);
+  });
+
+  it("refuses a code its app was sent just before its person Disconnected or was deactivated", async () => {
+    const admin = await addUser(db, { role: "admin" });
+    for (const end of ["disconnect", "deactivate"] as const) {
+      const person = await signedInPerson();
+      const aiApp = await connect(person.cookie);
+      // The app asks again; already Allowed, its code is on its way back to it.
+      aiApp.saved = undefined;
+      expect(await authorizeClient(aiApp, { serverUrl: MCP, fetchFn: app })).toBe("REDIRECT");
+      const back = new URL((await app(aiApp.sentTo!, { headers: person.cookie, redirect: "manual" })).headers.get("location")!);
+      expect(`${back.origin}${back.pathname}`).toBe(CALLBACK);
+
+      if (end === "disconnect") {
+        await disconnectAiConnection(db, await addSession(db, person.id), { clientId: aiApp.information!.client_id });
+      } else {
+        await deactivateUser(db, admin, { userId: person.id });
+      }
+
+      await expect(
+        authorizeClient(aiApp, { serverUrl: MCP, fetchFn: app, authorizationCode: back.searchParams.get("code")!, iss: back.searchParams.get("iss")! }),
+      ).rejects.toThrow();
+    }
+  });
+
+  it("lapses after 90 days unused, each use renewing it", async () => {
+    const person = await signedInPerson();
+    const aiApp = await connect(person.cookie);
+
+    await daysPass(person.id, 60);
+    expect((await callMcp(aiApp.saved!.access_token)).status).toBe(401);
+    expect(await refresh(aiApp)).toBe(true);
+    expect((await callMcp(aiApp.saved!.access_token)).status).toBe(200);
+    await daysPass(person.id, 60);
+    expect(await refresh(aiApp)).toBe(true);
+
+    await daysPass(person.id, 91);
+
+    expect((await callMcp(aiApp.saved!.access_token)).status).toBe(401);
+    expect(await refresh(aiApp)).toBe(false);
+  });
+
+  it("ends a deleted person's AI Connections", async () => {
+    const admin = await addUser(db, { role: "admin" });
+    const person = await signedInPerson();
+    const aiApp = await connect(person.cookie);
+
+    await deleteUser(db, admin, { userId: person.id });
+
+    expect((await callMcp(aiApp.saved!.access_token)).status).toBe(401);
+    expect(await refresh(aiApp)).toBe(false);
   });
 
   it("checks its person in the database on every call", async () => {

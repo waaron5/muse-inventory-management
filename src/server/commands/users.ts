@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { oauthAccessToken, oauthConsent, oauthRefreshToken, session, user } from "@/db/schema";
+import { session, user } from "@/db/schema";
 import type { Tx } from "@/db/types";
+import { endAiConnections } from "../auth/ai-tokens";
 import { CommandError } from "../errors";
 import { ref, said } from "./activity";
 import { defineCommand } from "./define";
@@ -73,9 +74,7 @@ export const deactivateUser = defineCommand({
     await tx.update(user).set({ banned: true, updatedAt: new Date() }).where(eq(user.id, input.userId));
     await tx.delete(session).where(eq(session.userId, input.userId));
     // Their AI Connections end too, and don't come back if they're reactivated (ADR 0017).
-    await tx.delete(oauthAccessToken).where(eq(oauthAccessToken.userId, input.userId));
-    await tx.delete(oauthRefreshToken).where(eq(oauthRefreshToken.userId, input.userId));
-    await tx.delete(oauthConsent).where(eq(oauthConsent.userId, input.userId));
+    await endAiConnections(tx, input.userId);
     await record("people", said`deactivated ${person.ref}`);
   },
 });

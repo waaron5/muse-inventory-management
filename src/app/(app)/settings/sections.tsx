@@ -4,7 +4,10 @@ import { Badge } from "@/components/badge";
 import { NameSetting } from "@/components/name-form";
 import { PageColumn } from "@/components/page-column";
 import { Row } from "@/components/row-list";
-import { currentSession } from "@/server/auth";
+import { aiConnectionsOn } from "@/lib/ai-connections";
+import { formatOn } from "@/lib/format";
+import { appURL, currentSession } from "@/server/auth";
+import { mcpResource } from "@/server/auth/create-auth";
 import { loaders } from "@/server/loaders";
 import { connection } from "next/server";
 import { Invite } from "../users/invite";
@@ -12,7 +15,11 @@ import { PersonMenu } from "../users/person-menu";
 import { AddClientButton, ClientMenu } from "../clients/client-menu";
 import { AddLocationButton, LocationMenu } from "../locations/location-menu";
 import { AddCategoryButton, CategoryMenu } from "../categories/category-menu";
+import { AiConnectionMenu } from "./ai-connection-menu";
 import { CardHeader, SettingsList } from "./settings-list";
+
+/** Where Muse people read how to connect their AI app: the public copy of `docs/ai-connections.md`. */
+const SETUP_NOTE = "https://github.com/waaron5/muse-inventory-management/blob/main/docs/ai-connections.md";
 
 export async function SettingsCards() {
   await connection();
@@ -20,7 +27,10 @@ export async function SettingsCards() {
     currentSession(), loaders.users(), loaders.clients(), loaders.locations(), loaders.categories(),
   ]);
   const isAdmin = session?.user.role === "admin";
-  const profileColour = session ? await loaders.profileColour(session.user.id) : undefined;
+  const withAiConnections = aiConnectionsOn();
+  const [profileColour, aiConnections] = session
+    ? await Promise.all([loaders.profileColour(session.user.id), withAiConnections ? loaders.aiConnections(session.user.id) : undefined])
+    : [];
   const inUse = clients.filter((c) => !c.archived);
   return (
     <div className="flex flex-col gap-6">
@@ -74,6 +84,19 @@ export async function SettingsCards() {
             {isAdmin && <CategoryMenu category={category} />}
           </Row> }))} />
       </PageColumn>
+      {withAiConnections && <PageColumn id="ai-connections">
+        <SettingsList id="ai-connections-heading" title="AI Connections"
+          empty={<p className="text-subtle">
+            To work in Muse Inventory from Claude, ChatGPT or Grok, add a custom connector in it with the
+            address <span className="select-all font-medium text-ink">{mcpResource(appURL)}</span>.{" "}
+            <a href={SETUP_NOTE} target="_blank" rel="noreferrer" className="text-cyan-ink underline">How to connect</a>
+          </p>}
+          rows={(aiConnections?.connections ?? []).map((connection) => ({ key: connection.clientId, text: connection.appName,
+            row: <Row name={connection.appName}
+              detail={`Connected ${formatOn(connection.connectedAt)} · Last used ${formatOn(connection.lastUsedAt)}`}>
+              <AiConnectionMenu connection={connection} />
+            </Row> }))} />
+      </PageColumn>}
     </div>
   );
 }

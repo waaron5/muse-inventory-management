@@ -9,7 +9,9 @@ A person connects their own AI app (Claude, ChatGPT, Grok) to Muse Inventory, an
 - **Only Better Auth's OAuth routes are public:** discovery, authorize, token, register and revoke. `src/server/ai/endpoints.ts` lists them; every other Better Auth route under `/api/auth` is not found, so sign-in keeps going through Server Actions and its own limits (ADR 0008).
 - **Sign-in and the Allow screen.** An app sends its person to `/api/auth/oauth2/authorize`. Someone not signed in goes to `/sign-in` first, which carries the app's signed request through and goes on afterwards. Then `/connect` asks "Let <app> act as you in Muse Inventory?", with Allow and Cancel and no scopes.
 - **An AI Connection acts as its person.** Access tokens are opaque and stored only as keyed hashes. Every call to `/mcp` looks its token up with its person, so a deactivated person is refused at once. Deactivating someone also deletes their tokens and consent, so reactivating them doesn't bring their AI Connections back.
-- **Switched on by `AI_CONNECTIONS=1`**, read on each request. Without it, and always in the demo, `/mcp`, the OAuth routes, their discovery documents and `/connect` are not found.
+- **Settings lists a person's own AI Connections** (`src/server/loaders/ai-connections.ts`): one per app they've Allowed that can still reach `/mcp` or renew its access, with when they Allowed it and when it last got an access token, which an app does at least hourly while in use. Nobody sees anyone else's, Admins included. Its **Disconnect** (`disconnectAiConnection`, never an AI's tool) deletes that person's tokens, Allow and any code still on its way to the app (`endAiConnections`, which deactivating uses too), for that app alone, since everyone's claude.ai is the same app: its next call is refused, and connecting again asks for Allow again.
+- **They last 90 rolling days, like a session.** Access tokens last an hour; each refresh brings a new refresh token good for another 90 days, so one left unused for 90 days lapses and drops off the list.
+- **Switched on by `AI_CONNECTIONS=1`**, read on each request. Without it, and always in the demo, `/mcp`, the OAuth routes, their discovery documents and `/connect` are not found, and Settings has no AI Connections card.
 
 ## Tools
 
@@ -57,4 +59,4 @@ The server's instructions (`src/server/ai/mcp-server.ts`) give the AI Muse's wor
 
    Discovery and Dynamic Client Registration work on `localhost`. Client ID Metadata Documents need the AI app's document on a public HTTPS address, so they can only be tried on a deployed copy.
 
-4. To start again, delete the app's rows from `oauth_client` (its tokens and consent go with them), or deactivate and reactivate the person.
+4. To start again, Disconnect it in Settings, or deactivate and reactivate the person.

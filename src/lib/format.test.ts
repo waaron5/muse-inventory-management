@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDayHeading, formatMonth, formatPrice, formatRowDays, formatShortDays, formatTime } from "./format";
+import { formatDayHeading, formatMonth, formatOn, formatPrice, formatRowDays, formatShortDays, formatTime } from "./format";
 
 describe("formatPrice", () => {
   it("leaves off the cents when there are none", () => {
@@ -60,5 +60,15 @@ describe("formatDayHeading", () => {
 describe("formatTime", () => {
   it("tells the time in Muse's time zone", () => {
     expect(formatTime(new Date("2026-10-28T21:42:00Z"))).toBe("3:42 PM");
+  });
+});
+
+describe("formatOn", () => {
+  it("says today and yesterday in Muse's time zone, then the date", () => {
+    // 9 PM in Denver on Nov 6 is already Nov 7 in UTC.
+    const now = new Date("2026-11-07T04:00:00Z");
+    expect(formatOn(new Date("2026-11-06T15:00:00Z"), now)).toBe("today");
+    expect(formatOn(new Date("2026-11-06T05:00:00Z"), now)).toBe("yesterday");
+    expect(formatOn(new Date("2026-10-02T18:00:00Z"), now)).toBe("Oct 2, 2026");
   });
 });

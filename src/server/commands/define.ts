@@ -38,7 +38,8 @@ export type AiDecision = false | { description: string };
  * the actor in the database, checks their role, then makes the change, its
  * History and its Activity in one transaction. A command must record its
  * Activity exactly once, or it saves nothing; only a change to someone's own
- * profile, which isn't Muse's data, records none. Each also decides whether an
+ * profile or disconnecting your own AI Connection, which aren't Muse's data,
+ * records none. Each also decides whether an
  * AI Connection may run it, so none reaches the AI without a decision.
  */
 export function defineCommand<Input extends z.ZodType, Output>(spec: {

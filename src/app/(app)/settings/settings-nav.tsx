@@ -1,7 +1,7 @@
 "use client";
 
 import { type MouseEvent, useEffect, useRef, useState } from "react";
-import { Building2, MapPin, Shapes, UserRound, UsersRound } from "lucide-react";
+import { Building2, MapPin, Plug, Shapes, UserRound, UsersRound } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,8 @@ const sections = [
   { id: "clients", label: "Clients", Icon: Building2 },
   { id: "locations", label: "Locations", Icon: MapPin },
   { id: "categories", label: "Categories", Icon: Shapes },
+  // Only where AI Connections are switched on (ADR 0017).
+  { id: "ai-connections", label: "AI Connections", Icon: Plug, onlyWithAiConnections: true },
 ];
 
 // The scroll's length, and how far below the top of the window a card stops
@@ -22,9 +24,11 @@ const interactions = ["pointerdown", "keydown", "wheel", "touchmove"];
 
 /**
  * Settings' cards in a menu beside them, from 1024px: a link scrolls quickly
- * to its card, and the card in view is marked as the current one.
+ * to its card, and the card in view is marked as the current one. AI
+ * Connections come last, where they're switched on.
  */
-export function SettingsNav() {
+export function SettingsNav({ withAiConnections = false }: { withAiConnections?: boolean }) {
+  const shown = sections.filter((section) => withAiConnections || !section.onlyWithAiConnections);
   const [current, setCurrent] = useState(sections[0].id);
   // While a link's scroll runs, and until someone scrolls themselves, the
   // link they chose stays current, even for a card too low to reach the top.
@@ -104,7 +108,7 @@ export function SettingsNav() {
         <PageHeader title="Settings" />
         <nav aria-label="Settings" className="hidden max-h-[calc(100dvh-170px)] overflow-y-auto lg:block">
           <ul className="flex flex-col gap-1">
-            {sections.map(({ id, label, Icon }) => (
+            {shown.map(({ id, label, Icon }) => (
               <li key={id}>
                 <a
                   href={`#${id}`}

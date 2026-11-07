@@ -26,14 +26,16 @@ export type ListRow = { key: string; text: string; row: ReactNode };
 /**
  * A Settings card's list: the first eight rows, then "View N more" for the
  * rest. With `search` (its label), a search box beside the main button
- * narrows the rows to those whose text has what's typed.
+ * narrows the rows to those whose text has what's typed. With no rows at all,
+ * `empty` stands in for the list.
  */
-export function SettingsList({ id, title, action, search, rows }: {
+export function SettingsList({ id, title, action, search, rows, empty }: {
   id: string;
   title: string;
   action?: ReactNode;
   search?: string;
   rows: ListRow[];
+  empty?: ReactNode;
 }) {
   const [query, setQuery] = useState("");
   const [all, setAll] = useState(false);
@@ -48,7 +50,7 @@ export function SettingsList({ id, title, action, search, rows }: {
         </div>}
         {action}
       </CardHeader>
-      {found.length === 0 && wanted ? <p className="py-8 text-subtle">Nothing matches.</p> : (
+      {rows.length === 0 && empty ? empty : found.length === 0 && wanted ? <p className="py-8 text-subtle">Nothing matches.</p> : (
         <RowList>{shown.map((r) => <Fragment key={r.key}>{r.row}</Fragment>)}</RowList>
       )}
       {shown.length < found.length && (

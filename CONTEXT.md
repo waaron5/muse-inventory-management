@@ -65,7 +65,7 @@ How many of one Inventory Item or Gift Muse has in all: its Stock at its Locatio
 _Avoid_: Owned, total quantity, quantity (unqualified)
 
 **Activity**:
-Every change anyone made to Muse's data, newest first, each as one short sentence after who made it ("Aaron added 6 Chairs to BRL Cove 26") with when; edits say only what changed, as it is now. Automatic giveaways are by "Automatic". A change made through an AI Connection is still the person's, marked "via AI". Changing your own name or profile colour isn't Activity. It began when the feature launched, is kept forever and never edited, and keeps the names it mentions as they were. Everyone can see it. Distinct from History, which is only Stock and lives on each item.
+Every change anyone made to Muse's data, newest first, each as one short sentence after who made it ("Aaron added 6 Chairs to BRL Cove 26") with when; edits say only what changed, as it is now. Automatic giveaways are by "Automatic". A change made through an AI Connection is still the person's, marked "via AI". Changing your own name or profile colour, or disconnecting your own AI Connection, isn't Activity. It began when the feature launched, is kept forever and never edited, and keeps the names it mentions as they were. Everyone can see it. Distinct from History, which is only Stock and lives on each item.
 _Avoid_: Audit log, activity feed, change log, History (for this)
 
 **History**:

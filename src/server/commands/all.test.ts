@@ -6,7 +6,7 @@ import { isCommand } from "./define";
 const modules = import.meta.glob<Record<string, unknown>>(["./*.ts", "!./*.test.ts", "!./index.ts"], { eager: true });
 const defined = Object.values(modules).flatMap((exported) => Object.values(exported).filter(isCommand));
 
-/** What stays in the app (ADR 0017): deleting, managing people beyond inviting, merging Clients, Acknowledging Shortages, photos, and your own profile. */
+/** What stays in the app (ADR 0017): deleting, managing people beyond inviting, merging Clients, Acknowledging Shortages, photos, and your own profile and AI Connections. */
 const EXCLUDED = [
   "acknowledgeShortage",
   "addPastUsePhoto",
@@ -19,6 +19,7 @@ const EXCLUDED = [
   "deleteLocation",
   "deletePastUsePhoto",
   "deleteUser",
+  "disconnectAiConnection",
   "mergeClients",
   "reactivateUser",
   "setItemPhoto",
