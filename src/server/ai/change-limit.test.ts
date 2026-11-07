@@ -20,6 +20,7 @@ const HOUR = 60 * 60 * 1000;
 describe("an AI Connection's changes an hour", () => {
   let db: Db;
   let chairs: { id: string };
+  let bugReportsSent = 0;
 
   beforeAll(async () => {
     db = await testDb();
@@ -44,7 +45,7 @@ describe("an AI Connection's changes an hour", () => {
   async function connect(appName = "Claude") {
     const person = await addUser(db, { role: "user", name: "Robin" });
     const { aiTokenId, clientId } = await addAiConnection(db, person.userId, { name: appName });
-    const connection: AiConnection = { userId: person.userId, name: "Robin", role: "user", clientId, appName, aiTokenId };
+    const connection: AiConnection = { userId: person.userId, name: "Robin", email: "robin@museem.com", role: "user", clientId, appName, aiTokenId };
     return { person, connection };
   }
 
@@ -56,7 +57,7 @@ describe("an AI Connection's changes an hour", () => {
 
   async function call(connection: AiConnection, name: string, args: Record<string, unknown>) {
     const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-    await mcpServer({ db, appURL: APP, connection, sendInvite: async () => "emailed" }).connect(serverSide);
+    await mcpServer({ db, appURL: APP, connection, sendInvite: async () => "emailed", sendBugMail: async () => (bugReportsSent++, true) }).connect(serverSide);
     const ai = new Client({ name: connection.appName, version: "1.0.0" });
     await ai.connect(clientSide);
     const result = await ai.callTool({ name, arguments: args });
@@ -91,6 +92,16 @@ describe("an AI Connection's changes an hour", () => {
 
     expect(await call(connection, "search", { query: "chair" })).not.toHaveProperty("refused");
     expect(await call(connection, "item", { id: chairs.id })).not.toHaveProperty("refused");
+  }, 60_000);
+
+  it("counts a bug report as a change, so past the limit none is sent", async () => {
+    const { connection } = await connect();
+    for (let made = 0; made < 299; made++) await found(connection);
+    const sent = bugReportsSent;
+
+    expect(await call(connection, "reportBug", { what: "Search times out" })).not.toHaveProperty("refused");
+    expect(await call(connection, "reportBug", { what: "Search times out" })).toEqual({ refused: TOO_MANY });
+    expect(bugReportsSent).toBe(sent + 1);
   }, 60_000);
 
   it("doesn't count the person's own changes on screen, nor another of their AI Connections'", async () => {

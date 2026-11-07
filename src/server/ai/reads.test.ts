@@ -67,8 +67,8 @@ describe("an AI Connection's reads", () => {
 
     const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
     const { aiTokenId } = await addAiConnection(db, admin.userId);
-    const connection = { userId: admin.userId, name: "Quinn", role: "admin" as const, clientId: "", appName: "Claude", aiTokenId };
-    await mcpServer({ db, appURL: APP, connection, sendInvite: async () => "emailed" }).connect(serverSide);
+    const connection = { userId: admin.userId, name: "Quinn", email: "quinn@museem.com", role: "admin" as const, clientId: "", appName: "Claude", aiTokenId };
+    await mcpServer({ db, appURL: APP, connection, sendInvite: async () => "emailed", sendBugMail: async () => true }).connect(serverSide);
     ai = new Client({ name: "test", version: "1.0.0" });
     await ai.connect(clientSide);
   });

@@ -3,12 +3,18 @@ import { headers } from "next/headers";
 import { db } from "@/db";
 import { aiConnectionsOn } from "@/lib/ai-connections";
 import { appURL, auth } from "../auth";
-import { inviteMailerFromEnv } from "../mail";
+import { bugReportMailerFromEnv, inviteMailerFromEnv } from "../mail";
 import { answerConnectRequest, continueAfterSignIn, readConnectRequest } from "./connect";
 import { aiEndpoints } from "./endpoints";
 
 /** AI Connections' HTTP side (ADR 0017), bound to the app's database and auth. */
-export const ai = aiEndpoints({ db, auth, enabled: () => aiConnectionsOn(), sendInvite: inviteMailerFromEnv(appURL) });
+export const ai = aiEndpoints({
+  db,
+  auth,
+  enabled: () => aiConnectionsOn(),
+  sendInvite: inviteMailerFromEnv(appURL),
+  sendBugMail: bugReportMailerFromEnv(),
+});
 
 /** Where sign-in goes next when it was reached while connecting an AI app; null otherwise. */
 export async function continueConnecting(search: string) {

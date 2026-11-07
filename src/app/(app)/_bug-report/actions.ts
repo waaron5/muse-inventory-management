@@ -3,13 +3,10 @@
 import { headers } from "next/headers";
 import { isDemo, offInTheDemo } from "@/lib/demo";
 import { currentSession } from "@/server/auth";
-import { type BugReportState, sendBugReport } from "@/server/bug-report";
+import { appVersion, type BugReportState, sendBugReport } from "@/server/bug-report";
 import { bugReportMailerFromEnv } from "@/server/mail";
 
 const sendBugMail = bugReportMailerFromEnv();
-
-// The deploy a report came from, as Sentry's releases name it.
-const appVersion = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local";
 
 /** Report a bug: emailed to the maintainer, with who, device and version read here. */
 export async function reportBug(form: FormData): Promise<BugReportState> {

@@ -1,6 +1,7 @@
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import type { Db } from "@/db/types";
 import { type Auth, mcpResource } from "../auth/create-auth";
+import type { SendBugMail } from "../bug-report";
 import type { Delivery } from "../mail";
 import { type AiConnection, findAiConnection } from "./connection";
 import { mcpServer } from "./mcp-server";
@@ -30,16 +31,20 @@ export function aiEndpoints({
   auth,
   enabled,
   sendInvite,
+  sendBugMail,
 }: {
   db: Db;
   auth: Auth;
   enabled: () => boolean;
   sendInvite: (to: string) => Promise<Delivery>;
+  sendBugMail: SendBugMail;
 }) {
   const appURL = auth.options.baseURL as string;
   const resourceMetadata = new URL("/.well-known/oauth-protected-resource/mcp", appURL).toString();
   // Built for each request, as the person whose token `mcp` found.
-  const handler = createMcpHandler(({ authInfo }) => mcpServer({ db, appURL, connection: authInfo?.extra?.connection as AiConnection, sendInvite }));
+  const handler = createMcpHandler(({ authInfo }) =>
+    mcpServer({ db, appURL, connection: authInfo?.extra?.connection as AiConnection, sendInvite, sendBugMail }),
+  );
 
   return {
     async oauth(request: Request): Promise<Response> {

@@ -27,9 +27,9 @@ describe("an AI Connection's changes", () => {
   async function connectAs(role: "admin" | "user", name: string, appName: string) {
     const person = await addUser(db, { role, name });
     const { aiTokenId, clientId } = await addAiConnection(db, person.userId, { name: appName });
-    const connection: AiConnection = { userId: person.userId, name, role, clientId, appName, aiTokenId };
+    const connection: AiConnection = { userId: person.userId, name, email: `${name.toLowerCase()}@museem.com`, role, clientId, appName, aiTokenId };
     const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-    await mcpServer({ db, appURL: APP, connection, sendInvite: async (to) => (invited.push(to), "emailed") }).connect(serverSide);
+    await mcpServer({ db, appURL: APP, connection, sendInvite: async (to) => (invited.push(to), "emailed"), sendBugMail: async () => true }).connect(serverSide);
     const ai = new Client({ name: appName, version: "1.0.0" });
     await ai.connect(clientSide);
     return { ai, person };

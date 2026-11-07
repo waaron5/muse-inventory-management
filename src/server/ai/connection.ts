@@ -13,7 +13,7 @@ import { liveAiToken, UNNAMED_APP } from "../auth/ai-tokens";
 import type { Role } from "../commands/define";
 
 /** The person an AI Connection acts as, and the app acting for them. */
-export type AiConnection = { userId: string; name: string; role: Role; clientId: string; appName: string; aiTokenId: string };
+export type AiConnection = { userId: string; name: string; email: string; role: Role; clientId: string; appName: string; aiTokenId: string };
 
 /**
  * Who a call to `/mcp` acts as, read fresh from the database on every call, as
@@ -29,6 +29,7 @@ export async function findAiConnection(db: ReadDb, auth: Auth, request: Request)
       aiTokenId: oauthAccessToken.id,
       userId: user.id,
       name: user.name,
+      email: user.email,
       role: user.role,
       clientId: oauthClient.clientId,
       appName: oauthClient.name,
@@ -60,5 +61,5 @@ export async function findAiConnection(db: ReadDb, auth: Auth, request: Request)
     if (isDpopBindingError(error) || isDpopProofError(error)) return null;
     throw error;
   }
-  return { userId: found.userId, name: found.name, role: found.role, clientId: found.clientId, appName: found.appName ?? UNNAMED_APP, aiTokenId: found.aiTokenId };
+  return { userId: found.userId, name: found.name, email: found.email, role: found.role, clientId: found.clientId, appName: found.appName ?? UNNAMED_APP, aiTokenId: found.aiTokenId };
 }

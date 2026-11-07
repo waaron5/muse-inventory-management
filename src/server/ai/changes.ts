@@ -12,7 +12,7 @@ import { loadEventScreen } from "../loaders/event";
 import type { Delivery } from "../mail";
 import type { AiConnection } from "./connection";
 import { answer, refused } from "./answers";
-import { takeAiChange } from "./change-limit";
+import { takeAiChange, tooManyChanges } from "./change-limit";
 import { appLinks, type AppLinks } from "./links";
 
 // Every command an AI Connection may run is a tool of the same name (ADR 0017),
@@ -160,9 +160,7 @@ export function registerChanges(server: McpServer, deps: ChangeDeps) {
       async (args) => {
         const given = args as Record<string, unknown>;
         try {
-          if (!(await takeAiChange(deps.db, deps.connection))) {
-            return refused(`That's a lot of changes at once. Try again later, or do it in the app: ${links.to("/")}`);
-          }
+          if (!(await takeAiChange(deps.db, deps.connection))) return tooManyChanges(deps.appURL);
           const input = adapter?.fill ? await adapter.fill(deps.db, given) : given;
           const done = await command.withActivity(deps.db, { userId: deps.connection.userId, aiTokenId: deps.connection.aiTokenId }, input as never);
           return answer({ ...(await said(deps, links, done.activity?.sentence ?? null)), ...(done.output ? { result: done.output } : {}), ...(await after(name, deps, input)) });

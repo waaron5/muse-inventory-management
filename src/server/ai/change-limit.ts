@@ -2,7 +2,9 @@ import * as Sentry from "@sentry/nextjs";
 import { sql } from "drizzle-orm";
 import { aiChangeCount } from "@/db/schema";
 import type { Db } from "@/db/types";
+import { refused } from "./answers";
 import type { AiConnection } from "./connection";
+import { appLinks } from "./links";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -35,4 +37,9 @@ export async function takeAiChange(db: Db, connection: Pick<AiConnection, "userI
     Sentry.captureMessage("An AI Connection reached its hourly change limit", { tags: { app: connection.appName } });
   }
   return counted.count <= CHANGES_AN_HOUR;
+}
+
+/** What the AI is told past the limit: nothing was done. */
+export function tooManyChanges(appURL: string) {
+  return refused(`That's a lot of changes at once. Try again later, or do it in the app: ${appLinks(appURL).to("/")}`);
 }

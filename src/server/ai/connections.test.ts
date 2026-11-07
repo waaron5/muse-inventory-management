@@ -15,6 +15,7 @@ import { testAuth } from "@/test/auth";
 import { addSession, addUser, testCategoryId, testDb } from "@/test/db";
 import type { Auth } from "../auth/create-auth";
 import { sendCode, signIn } from "../auth/sign-in";
+import type { BugMail } from "../bug-report";
 import { createEvent } from "../commands/create-event";
 import { createInventoryItem } from "../commands/create-inventory-item";
 import { createLocation } from "../commands/create-location";
@@ -56,13 +57,14 @@ describe("AI Connections", () => {
   let auth: Auth;
   let codeFor: (email: string) => string;
   let app: typeof fetch;
+  const bugMails: BugMail[] = [];
 
   beforeAll(async () => {
     db = await testDb();
     const made = testAuth(db);
     auth = made.auth;
     codeFor = (email) => made.outbox.codeFor(email);
-    const endpoints = aiEndpoints({ db, auth, enabled: () => true, sendInvite: async () => "emailed" });
+    const endpoints = aiEndpoints({ db, auth, enabled: () => true, sendInvite: async () => "emailed", sendBugMail: async (mail) => (bugMails.push(mail), true) });
     app = routeTo(endpoints);
 
     const admin = await addUser(db, { role: "admin" });
@@ -84,7 +86,7 @@ describe("AI Connections", () => {
     await sendCode(auth, email);
     const result = await signIn(auth, email, codeFor(email));
     if (!result.ok) throw new Error(result.message);
-    return { id, cookie: result.cookie };
+    return { id, email, cookie: result.cookie };
   }
 
   /** The app discovers Muse Inventory, registers, and sends its person to the Allow screen. */
@@ -206,6 +208,16 @@ describe("AI Connections", () => {
 
     expect(JSON.parse((result.content as { text: string }[])[0].text)).toMatchObject({ done: "Quinn added Location Loading dock" });
     expect(await db.select({ viaAiApp: activity.viaAiApp }).from(activity).where(eq(activity.byUserId, person.id))).toEqual([{ viaAiApp: "Claude" }]);
+  });
+
+  it("reports a bug as its person, naming its app, with replies going to them", async () => {
+    const person = await signedInPerson();
+    const client = await mcpClient(await connect(person.cookie));
+
+    const result = await client.callTool({ name: "reportBug", arguments: { what: "Search keeps timing out" } });
+
+    expect(result.isError).toBeFalsy();
+    expect(bugMails.at(-1)).toMatchObject({ replyTo: person.email, text: expect.stringContaining(`From: Quinn <${person.email}>, User\nReported via Claude\n`) });
   });
 
   it("names the app and where it returns to on the Allow screen, and refuses a changed request", async () => {
@@ -356,7 +368,7 @@ describe("AI Connections", () => {
   });
 
   it("is not found anywhere while switched off", async () => {
-    const off = routeTo(aiEndpoints({ db, auth, enabled: () => false, sendInvite: async () => "emailed" }));
+    const off = routeTo(aiEndpoints({ db, auth, enabled: () => false, sendInvite: async () => "emailed", sendBugMail: async () => true }));
     const person = await signedInPerson();
     const token = (await connect(person.cookie)).saved!.access_token;
 

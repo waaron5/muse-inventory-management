@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
+import type { SendBugMail } from "../bug-report";
 import { type AiSearchResults, loadAiSearch } from "../loaders/ai-search";
+import { registerBugReport } from "./bug-report";
 import { type ChangeDeps, registerChanges } from "./changes";
 import { appLinks } from "./links";
 import { DATES, registerReads } from "./reads";
@@ -29,8 +31,13 @@ Changes are made as the person, and only what their role allows: when a change s
 
 Some things can only be done in the app: deleting anything, managing people beyond inviting them, merging Clients, Acknowledging Shortages, and photos. When asked for one of those, say it's done in Muse Inventory and give the link to where.`;
 
-/** The MCP server one AI Connection talks to, for one request: its reads, and its changes as its person. */
-export function mcpServer(deps: ChangeDeps) {
+export type AiDeps = ChangeDeps & { sendBugMail: SendBugMail };
+
+/**
+ * The MCP server one AI Connection talks to, for one request: its reads, its
+ * changes as its person, and Report a bug.
+ */
+export function mcpServer(deps: AiDeps) {
   const { db, appURL } = deps;
   const server = new McpServer({ name: "muse-inventory", title: "Muse Inventory", version: "1.0.0" }, { instructions: INSTRUCTIONS });
 
@@ -52,6 +59,7 @@ export function mcpServer(deps: ChangeDeps) {
   );
 
   registerReads(server, db, appURL);
+  registerBugReport(server, deps);
   return registerChanges(server, deps);
 }
 
