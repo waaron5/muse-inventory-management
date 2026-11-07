@@ -1,8 +1,71 @@
 # AI Connections
 
-A person connects their own AI app (Claude, ChatGPT, Grok) to Muse Inventory, and it acts as them. The decisions are in [ADR 0017](adr/0017-ai-connections-act-as-the-person.md), and the term in [`CONTEXT.md`](../CONTEXT.md).
+Ask your own AI app (Claude, ChatGPT or Grok) to work in Muse Inventory for you: "what chairs are free the second week of March?", "add these 20 items to the Gala", "invite a new teammate", "report a bug". It finds things, reserves them, adds to the catalog and the rest, much as you would on screen.
 
-## How it fits together
+**It acts as you.** Whatever it does is done by you: Activity shows your name, with a small "via AI" mark naming the app. It sees what you see, and can change only what your role allows. Your AI app will usually ask before it changes anything; read what it's about to do before you say yes, and keep "always allow" for the apps you trust.
+
+## Connecting your AI app
+
+Each person connects their own. You need the address:
+
+```
+https://inventory.museem.com/mcp
+```
+
+Add it to your AI app as a custom connector, as below. Your app then opens Muse Inventory: sign in with your emailed code if you aren't already, then press **Allow** on "Let ... act as you in Muse Inventory?". That's it. You only do this once per app.
+
+These apps move their menus around now and then; if a step doesn't match, look for **Connectors** or **Apps** in the app's settings.
+
+### Claude
+
+1. On [claude.ai](https://claude.ai), open **Customize → Connectors** (in some versions **Settings → Connectors**).
+2. Press **+ Add**, then **Add custom connector**.
+3. Name it **Muse Inventory**, paste the address, and press **Add**.
+4. Press **Connect**, then sign in and **Allow**.
+5. In a chat, press **+ → Connectors** and make sure Muse Inventory is switched on.
+
+Claude's free plan allows one custom connector.
+
+### ChatGPT
+
+ChatGPT only lets a custom connector make changes with **Developer mode** on, which needs a paid plan. On a Business workspace, an admin may need to allow it first.
+
+1. On [chatgpt.com](https://chatgpt.com), open **Settings → Apps & Connectors → Advanced settings** and turn on **Developer mode**.
+2. Back in **Apps & Connectors**, press **Create**.
+3. Name it **Muse Inventory**, paste the address, choose **OAuth** for authentication, confirm you trust it, and press **Create**.
+4. Sign in and **Allow**.
+5. In a chat, press **+ → More** and choose Muse Inventory. ChatGPT only uses it in chats where it's chosen.
+
+### Grok
+
+1. Go to [grok.com/connectors](https://grok.com/connectors).
+2. Press **New Connector**, then **Custom**.
+3. Name it **Muse Inventory**, paste the address, and save.
+4. Sign in and **Allow**. If nothing opens, let your browser show pop-ups from grok.com.
+
+## What it can do
+
+- **Look anything up:** items, Gifts, Events and Clients, what's Available over some dates or for an Event, an Event's Lines and Shortages, recent Activity, Locations and Categories.
+- **Make changes your role allows:** create, edit and cancel Events, add Clients, reserve items and change Reservations, add, edit and archive items, record Stock changes, add Locations and Categories, invite people (Admins only), and report a bug.
+- **Lists go one item at a time.** Give it a list and it adds each one on its own, then tells you which went through and which didn't. A Reservation for more than is Available still saves, and it tells you which Shortage that caused, as the app does.
+- **It asks when it isn't sure.** If what you said matches more than one thing (two Events with the same name, say), it lists them and asks which one.
+- **It links back.** Everything it mentions comes with a link to open it in Muse Inventory.
+
+## What stays in the app
+
+Your AI can't delete anything, change someone's role, deactivate, reactivate or delete people, merge Clients, Acknowledge Shortages, add photos, or change your own name or colour. Ask for one of these and it gives you a link to do it in Muse Inventory yourself.
+
+It can also make at most 300 changes an hour. Looking things up is not limited.
+
+## Disconnecting
+
+**Settings → AI Connections** lists each AI app you've connected, with when you connected it and when it was last used. Press **⋯ → Disconnect** to cut one off at once; to use it again, connect it again. A connection left unused for 90 days ends by itself. Nobody else sees your AI Connections, Admins included. Deactivating someone ends all of theirs.
+
+## For the maintainer
+
+The decisions are in [ADR 0017](adr/0017-ai-connections-act-as-the-person.md), and the term in [`CONTEXT.md`](../CONTEXT.md).
+
+### How it fits together
 
 - **`/mcp`** is a remote MCP server over Streamable HTTP (`src/app/mcp`, `src/server/ai`). It serves both the 2026-07-28 protocol and 2025-era clients, statelessly.
 - **OAuth 2.1** comes from Better Auth's MCP plugin (`@better-auth/mcp`), configured in `src/server/auth/create-auth.ts`. AI apps find it through the protected resource metadata at `/.well-known/oauth-protected-resource/mcp` and the authorization server metadata at `/.well-known/oauth-authorization-server/api/auth`. They register with a Client ID Metadata Document, or with Dynamic Client Registration (`/api/auth/oauth2/register`) when they don't host one.
@@ -13,7 +76,7 @@ A person connects their own AI app (Claude, ChatGPT, Grok) to Muse Inventory, an
 - **They last 90 rolling days, like a session.** Access tokens last an hour; each refresh brings a new refresh token good for another 90 days, so one left unused for 90 days lapses and drops off the list.
 - **Switched on by `AI_CONNECTIONS=1`**, read on each request. Without it, and always in the demo, `/mcp`, the OAuth routes, their discovery documents and `/connect` are not found, and Settings has no AI Connections card.
 
-## Tools
+### Tools
 
 | Tool | Reads or changes | What it does |
 | --- | --- | --- |
@@ -29,7 +92,7 @@ A person connects their own AI app (Claude, ChatGPT, Grok) to Muse Inventory, an
 
 Each read goes through the screen's own loader (`src/server/ai/reads.ts`), so its numbers match the screens; `src/server/ai/reads.test.ts` checks them against each other. Roles never limit seeing, so Unit Prices and P&L Codes come too. Dates are Muse calendar days (ADR 0005), as every tool with dates says.
 
-### Changes
+#### Changes
 
 Every command decides, in `defineCommand`'s required `ai`, whether an AI Connection may run it (ADR 0017): `false`, or the description the AI is told. The excluded ones are permanent deletion, changing roles, deactivating, reactivating or deleting people, merging Clients, Acknowledging Shortages, photos, and your own profile. `src/server/commands/all.ts` lists every command; `src/server/commands/all.test.ts` finds them without the list and fails when one is missing from it, has no decision, or the excluded set changes.
 
@@ -43,7 +106,7 @@ Every command decides, in `defineCommand`'s required `ai`, whether an AI Connect
 
 The server's instructions (`src/server/ai/mcp-server.ts`) give the AI Muse's words, tell it never to guess between matches, and send it to the app, with a link, for what it can't do.
 
-## Trying it locally
+### Trying it locally
 
 1. Migrate your local database (`pnpm db:migrate`), then start the app with AI Connections on. If something else has port 3000, use another and tell Better Auth:
 
