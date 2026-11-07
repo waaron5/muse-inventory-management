@@ -263,6 +263,24 @@ export const oauthConsent = pgTable(
   (t) => [index().on(t.clientId), index().on(t.userId)],
 );
 
+// How many changes an AI Connection (a person through one app) has made in the
+// current hour, so one stuck in a loop stops (ADR 0017): one row each, started
+// again when a new hour begins.
+export const aiChangeCount = pgTable(
+  "ai_change_count",
+  {
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    clientId: text()
+      .notNull()
+      .references(() => oauthClient.clientId, { onDelete: "cascade" }),
+    windowStart: timestamp({ withTimezone: true }).notNull(),
+    count: integer().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.clientId] })],
+);
+
 export const oauthClientAssertion = pgTable("oauth_client_assertion", {
   id: text().primaryKey(),
   expiresAt: timestamp({ withTimezone: true }).notNull(),

@@ -85,5 +85,5 @@ export async function addAiConnection(db: Db, userId: string, app: { name?: stri
     createdAt: new Date(),
     expiresAt: new Date(Date.now() + 60 * 60 * 1000),
   });
-  return { userId, aiTokenId };
+  return { userId, aiTokenId, clientId };
 }

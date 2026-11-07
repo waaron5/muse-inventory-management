@@ -12,12 +12,14 @@ import { loadEventScreen } from "../loaders/event";
 import type { Delivery } from "../mail";
 import type { AiConnection } from "./connection";
 import { answer, refused } from "./answers";
+import { takeAiChange } from "./change-limit";
 import { appLinks, type AppLinks } from "./links";
 
 // Every command an AI Connection may run is a tool of the same name (ADR 0017),
 // run as its person through the command itself, so role checks, History and
 // Activity are as on screen. A tool says what changed as its Activity sentence
-// does, with links, and a refusal is the command's own message.
+// does, with links, and a refusal is the command's own message. Each call counts
+// toward its AI Connection's changes an hour, before anything is done.
 
 export type ChangeDeps = { db: Db; appURL: string; connection: AiConnection; sendInvite: (to: string) => Promise<Delivery> };
 
@@ -158,6 +160,9 @@ export function registerChanges(server: McpServer, deps: ChangeDeps) {
       async (args) => {
         const given = args as Record<string, unknown>;
         try {
+          if (!(await takeAiChange(deps.db, deps.connection))) {
+            return refused(`That's a lot of changes at once. Try again later, or do it in the app: ${links.to("/")}`);
+          }
           const input = adapter?.fill ? await adapter.fill(deps.db, given) : given;
           const done = await command.withActivity(deps.db, { userId: deps.connection.userId, aiTokenId: deps.connection.aiTokenId }, input as never);
           return answer({ ...(await said(deps, links, done.activity?.sentence ?? null)), ...(done.output ? { result: done.output } : {}), ...(await after(name, deps, input)) });

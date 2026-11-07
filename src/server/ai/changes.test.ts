@@ -26,8 +26,8 @@ describe("an AI Connection's changes", () => {
   // The person and their app, as `/mcp` finds them for a call.
   async function connectAs(role: "admin" | "user", name: string, appName: string) {
     const person = await addUser(db, { role, name });
-    const { aiTokenId } = await addAiConnection(db, person.userId, { name: appName });
-    const connection: AiConnection = { userId: person.userId, name, role, clientId: "", appName, aiTokenId };
+    const { aiTokenId, clientId } = await addAiConnection(db, person.userId, { name: appName });
+    const connection: AiConnection = { userId: person.userId, name, role, clientId, appName, aiTokenId };
     const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
     await mcpServer({ db, appURL: APP, connection, sendInvite: async (to) => (invited.push(to), "emailed") }).connect(serverSide);
     const ai = new Client({ name: appName, version: "1.0.0" });
